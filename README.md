@@ -1,6 +1,6 @@
 # Borgsum Chess Engine
-# by Andreas Øverland
-# andreasoverland@gmail.com
+### by Andreas Øverland - andreasoverland@gmail.com
+
 
 
 Super Simple Chess Engine
