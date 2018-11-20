@@ -65,9 +65,9 @@ int main(){
 
     printf( "\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
             "Depth",
-           "Nodes",
+            "Nodes",
             "Caps",
-           "E.p.",
+            "E.p.",
             "Castles",
             "Promos",
             "Checks",
@@ -103,7 +103,8 @@ int main(){
 
 void dig(int board[]){
 
-    if (board[IDX_MOVE_NUM] < MAX_LEVEL ) {
+    // Uncomment to include testing for mates on the last level
+    if (board[IDX_MOVE_NUM] < MAX_LEVEL /* || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) */ ) {
         int numMoves = findAllPossibleMoves(board);
         if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
             board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
