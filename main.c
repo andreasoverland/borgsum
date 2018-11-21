@@ -104,13 +104,19 @@ int main(){
 void dig(int board[]){
 
     // Uncomment to include testing for mates on the last level
+    boolean doCount = true;
     if (board[IDX_MOVE_NUM] < MAX_LEVEL /* || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) */ ) {
         int numMoves = findAllPossibleMoves(board);
+        if( numMoves == -1 ){
+          doCount = false;
+        }
         if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
             board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
         }
     }
-    count(board);
+    if( doCount ){
+      count(board);
+    }
 
 }
 
@@ -156,13 +162,9 @@ int findAllPossibleMoves(int originalBoard[]) {
                         makeNewBoard(originalBoard,m);
                         m[fromIdx] = 0;
                         m[fromIdxm8] = p;
+                        numMovesFound++;
+                        dig(m);
 
-                        const int checkStatus = calculateCheckStatus(m);
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            m[IDX_CHECK_STATUS] = checkStatus;
-                            numMovesFound++;
-                            dig(m);
-                        }
                     }
                     else {
                         // if target = any one rook corner, adjust castling aproprieately
@@ -178,37 +180,27 @@ int findAllPossibleMoves(int originalBoard[]) {
                 }
                 if (rank == 6) {
                     if (originalBoard[fromIdxm16] == 0 && originalBoard[fromIdxm8] == 0) {
-
                         makeNewBoard(originalBoard,m);
                         m[fromIdx] = 0;
                         m[fromIdxm16] = p;
                         m[IDX_EP_IDX] = fromIdxm8; // set en passant strike index
-
-                        const int checkStatus = calculateCheckStatus(m);
-
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            m[IDX_CHECK_STATUS] = checkStatus;
-                            numMovesFound++;
-                            dig(m);
-                        }
+                        numMovesFound++;
+                        dig(m);
                     }
                 }
                 if (file > 0 && (originalBoard[fromIdxm9] & BLACK_MASK) != 0) { // strike left
 
+                    if( originalBoard[fromIdxm9] == Piece_k ){
+                       return -1; // The previous move was illegal
+                    }
 
                     if (rank > 1) {
                         makeNewBoard(originalBoard,m);
                         m[fromIdx] = 0;
                         m[fromIdxm9] = p;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
-
-                        const int checkStatus = calculateCheckStatus(m);
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            m[IDX_CHECK_STATUS] = checkStatus;
-                            numMovesFound++;
-                            dig(m);
-                        }
-
+                        numMovesFound++;
+                        dig(m);
                     }
                     else {
                         int castlingMask = originalBoard[IDX_CASTLING];
@@ -221,6 +213,10 @@ int findAllPossibleMoves(int originalBoard[]) {
                 }
                 if (file < 7 && (originalBoard[fromIdxm7] & BLACK_MASK) != 0) { // strike right
 
+                    if( originalBoard[fromIdxm7] == Piece_k ){
+                       return -1; // The previous move was illegal
+                    }
+
                     if (rank > 1) {
 
                         makeNewBoard(originalBoard,m);
@@ -231,10 +227,8 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         const int checkStatus = calculateCheckStatus(m);
                         m[IDX_CHECK_STATUS] = checkStatus;
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            numMovesFound++;
-                            dig(m);
-                        }
+                        numMovesFound++;
+                        dig(m);
 
                     }
                     else {
@@ -254,12 +248,9 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdxm7] = p;
                         m[fromIdx + 1] = 0;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
-                        const int checkStatus = calculateCheckStatus(m);
-                        m[IDX_CHECK_STATUS] = checkStatus;
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            numMovesFound++;
-                            dig(m);
-                        }
+
+                        numMovesFound++;
+                        dig(m);
 
                     }
                     else if (file > 0 && fromIdxm9 == originalBoard[IDX_EP_IDX]) {
@@ -271,19 +262,19 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdx - 1] = 0;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
 
-                        const int checkStatus = calculateCheckStatus(m);
-                        m[IDX_CHECK_STATUS] = checkStatus;
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            numMovesFound++;
-                            dig(m);
-                        }
+                        numMovesFound++;
+                        dig(m);
+
                     }
                 }
             }
             else if (p == Piece_R) {
                 // White rook
-                numMovesFound += moveLinear(originalBoard, fromIdx, ROOK_MOVE_MATRIX,ROOK_MOVE_MATRIX_LENGTH);
-
+                int numLinearMoves = moveLinear(originalBoard, fromIdx, ROOK_MOVE_MATRIX,ROOK_MOVE_MATRIX_LENGTH);
+                if( numLinearMoves == -1 ){
+                  return -1;
+                }
+                numMovesFound += numLinearMoves;
             }
             else if (p == Piece_N) {
                 // White Knight
@@ -297,6 +288,10 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         if ((originalBoard[toIdx] & WHITE_MASK) == 0) {
 
+                            if( originalBoard[toIdx] == Piece_k ){
+                              return -1;
+                            }
+
                             int newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
@@ -306,12 +301,10 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[toIdx] = p;
                             newBoard[fromIdx] = 0;
 
-                            const int checkStatus = calculateCheckStatus(newBoard);
                             newBoard[IDX_CHECK_STATUS] = checkStatus;
-                            if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                                numMovesFound++;
-                                dig(newBoard);
-                            }
+
+                            numMovesFound++;
+                            dig(newBoard);
 
                         }
                     }
@@ -319,16 +312,26 @@ int findAllPossibleMoves(int originalBoard[]) {
             }
             else if (p == Piece_B) {
                 // White Bishop
-                numMovesFound += moveLinear(originalBoard, fromIdx, BISHOP_MOVE_MATRIX, BISHOP_MOVE_MATRIX_LENGTH);
+                int numLinearMoves = moveLinear(originalBoard, fromIdx, BISHOP_MOVE_MATRIX, BISHOP_MOVE_MATRIX_LENGTH);
+                if( numLinearMoves == -1 ){
+                  return -1;
+                }
+                numMovesFound += numLinearMoves;
 
             }
             else if (p == Piece_Q) {
                 // White Queen
-                numMovesFound += moveLinear(originalBoard, fromIdx, MOVE_MATRIX, MOVE_MATRIX_LENGTH);
+                int numLinearMoves = moveLinear(originalBoard, fromIdx, MOVE_MATRIX, MOVE_MATRIX_LENGTH);
+                if( numLinearMoves == -1 ){
+                  return -1;
+                }
+                numMovesFound += numLinearMoves;
             }
             else if (p == Piece_K) {
 
                 // White King Normal Moves
+
+                int numKingMoves = 0;
 
                 for (int t = 0; t < MOVE_MATRIX_LENGTH; t += 2) {
                     int newFile = file + MOVE_MATRIX[t];
@@ -338,6 +341,10 @@ int findAllPossibleMoves(int originalBoard[]) {
                         int toIdx = newRank << 3 | newFile;
 
                         if (originalBoard[toIdx] == 0 || (originalBoard[toIdx] & BLACK_MASK) != 0) {
+
+                            if( originalBoardIdx[toIdx] == Piece_k ){
+                              return -1;
+                            }
 
                             int newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
@@ -354,14 +361,12 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                             if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
                                 newBoard[IDX_CHECK_STATUS] = checkStatus;
-                                numMovesFound++;
+                                kingMoves++;
                                 dig(newBoard);
-
                             }
                         }
                     }
                 }
-
 
                 if ((originalBoard[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) != 0) {
                     // Just do it. Then mark board as did castle queen side, check of squares were threatened on next
@@ -386,7 +391,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                             const int checkStatus = calculateCheckStatus(newBoard);
                             if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
                                 newBoard[IDX_CHECK_STATUS] = checkStatus;
-                                numMovesFound++;
+                                numKingMoves++;
                                 dig(newBoard);
                             }
                         }
@@ -416,12 +421,16 @@ int findAllPossibleMoves(int originalBoard[]) {
                             const int checkStatus = calculateCheckStatus(newBoard);
                             if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
                                 newBoard[IDX_CHECK_STATUS] = checkStatus;
-                                numMovesFound++;
+                                numKingMoves++;
                                 dig(newBoard);
                             }
                         }
                     }
                 }
+
+                // Sjekk om vi sto i sjakk, og om det ble noen kongemoves
+                numMovesFound+=numKingMoves;
+
             }
         }
         /*
@@ -487,6 +496,10 @@ int findAllPossibleMoves(int originalBoard[]) {
                     }
                 }
                 if (file < 7 && (originalBoard[fromIdxp9] & WHITE_MASK) != 0) { // strike left as seen from black
+
+                    if( originalBoard[fromIdxp9] == Piece_K ){
+                      return -1;
+                    }
 
                     if (rank < 6) {
                         int m[NUM_BYTES];
