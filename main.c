@@ -125,6 +125,12 @@ int findAllPossibleMoves(int originalBoard[]) {
 
     int numMovesFound = 0;
 
+    // problemet med retroaktive er at vi gjør mange flytt, selv om kongen står i sjakk
+    // så vi vil egentlig gjøre denne sjekken vi gjør mange unødvendige flytt.
+    // kan det gjøres smartere sjakk-tester
+    // det hadde vært kult å vite hvilke brikker som påvirket hvilke vektorer
+    // er det kult med bit-boards likevel, for å kjapt sjekke attack?
+
     for (int fromIdx = 0; (fromIdx & 64) == 0; fromIdx++) {
 
         const int p = originalBoard[fromIdx];
