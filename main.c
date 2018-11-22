@@ -104,11 +104,11 @@ int main(){
 void dig(int board[]){
 
     // Uncomment to include testing for mates on the last level
-    boolean doCount = true;
+    boolean doCount = TRUE;
     if (board[IDX_MOVE_NUM] < MAX_LEVEL /* || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) */ ) {
         int numMoves = findAllPossibleMoves(board);
         if( numMoves == -1 ){
-          doCount = false;
+          doCount = FALSE;
         }
         if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
             board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
@@ -301,8 +301,6 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[toIdx] = p;
                             newBoard[fromIdx] = 0;
 
-                            newBoard[IDX_CHECK_STATUS] = checkStatus;
-
                             numMovesFound++;
                             dig(newBoard);
 
@@ -342,7 +340,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         if (originalBoard[toIdx] == 0 || (originalBoard[toIdx] & BLACK_MASK) != 0) {
 
-                            if( originalBoardIdx[toIdx] == Piece_k ){
+                            if( originalBoard[toIdx] == Piece_k ){
                               return -1;
                             }
 
@@ -357,13 +355,8 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[IDX_WHITE_KING_INDEX] = toIdx;
                             newBoard[IDX_CASTLING] &= 0xf ^ (MASK_CASTLING_WHITE_KING_SIDE | MASK_CASTLING_WHITE_QUEEN_SIDE);
 
-                            const int checkStatus = calculateCheckStatus(newBoard);
-
-                            if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                                newBoard[IDX_CHECK_STATUS] = checkStatus;
-                                kingMoves++;
-                                dig(newBoard);
-                            }
+                            numKingMoves++;
+                            dig(newBoard);
                         }
                     }
                 }
@@ -388,12 +381,8 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[D1] = Piece_R;
                             newBoard[IDX_WHITE_KING_INDEX] = C1;
 
-                            const int checkStatus = calculateCheckStatus(newBoard);
-                            if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                                newBoard[IDX_CHECK_STATUS] = checkStatus;
-                                numKingMoves++;
-                                dig(newBoard);
-                            }
+                            numKingMoves++;
+                            dig(newBoard);
                         }
 
                     }
@@ -418,12 +407,9 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[F1] = Piece_R;
                             newBoard[IDX_WHITE_KING_INDEX] = G1;
 
-                            const int checkStatus = calculateCheckStatus(newBoard);
-                            if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                                newBoard[IDX_CHECK_STATUS] = checkStatus;
-                                numKingMoves++;
-                                dig(newBoard);
-                            }
+                            numKingMoves++;
+                            dig(newBoard);
+
                         }
                     }
                 }
@@ -637,6 +623,10 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         if ((originalBoard[toIdx] & BLACK_MASK) == 0) {
 
+                            if( originalBoard[toIdx] == Piece_K ){
+                              return -1;
+                            }
+
                             int newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
@@ -647,13 +637,9 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[fromIdx] = 0;
                             newBoard[IDX_BLACK_KING_INDEX] = toIdx;
 
-                            int checkStatus = calculateCheckStatus(newBoard);
-                            if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-                                newBoard[IDX_CHECK_STATUS] = checkStatus;
+                            numMovesFound++;
+                            dig(newBoard);
 
-                                numMovesFound++;
-                                dig(newBoard);
-                            }
                         }
                     }
                 }
@@ -740,6 +726,11 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
                 int pieceAtIdx = b[toIdx];
 
                 if ((pieceAtIdx & color) == 0) {
+
+                    if( pieceAtIdx == (Piece_K | Piece_k) ){
+                      return -1;
+                    }
+
                     int newBoard[NUM_BYTES];
                     makeNewBoard(b,newBoard);
                     int breakAfterThis = 0;
@@ -808,12 +799,8 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    int checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
+    dig(promo);
+    numMovesMade++;
 
     //int[] queen =makeNewBoard(b);
     makeNewBoard(b, promo );
@@ -822,13 +809,8 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
+    dig(promo);
+    numMovesMade++;
 
     makeNewBoard(b, promo );
     promo[from] = 0;
@@ -836,13 +818,8 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
+    dig(promo);
+    numMovesMade++;
 
     makeNewBoard(b, promo );
     promo[from] = 0;
@@ -850,15 +827,10 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
+    dig(promo);
+    numMovesMade++;
 
     return numMovesMade;
-
 }
 
  int makeBlackPromotions(int b[], int from, int to, int moveMask, int castlingMask) {
@@ -873,12 +845,8 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    int checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
+    dig(promo);
+    numMovesMade++;
 
 
     makeNewBoard(b, promo);
@@ -887,12 +855,8 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
+    dig(promo);
+    numMovesMade++;
 
     makeNewBoard(b, promo);
     promo[from] = 0;
@@ -900,12 +864,8 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
+    dig(promo);
+    numMovesMade++;
 
 
     makeNewBoard(b, promo);
@@ -914,12 +874,8 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
+    dig(promo);
+    numMovesMade++;
 
     return numMovesMade;
 
@@ -1073,8 +1029,6 @@ void influenceMapForSquare(int b[], int idx) {
     int* influenceMap = b+IDX_START_INFLUENCE_MAP;
 
     memset(influenceMap, 0, sizeof(int)<<4);
-
-
 
     // the 8 first are the results from linear runs.
     // the next 8 results are possible knight positions
