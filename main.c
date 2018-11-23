@@ -24,7 +24,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
 int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 8;
 long numMoves[]      = {0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0};
@@ -36,7 +36,7 @@ long numCheckmates[] = {0,0,0,0,0,0,0,0};
 int main(){
 
     int board[NUM_BYTES];
-    diagramToByteBoard( board, "\
+    /*diagramToByteBoard( board, "\
                        r . . . k . . r\
                        p . p p q p b .\
                        b n . . p n p .\
@@ -44,7 +44,18 @@ int main(){
                        . p . . P . . .\
                        . . N . . Q . p\
                        P P P B B P P P\
-                       R . . . K . . R");
+                       R . . . K . . R");*/
+
+     diagramToByteBoard( board, "\
+                        r n b q k b n r\
+                        p p p p p p p p\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        P P P P P P P P\
+                        R N B Q K B N R");
+
 
     printBoard( board );
 
@@ -104,9 +115,11 @@ int main(){
 void dig(int board[]){
 
     // Uncomment to include testing for mates on the last level
-    if (board[IDX_MOVE_NUM] < MAX_LEVEL /* || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) */ ) {
+    if (board[IDX_MOVE_NUM] < MAX_LEVEL
+       || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0)
+    ) {
         int numMoves = findAllPossibleMoves(board);
-        if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
+        if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
             board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
         }
     }
