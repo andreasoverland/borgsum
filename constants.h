@@ -15,6 +15,9 @@ const int Piece_b = 512;
 const int Piece_q = 1024;
 const int Piece_k = 2048;
 
+const int Pieces_Nn = 4 | 256;
+const int Pieces_PpKk = 1 | 64 | 32 | 2048;
+
 const int Pieces_qbpk = 1024 | 512 | 2048 | 64 ;
 const int Pieces_qbk  = 1024 | 512 | 2048;
 const int Pieces_qrk  = 1024 | 128 | 2048;
@@ -25,10 +28,6 @@ const int Pieces_QRK =  16 | 2 | 32;
 
 const int WHITE_MASK = 0b000000111111;
 const int BLACK_MASK = 0b111111000000;
-
-const int COLOR_WHITE = 0;
-const int COLOR_BLACK = 1;
-const int COLOR_NONE = 2;
 
 const int MASK_CASTLING_WHITE_QUEEN_SIDE = 1;
 const int MASK_CASTLING_WHITE_KING_SIDE = 2;

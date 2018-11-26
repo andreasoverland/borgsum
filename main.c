@@ -34,7 +34,7 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
 
 unsigned long long otherBoard[64];
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 6;
 long numMoves[]      = {0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0};
@@ -42,6 +42,11 @@ long numCastles[]    = {0,0,0,0,0,0,0,0};
 long numPromos[]     = {0,0,0,0,0,0,0,0};
 long numChecks[]     = {0,0,0,0,0,0,0,0};
 long numCheckmates[] = {0,0,0,0,0,0,0,0};
+
+long calculateCheckStatusInvocations = 0;
+long makeNewBoardInvocations = 0;
+long isSquaresThreatenedByColorInvocations = 0;
+long influenceMapForSquareInvocations = 0;
 
 int main(){
 
@@ -113,6 +118,12 @@ int main(){
 
     printf("Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
 
+    printf( "%lu calculateCheckStatusInvocations\n", calculateCheckStatusInvocations );
+    printf( "%lu makeNewBoardInvocations\n", makeNewBoardInvocations );
+    printf( "%lu isSquaresThreatenedByColorInvocations\n", isSquaresThreatenedByColorInvocations );
+    printf( "%lu influenceMapForSquareInvocations\n", influenceMapForSquareInvocations );
+
+
     return 0;
 }
 
@@ -148,14 +159,14 @@ int findAllPossibleMoves(int originalBoard[]) {
 
         const int p = originalBoard[fromIdx];
 
-        if (p == Piece_e) {
+        if (p == 0) {
             continue;
         }
 
         const int rank = fromIdx >> 3;
         const int file = fromIdx & 7;
 
-        if (originalBoard[IDX_TURN] == 0) { // turn == white
+        if (originalBoard[IDX_TURN] == WHITE_MASK) { // turn == white
             /*
              *******************************************************************************************
              ***************************************  WHITE  *******************************************
@@ -395,7 +406,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         int squares[] = {C1, D1};
 
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED) == 0 &&
-                            !isSquaresThreatenedByColor(originalBoard, squares, COLOR_BLACK)) {
+                            !isSquaresThreatenedByColor(originalBoard, squares, BLACK_MASK)) {
 
                             int newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
@@ -425,7 +436,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         int squares[] = {G1, F1};
 
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED) == 0 &&
-                            !isSquaresThreatenedByColor(originalBoard, squares, COLOR_BLACK)) {
+                            !isSquaresThreatenedByColor(originalBoard, squares, BLACK_MASK)) {
 
                             int newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
@@ -686,7 +697,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         int squares[] = {C8,D8};
 
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_BLACK_KING_CHECKED) == 0 &&
-                            !isSquaresThreatenedByColor(originalBoard, squares, COLOR_WHITE)) {
+                            !isSquaresThreatenedByColor(originalBoard, squares, WHITE_MASK)) {
 
                             int newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
@@ -713,7 +724,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                     if (originalBoard[H8] == Piece_r && originalBoard[G8] == 0 && originalBoard[F8] == 0 && originalBoard[E8] == Piece_k) {
 
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_BLACK_KING_CHECKED) == 0 &&
-                            !isSquaresThreatenedByColor(originalBoard, squares, COLOR_WHITE)) {
+                            !isSquaresThreatenedByColor(originalBoard, squares, WHITE_MASK)) {
 
                             int newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
@@ -948,20 +959,24 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
 
 void makeNewBoard(int oldBoard[], int newBoard[]) {
 
+    makeNewBoardInvocations++;
+
     // TODO: Prøv å sette 0 på bare de bytsa som ikke blir aktivt kopiert, alle etter NUM_BYTES_TO_COPY til NUM_BYTES.
     memset(newBoard+NUM_BYTES_TO_COPY, 0,  sizeof(int)*(NUM_BYTES-NUM_BYTES_TO_COPY));
     memcpy(newBoard, oldBoard,  sizeof(int)*NUM_BYTES_TO_COPY);
 
     newBoard[IDX_MOVE_NUM]++;
-    newBoard[IDX_TURN] = (oldBoard[IDX_TURN] == 0 ? 1 : 0);
+    newBoard[IDX_TURN] = (oldBoard[IDX_TURN] == WHITE_MASK ? BLACK_MASK : WHITE_MASK);
     newBoard[IDX_CHECK_STATUS] = 0;
 
 }
 
 
 boolean isSquaresThreatenedByColor(int board[], int indices[], int color) {
+    // only invoked just before castling
+    isSquaresThreatenedByColorInvocations ++;
 
-    int offset = color == COLOR_WHITE ? 0 : 64;
+    int offset = color == WHITE_MASK ? 0 : 64;
 
     for (int i=0;i<2;i++){
 
@@ -1009,10 +1024,10 @@ boolean isSquaresThreatenedByColor(int board[], int indices[], int color) {
             if ((newRank & 0xFFFFFFF8) == 0 && (newFile & 0xFFFFFFF8) == 0) {
                 int checkIdx = newRank << 3 | newFile;
                 int checkPiece = board[checkIdx];
-                if (color == COLOR_BLACK && checkPiece == Piece_n) {
+                if (color == BLACK_MASK && checkPiece == Piece_n) {
                     return TRUE;
                 }
-                if (color == COLOR_WHITE && checkPiece == Piece_N) {
+                if (color == WHITE_MASK && checkPiece == Piece_N) {
                     return TRUE;
                 }
             }
@@ -1026,6 +1041,8 @@ boolean isSquaresThreatenedByColor(int board[], int indices[], int color) {
 
 
 int calculateCheckStatus(int board[]) {
+
+    calculateCheckStatusInvocations++;
 
     int result = 0;
 
@@ -1090,11 +1107,11 @@ int calculateCheckStatus(int board[]) {
 
 void influenceMapForSquare(int b[], int idx) {
 
+    influenceMapForSquareInvocations++;
+
     int* influenceMap = b+IDX_START_INFLUENCE_MAP;
 
     memset(influenceMap, 0, sizeof(int)<<4);
-
-
 
     // the 8 first are the results from linear runs.
     // the next 8 results are possible knight positions
@@ -1108,8 +1125,7 @@ void influenceMapForSquare(int b[], int idx) {
     int checkIdx;
     int checkPiece;
 
-    int pieces_Nn = Piece_N | Piece_n;
-    for (int direction = 0; direction < 16; direction += 2) {
+    for (int direction = 0; (direction & 16 ) == 0; direction += 2) {
 
         newFile = file;
         newRank = rank;
@@ -1129,17 +1145,11 @@ void influenceMapForSquare(int b[], int idx) {
                     continue;
                 }
 
-                if (n > 1) {
-                    // Only register pawns and kings if they are 1 square away,
-                    // otherwise, just stop scanning that direction
-                    // without registering them as threat
-                    int pieces_PpKk = Piece_P | Piece_p | Piece_K | Piece_k;
-                    if ( (checkPiece & pieces_PpKk) != 0 ) {
-                        break;
-                    }
+                if ( (checkPiece & Pieces_PpKk ) != 0 && n > 1) {
+                    break;
                 }
 
-                if  ( (checkPiece & pieces_Nn) == 0 ) {
+                if  ( (checkPiece & Pieces_Nn) == 0 ) {
                     influenceMap[direction >> 1] = checkPiece;
                 }
                 break;
@@ -1160,7 +1170,7 @@ void influenceMapForSquare(int b[], int idx) {
         if ((newRank & 0xFFFFFFF8) == 0 && (newFile & 0xFFFFFFF8) == 0) {
             checkIdx = newRank << 3 | newFile;
             checkPiece = b[checkIdx];
-            if ( (checkPiece & pieces_Nn) != 0) {
+            if ( (checkPiece & Pieces_Nn) != 0) {
                 influenceMap[8 | (t >> 1)] = checkPiece;
             }
         }
@@ -1253,6 +1263,7 @@ void diagramToByteBoard( int board[], char diagram[] ) {
 
     memset(board, 0,  sizeof(int)*NUM_BYTES);
     board[IDX_CASTLING] = 0b00001111;
+    board[IDX_TURN] = WHITE_MASK;
 
     int pos = 0;
     for( int t=0;t<len;t++){
