@@ -186,7 +186,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         else if (fromIdxm8 == H8) {
                             castlingMask &= 0xf ^ MASK_CASTLING_BLACK_KING_SIDE;
                         }
-                        makeWhitePromotions(originalBoard, fromIdx, (fromIdxm8), MASK_EMPTY, castlingMask);
+                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, (fromIdxm8), MASK_EMPTY, castlingMask);
                     }
                 }
                 if (rank == 6) {
