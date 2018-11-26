@@ -108,11 +108,16 @@ void dig(int board[]){
     if (board[IDX_MOVE_NUM] < MAX_LEVEL /* || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) */ ) {
         int numMoves = findAllPossibleMoves(board);
         if( numMoves == -1 ){
-          doCount = FALSE;
+            doCount = FALSE;
         }
-        if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
-            board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
+        else {
+          const int checkStatus = calculateCheckStatus(board);
+          board[IDX_CHECK_STATUS] = checkStatus;
+          if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
+              board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
+          }
         }
+
     }
     if( doCount ){
       count(board);
@@ -230,9 +235,6 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdx] = 0;
                         m[fromIdxm7] = p;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
-
-                        const int checkStatus = calculateCheckStatus(m);
-                        m[IDX_CHECK_STATUS] = checkStatus;
                         numMovesFound++;
                         dig(m);
 
