@@ -24,7 +24,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
 int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
 
-int MAX_LEVEL = 8;
+int MAX_LEVEL = 9;
 long numMoves[]      = {0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0};
