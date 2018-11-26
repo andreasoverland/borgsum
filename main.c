@@ -11,6 +11,15 @@ void printBoard( int board[] );
 void printNumBoard( int board[] );
 void doSomethingToArray( int board[] );
 
+// Variations
+// - Memory-variations:
+//   - Byte Board
+//   - Bitboard
+// - Strategy-Variations
+//   - Proactive, testing for check after each possible move generation.
+//   - Retroactive, testing for check by testing if an attacking piece hits a
+//     king in a possible move, making the PRREVIOUS move illegal.
+
 // Engine methods
 void dig(int board[]);
 void count(int board[]);
@@ -23,8 +32,9 @@ int makeBlackPromotions(int b[], int from, int to, int moveMask, int castlingMas
 int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
+unsigned long long otherBoard[64];
 
-int MAX_LEVEL = 9;
+int MAX_LEVEL = 5;
 long numMoves[]      = {0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0};
@@ -70,7 +80,7 @@ int main(){
         ts2.tv_sec--;
     }
 
-    printf("Time spent: %ld.%09ld\n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
+
 
     int l = 14;
 
@@ -100,6 +110,8 @@ int main(){
     }
 
     printf("\nTotal valid moves found : %lu \n" ,total);
+
+    printf("Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
 
     return 0;
 }
