@@ -12,7 +12,7 @@ void printNumBoard( int board[] );
 void doSomethingToArray( int board[] );
 
 // Engine methods
-void dig(int board[]);
+int dig(int board[]);
 void count(int board[]);
 void influenceMapForSquare(int b[], int idx);
 int findAllPossibleMoves(int originalBoard[]);
@@ -24,7 +24,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
 int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 3;
 long numMoves[]      = {0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0};
@@ -36,7 +36,7 @@ long numCheckmates[] = {0,0,0,0,0,0,0,0};
 int main(){
 
     int board[NUM_BYTES];
-    diagramToByteBoard( board, "\
+/*    diagramToByteBoard( board, "\
                        r . . . k . . r\
                        p . p p q p b .\
                        b n . . p n p .\
@@ -45,6 +45,17 @@ int main(){
                        . . N . . Q . p\
                        P P P B B P P P\
                        R . . . K . . R");
+*/
+     diagramToByteBoard( board, "\
+                        r . . . k . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        K . . . . . . .");
+
 
     printBoard( board );
 
@@ -101,27 +112,27 @@ int main(){
 
 
 
-void dig(int board[]){
+int dig(int board[]){
+
+
 
     // Uncomment to include testing for mates on the last level
-    boolean doCount = TRUE;
+
     if (board[IDX_MOVE_NUM] < MAX_LEVEL /* || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) */ ) {
         int numMoves = findAllPossibleMoves(board);
         if( numMoves == -1 ){
-            doCount = FALSE;
+            return board[IDX_TURN];
         }
-        else {
-          const int checkStatus = calculateCheckStatus(board);
-          board[IDX_CHECK_STATUS] = checkStatus;
-          if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
-              board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
-          }
+        if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0) {
+            board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
         }
 
+
     }
-    if( doCount ){
-      count(board);
-    }
+    printBoard(board);
+    count(board);
+
+    return 0;
 
 }
 
@@ -147,7 +158,7 @@ int findAllPossibleMoves(int originalBoard[]) {
         const int rank = fromIdx >> 3;
         const int file = fromIdx & 7;
 
-        if (originalBoard[IDX_TURN] == 0) { // turn == white
+        if (originalBoard[IDX_TURN] == WHITE_MASK) { // turn == white
             /*
              *******************************************************************************************
              ***************************************  WHITE  *******************************************
@@ -174,7 +185,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdx] = 0;
                         m[fromIdxm8] = p;
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                     else {
@@ -186,7 +197,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         else if (fromIdxm8 == H8) {
                             castlingMask &= 0xf ^ MASK_CASTLING_BLACK_KING_SIDE;
                         }
-                        makeWhitePromotions(originalBoard, fromIdx, (fromIdxm8), MASK_EMPTY, castlingMask);
+                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, (fromIdxm8), MASK_EMPTY, castlingMask);
                     }
                 }
                 if (rank == 6) {
@@ -196,7 +207,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdxm16] = p;
                         m[IDX_EP_IDX] = fromIdxm8; // set en passant strike index
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
                     }
                 }
                 if (file > 0 && (originalBoard[fromIdxm9] & BLACK_MASK) != 0) { // strike left
@@ -211,7 +222,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdxm9] = p;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
                     }
                     else {
                         int castlingMask = originalBoard[IDX_CASTLING];
@@ -236,7 +247,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdxm7] = p;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                     else {
@@ -258,7 +269,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                     else if (file > 0 && fromIdxm9 == originalBoard[IDX_EP_IDX]) {
@@ -271,19 +282,12 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                 }
             }
-            else if (p == Piece_R) {
-                // White rook
-                int numLinearMoves = moveLinear(originalBoard, fromIdx, ROOK_MOVE_MATRIX,ROOK_MOVE_MATRIX_LENGTH);
-                if( numLinearMoves == -1 ){
-                  return -1;
-                }
-                numMovesFound += numLinearMoves;
-            }
+
             else if (p == Piece_N) {
                 // White Knight
 
@@ -310,24 +314,31 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[fromIdx] = 0;
 
                             numMovesFound++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
 
                         }
                     }
                 }
             }
-            else if (p == Piece_B) {
-                // White Bishop
-                int numLinearMoves = moveLinear(originalBoard, fromIdx, BISHOP_MOVE_MATRIX, BISHOP_MOVE_MATRIX_LENGTH);
+            else if (p == Piece_Q) {
+                // White Queen
+                int numLinearMoves = moveLinear(originalBoard, fromIdx, MOVE_MATRIX,MOVE_MATRIX_LENGTH);
                 if( numLinearMoves == -1 ){
                   return -1;
                 }
                 numMovesFound += numLinearMoves;
-
             }
-            else if (p == Piece_Q) {
-                // White Queen
-                int numLinearMoves = moveLinear(originalBoard, fromIdx, MOVE_MATRIX, MOVE_MATRIX_LENGTH);
+            else if (p == Piece_R ) {
+                // White rook
+                int numLinearMoves = moveLinear(originalBoard, fromIdx, ROOK_MOVE_MATRIX,ROOK_MOVE_MATRIX_LENGTH);
+                if( numLinearMoves == -1 ){
+                  return -1;
+                }
+                numMovesFound += numLinearMoves;
+            }
+            else if (p == Piece_B) {
+                // White Bishop
+                int numLinearMoves = moveLinear(originalBoard, fromIdx, BISHOP_MOVE_MATRIX, BISHOP_MOVE_MATRIX_LENGTH);
                 if( numLinearMoves == -1 ){
                   return -1;
                 }
@@ -364,7 +375,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[IDX_CASTLING] &= 0xf ^ (MASK_CASTLING_WHITE_KING_SIDE | MASK_CASTLING_WHITE_QUEEN_SIDE);
 
                             numKingMoves++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
                         }
                     }
                 }
@@ -390,7 +401,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[IDX_WHITE_KING_INDEX] = C1;
 
                             numKingMoves++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
                         }
 
                     }
@@ -416,7 +427,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[IDX_WHITE_KING_INDEX] = G1;
 
                             numKingMoves++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
 
                         }
                     }
@@ -452,7 +463,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[fromIdxp8] = p;
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                     else { // will move to promotion
@@ -478,7 +489,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[IDX_EP_IDX] = fromIdxp8; // set en passant strike index
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
 
                     }
@@ -498,7 +509,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                     else {
@@ -524,7 +535,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                     else {
@@ -546,7 +557,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
 
                     }
                     else if (file > 0 && fromIdxp7 == originalBoard[IDX_EP_IDX]) {
@@ -559,18 +570,9 @@ int findAllPossibleMoves(int originalBoard[]) {
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
 
                         numMovesFound++;
-                        dig(m);
+                        originalBoard[IDX_CHECK_STATUS] |= dig(m);
                     }
                 }
-            }
-            else if (p == Piece_r) {
-                // Black rook
-                int numLinearMoves = moveLinear(originalBoard, fromIdx, ROOK_MOVE_MATRIX, ROOK_MOVE_MATRIX_LENGTH);
-                if( numLinearMoves == -1 ){
-                  return -1;
-                }
-                numMovesFound+=numLinearMoves;
-
             }
             else if (p == Piece_n) {
                 // Black Knight
@@ -597,11 +599,19 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[fromIdx] = 0;
 
                             numMovesFound++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
 
                         }
                     }
                 }
+            }
+            else if (p == Piece_r) {
+                // Black rook
+                int numLinearMoves = moveLinear(originalBoard, fromIdx, ROOK_MOVE_MATRIX, ROOK_MOVE_MATRIX_LENGTH);
+                if( numLinearMoves == -1 ){
+                  return -1;
+                }
+                numMovesFound+=numLinearMoves;
 
             }
             else if (p == Piece_b) {
@@ -646,7 +656,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[IDX_BLACK_KING_INDEX] = toIdx;
 
                             numMovesFound++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
 
                         }
                     }
@@ -674,7 +684,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[IDX_BLACK_KING_INDEX] = C8;
 
                             numMovesFound++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
                         }
                     }
                 }
@@ -701,7 +711,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                             newBoard[IDX_BLACK_KING_INDEX] = G8;
 
                             numMovesFound++;
-                            dig(newBoard);
+                            originalBoard[IDX_CHECK_STATUS] |= dig(newBoard);
                         }
                     }
                 }
@@ -761,7 +771,7 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
                             }
                         }
                         numMovesFound++;
-                        dig(newBoard);
+                        b[IDX_CHECK_STATUS] |= dig(newBoard);
                     }
                     else if (color == BLACK_MASK && (checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
 
@@ -774,7 +784,7 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
                             }
                         }
                         numMovesFound++;
-                        dig(newBoard);
+                        b[IDX_CHECK_STATUS] |= dig(newBoard);
                     }
                     if (breakAfterThis == 1) {
                         break;
@@ -807,7 +817,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
     //int[] queen =makeNewBoard(b);
@@ -817,7 +827,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
     makeNewBoard(b, promo );
@@ -826,7 +836,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
     makeNewBoard(b, promo );
@@ -835,7 +845,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
     return numMovesMade;
@@ -853,7 +863,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
 
@@ -863,7 +873,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
     makeNewBoard(b, promo);
@@ -872,7 +882,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
 
@@ -882,7 +892,7 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
     promo[IDX_LAST_MOVE_WAS] = lastMove;
     promo[IDX_CASTLING] = castlingMask;
 
-    dig(promo);
+    b[IDX_CHECK_STATUS] |= dig(promo);
     numMovesMade++;
 
     return numMovesMade;
@@ -897,7 +907,7 @@ void makeNewBoard(int oldBoard[], int newBoard[]) {
     memcpy(newBoard, oldBoard,  sizeof(int)*NUM_BYTES_TO_COPY);
 
     newBoard[IDX_MOVE_NUM]++;
-    newBoard[IDX_TURN] = (oldBoard[IDX_TURN] == 0 ? 1 : 0);
+    newBoard[IDX_TURN] = (oldBoard[IDX_TURN] == WHITE_MASK ? BLACK_MASK : WHITE_MASK);
     newBoard[IDX_CHECK_STATUS] = 0;
 
 }
@@ -1185,6 +1195,12 @@ void printBoard( int board[] ){
         }
     }
     printf("\n");
+    if( board[IDX_CHECK_STATUS] & WHITE_MASK ){
+      printf("WHITE King is in check.\n");
+    }
+    if( board[IDX_CHECK_STATUS] & BLACK_MASK ){
+      printf("BLACK King is in check.\n");
+    }
     printf( "Move num: %d", board[IDX_MOVE_NUM] );
     printf( "\n");
 }
@@ -1195,6 +1211,7 @@ void diagramToByteBoard( int board[], char diagram[] ) {
 
     memset(board, 0,  sizeof(int)*NUM_BYTES);
     board[IDX_CASTLING] = 0b00001111;
+    board[IDX_TURN] = WHITE_MASK;
 
     int pos = 0;
     for( int t=0;t<len;t++){
