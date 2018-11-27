@@ -134,9 +134,9 @@ int main(){
 
 void dig(int board[]){
 
-    // Uncomment to include testing for mates on the last level
+
     if (board[IDX_MOVE_NUM] < MAX_LEVEL
-       || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0)
+       || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
     ) {
         int numMoves = findAllPossibleMoves(board);
         if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
@@ -1049,11 +1049,14 @@ int calculateCheckStatus(int board[]) {
 
     int* influemceMapPtr = board+IDX_START_INFLUENCE_MAP;
 
-    if (((influemceMapPtr[0] | influemceMapPtr[2]) & Pieces_qbpk) != 0) {
+    // int mapping[8] = {2,0,2,0,0,1,0,1}
+    if (((influemceMapPtr[1] | influemceMapPtr[3] | influemceMapPtr[4] | influemceMapPtr[6]) & Pieces_qrk) != 0) {
         whiteKingIsInCheck = TRUE;
-    } else if (((influemceMapPtr[1] | influemceMapPtr[3] | influemceMapPtr[4] | influemceMapPtr[6]) & Pieces_qrk) != 0) {
+    }
+    else if (((influemceMapPtr[5] | influemceMapPtr[7]) & Pieces_qbk) != 0) {
         whiteKingIsInCheck = TRUE;
-    } else if (((influemceMapPtr[5] | influemceMapPtr[7]) & Pieces_qbk) != 0) {
+    }
+    else if (((influemceMapPtr[0] | influemceMapPtr[2]) & Pieces_qbpk) != 0) {
         whiteKingIsInCheck = TRUE;
     }
 
@@ -1069,6 +1072,7 @@ int calculateCheckStatus(int board[]) {
     boolean blackKingIsInCheck = FALSE;
 
     // go through all and check all 1..6 piece entries
+
 
     if (((influemceMapPtr[1] | influemceMapPtr[3] | influemceMapPtr[4] | influemceMapPtr[6]) & Pieces_QRK) != 0) {
         blackKingIsInCheck = TRUE;
@@ -1115,7 +1119,8 @@ void influenceMapForSquare(int b[], int idx) {
     int rank = idx >> 3;
     int file = idx & 7;
 
-    for (int direction = 0; (direction & 8 ) == 0; direction ++) {
+    int mapping[] = {2,0,2,0,0,1,0,1};
+    for (int direction = 0; !(direction & 8 ) ; direction ++) {
 
         int dd = direction << 1;
         int newFile = file;
