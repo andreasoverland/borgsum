@@ -37,14 +37,14 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
 
 // unsigned long long otherBoard[64];
 
- int MAX_LEVEL = 7;
- long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
- long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
- long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
- long numCastles[]    = {0,0,0,0,0,0,0,0,0,0,0};
- long numPromos[]     = {0,0,0,0,0,0,0,0,0,0,0};
- long numChecks[]     = {0,0,0,0,0,0,0,0,0,0,0};
- long numCheckmates[] = {0,0,0,0,0,0,0,0,0,0,0};
+int MAX_LEVEL = 6;
+long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
+long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
+long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
+long numCastles[]    = {0,0,0,0,0,0,0,0,0,0,0};
+long numPromos[]     = {0,0,0,0,0,0,0,0,0,0,0};
+long numChecks[]     = {0,0,0,0,0,0,0,0,0,0,0};
+long numCheckmates[] = {0,0,0,0,0,0,0,0,0,0,0};
 
 long calculateCheckStatusInvocations = 0;
 long makeNewBoardInvocations = 0;
