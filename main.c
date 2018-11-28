@@ -35,7 +35,7 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
 
 // unsigned long long otherBoard[64];
 
- int MAX_LEVEL = 7;
+ int MAX_LEVEL = 9;
  long numMoves[]      = {0,0,0,0,0,0,0,0,0};
  long numCaptures[]   = {0,0,0,0,0,0,0,0,0};
  long numEP[]         = {0,0,0,0,0,0,0,0,0};
@@ -1256,6 +1256,7 @@ void printBoard( int board[] ){
     printf("\n");
     printf( "Move num: %d", board[IDX_MOVE_NUM] );
     printf( "\n");
+    fflush(stdout);
 }
 
 
