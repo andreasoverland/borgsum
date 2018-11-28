@@ -10,6 +10,7 @@ void diagramToByteBoard( int board[], char diagram[] );
 void printBoard( int board[] );
 void printNumBoard( int board[] );
 void doSomethingToArray( int board[] );
+long printStats();
 
 // Variations
 // - Memory-variations:
@@ -34,7 +35,7 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
 
 // unsigned long long otherBoard[64];
 
- int MAX_LEVEL = 6;
+ int MAX_LEVEL = 7;
  long numMoves[]      = {0,0,0,0,0,0,0,0,0};
  long numCaptures[]   = {0,0,0,0,0,0,0,0,0};
  long numEP[]         = {0,0,0,0,0,0,0,0,0};
@@ -87,30 +88,7 @@ int main(){
 
     int l = 14;
 
-    printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-            "Depth",
-            "Nodes",
-            "Caps",
-            "E.p.",
-            "Castles",
-            "Promos",
-            "Checks",
-            "Mates"
-    );
-
-    long total = 0;
-
-    for (int t = 0; t <= MAX_LEVEL+1; t++) {
-        printf("%d",t);
-        printf("\t%lu",numMoves[t]);
-        printf("\t%lu",numCaptures[t]);
-        printf("\t%lu",numEP[t]);
-        printf("\t%lu",numCastles[t]);
-        printf("\t%lu",numPromos[t]);
-        printf("\t%lu",numChecks[t]);
-        printf("\t%lu\n",numCheckmates[t]);
-        total += numMoves[t];
-    }
+    long total = printStats();
 
     printf("\nTotal valid moves found : %lu \n" ,total);
 
@@ -124,6 +102,38 @@ int main(){
 
     return 0;
 }
+
+long printStats(){
+  printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
+          "Depth",
+          "Nodes",
+          "Caps",
+          "E.p.",
+          "Castles",
+          "Promos",
+          "Checks",
+          "Mates"
+  );
+
+  static long total = 0;
+
+  for (int t = 0; t <= MAX_LEVEL+1; t++) {
+      printf("%3d",t);
+      printf("\t%20lu",numMoves[t]);
+      printf("\t%20lu",numCaptures[t]);
+      printf("\t%10lu",numEP[t]);
+      printf("\t%10lu",numCastles[t]);
+      printf("\t%10lu",numPromos[t]);
+      printf("\t%20lu",numChecks[t]);
+      printf("\t%20lu\n",numCheckmates[t]);
+      total += numMoves[t];
+  }
+  printf("\n");
+  fflush(stdout);
+  return total;
+
+}
+
 
 /************************************************************************************************************
  **                                                                                                        **
@@ -145,6 +155,9 @@ void dig(int board[]){
     }
     count(board);
 
+    if( board[IDX_MOVE_NUM] == 2){
+      printStats();
+    }
 }
 
 
