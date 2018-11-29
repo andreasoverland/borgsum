@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -8,8 +9,10 @@ typedef enum { FALSE, TRUE } boolean;
 
 void diagramToByteBoard( int board[], char diagram[] );
 void printBoard( int board[] );
+void printDiagram( int board[] );
 void printNumBoard( int board[] );
 void doSomethingToArray( int board[] );
+long printStats();
 
 // Variations
 // - Memory-variations:
@@ -34,14 +37,14 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
 
 // unsigned long long otherBoard[64];
 
- int MAX_LEVEL = 6;
- long numMoves[]      = {0,0,0,0,0,0,0,0,0};
- long numCaptures[]   = {0,0,0,0,0,0,0,0,0};
- long numEP[]         = {0,0,0,0,0,0,0,0,0};
- long numCastles[]    = {0,0,0,0,0,0,0,0,0};
- long numPromos[]     = {0,0,0,0,0,0,0,0,0};
- long numChecks[]     = {0,0,0,0,0,0,0,0,0};
- long numCheckmates[] = {0,0,0,0,0,0,0,0,0};
+int MAX_LEVEL = 6;
+long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
+long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
+long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
+long numCastles[]    = {0,0,0,0,0,0,0,0,0,0,0};
+long numPromos[]     = {0,0,0,0,0,0,0,0,0,0,0};
+long numChecks[]     = {0,0,0,0,0,0,0,0,0,0,0};
+long numCheckmates[] = {0,0,0,0,0,0,0,0,0,0,0};
 
 long calculateCheckStatusInvocations = 0;
 long makeNewBoardInvocations = 0;
@@ -49,9 +52,50 @@ long isSquaresThreatenedByColorInvocations = 0;
 long influenceMapForSquareInvocations = 0;
 long moveLinearInvocations = 0;
 
-int main(){
+int main( int argc, char **argv){
+
+
+  // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
+
+  char *initialBoard = "\
+                       r n b q k b n r\
+                       p p p p p p p p\
+                       . . . . . . . .\
+                       . . . . . . . .\
+                       . . . . . . . .\
+                       . . . . . . . .\
+                       P P P P P P P P\
+                       R N B Q K B N R";
+
+    printf("Num args: %d\n", argc );
 
     int board[NUM_BYTES];
+
+    if( argc > 1 ){
+      initialBoard = argv[1];
+    }
+    diagramToByteBoard( board, initialBoard);
+
+    if( argc > 2 ){
+        MAX_LEVEL = atoi(argv[2]);
+    }
+
+    if( argc > 3 ){
+      if( strcmp(argv[3], "b" ) == 0 ){
+          board[IDX_TURN] = BLACK_MASK;
+      }
+      else {
+        board[IDX_TURN] = WHITE_MASK;
+      }
+    }
+
+    for( int t=0;t<argc;t++){
+
+      printf(" - %s\n", argv[t] );
+
+    }
+
+
     /*diagramToByteBoard( board, "\
                        r . . . k . . r\
                        p . p p q p b .\
@@ -62,15 +106,8 @@ int main(){
                        P P P B B P P P\
                        R . . . K . . R");*/
 
-     diagramToByteBoard( board, "\
-                        r n b q k b n r\
-                        p p p p p p p p\
-                        . . . . . . . .\
-                        . . . . . . . .\
-                        . . . . . . . .\
-                        . . . . . . . .\
-                        P P P P P P P P\
-                        R N B Q K B N R");
+      // TODO: take in from commandline, including maxlevel
+
 
     printBoard( board );
 
@@ -87,30 +124,7 @@ int main(){
 
     int l = 14;
 
-    printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-            "Depth",
-            "Nodes",
-            "Caps",
-            "E.p.",
-            "Castles",
-            "Promos",
-            "Checks",
-            "Mates"
-    );
-
-    long total = 0;
-
-    for (int t = 0; t <= MAX_LEVEL+1; t++) {
-        printf("%d",t);
-        printf("\t%lu",numMoves[t]);
-        printf("\t%lu",numCaptures[t]);
-        printf("\t%lu",numEP[t]);
-        printf("\t%lu",numCastles[t]);
-        printf("\t%lu",numPromos[t]);
-        printf("\t%lu",numChecks[t]);
-        printf("\t%lu\n",numCheckmates[t]);
-        total += numMoves[t];
-    }
+    long total = printStats();
 
     printf("\nTotal valid moves found : %lu \n" ,total);
 
@@ -124,6 +138,38 @@ int main(){
 
     return 0;
 }
+
+long printStats(){
+  printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
+          "Depth",
+          "Nodes",
+          "Caps",
+          "E.p.",
+          "Castles",
+          "Promos",
+          "Checks",
+          "Mates"
+  );
+
+  static long total = 0;
+
+  for (int t = 0; t <= MAX_LEVEL+1; t++) {
+      printf("%3d",t);
+      printf("\t%20lu",numMoves[t]);
+      printf("\t%20lu",numCaptures[t]);
+      printf("\t%10lu",numEP[t]);
+      printf("\t%10lu",numCastles[t]);
+      printf("\t%10lu",numPromos[t]);
+      printf("\t%20lu",numChecks[t]);
+      printf("\t%20lu\n",numCheckmates[t]);
+      total += numMoves[t];
+  }
+  printf("\n");
+  fflush(stdout);
+  return total;
+
+}
+
 
 /************************************************************************************************************
  **                                                                                                        **
@@ -144,7 +190,14 @@ void dig(int board[]){
         }
     }
     count(board);
-
+    if( MAX_LEVEL == 1 ){
+      if( board[IDX_MOVE_NUM] == 1){
+        printDiagram( board );
+      }
+    }
+    /*if( board[IDX_MOVE_NUM] == 2){
+      printStats();
+    }*/
 }
 
 
@@ -1221,6 +1274,36 @@ void printNumBoard( int board[] ){
     }
 }
 
+void printDiagram( int board[] ){
+  printf("\"");
+  for( int s=0;(s & 64) == 0;s++){
+
+    if( s % 8 == 0 && s != 0 ){
+        printf(" ");
+    }
+
+      switch( board[s] ){
+          case Piece_P:printf("P");break;
+          case Piece_R:printf("R");break;
+          case Piece_N:printf("N");break;
+          case Piece_B:printf("B");break;
+          case Piece_Q:printf("Q");break;
+          case Piece_K:printf("K");break;
+          case Piece_p:printf("p");break;
+          case Piece_r:printf("r");break;
+          case Piece_n:printf("n");break;
+          case Piece_b:printf("b");break;
+          case Piece_q:printf("q");break;
+          case Piece_k:printf("k");break;
+          default:
+              printf(".");
+      }
+
+
+  }
+  printf("\"\n");
+}
+
 void printBoard( int board[] ){
     printf( "  A B C D E F G H");
     for( int s=0;(s & 64) == 0;s++){
@@ -1246,8 +1329,10 @@ void printBoard( int board[] ){
         }
     }
     printf("\n");
-    printf( "Move num: %d", board[IDX_MOVE_NUM] );
-    printf( "\n");
+    printf( "Move num: %d\n", board[IDX_MOVE_NUM] );
+    printf( "Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black" );
+    printf( "\n\n");
+    fflush(stdout);
 }
 
 
