@@ -68,12 +68,25 @@ int main( int argc, char **argv){
                        R N B Q K B N R";
 
     printf("Num args: %d\n", argc );
+
+    int board[NUM_BYTES];
+
     if( argc > 1 ){
       initialBoard = argv[1];
     }
+    diagramToByteBoard( board, initialBoard);
 
     if( argc > 2 ){
-      MAX_LEVEL = atoi(argv[2]);
+        MAX_LEVEL = atoi(argv[2]);
+    }
+
+    if( argc > 3 ){
+      if( strcmp(argv[3], "b" ) == 0 ){
+          board[IDX_TURN] = BLACK_MASK;
+      }
+      else {
+        board[IDX_TURN] = WHITE_MASK;
+      }
     }
 
     for( int t=0;t<argc;t++){
@@ -82,7 +95,7 @@ int main( int argc, char **argv){
 
     }
 
-    int board[NUM_BYTES];
+
     /*diagramToByteBoard( board, "\
                        r . . . k . . r\
                        p . p p q p b .\
@@ -94,7 +107,7 @@ int main( int argc, char **argv){
                        R . . . K . . R");*/
 
       // TODO: take in from commandline, including maxlevel
-    diagramToByteBoard( board, initialBoard);
+
 
     printBoard( board );
 
@@ -1311,7 +1324,8 @@ void printBoard( int board[] ){
         }
     }
     printf("\n");
-    printf( "Move num: %d", board[IDX_MOVE_NUM] );
+    printf( "Move num: %d\n", board[IDX_MOVE_NUM] );
+    printf( "Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black" );
     printf( "\n\n");
     fflush(stdout);
 }
