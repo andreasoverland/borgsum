@@ -67,8 +67,6 @@ int main( int argc, char **argv){
                        P P P P P P P P\
                        R N B Q K B N R";
 
-    printf("Num args: %d\n", argc );
-
     int board[NUM_BYTES];
 
     if( argc > 1 ){
@@ -77,11 +75,7 @@ int main( int argc, char **argv){
     diagramToByteBoard( board, initialBoard);
 
     if( argc > 2 ){
-        MAX_LEVEL = atoi(argv[2]);
-    }
-
-    if( argc > 3 ){
-      if( strcmp(argv[3], "b" ) == 0 ){
+      if( strcmp(argv[2], "b" ) == 0 ){
           board[IDX_TURN] = BLACK_MASK;
       }
       else {
@@ -89,11 +83,14 @@ int main( int argc, char **argv){
       }
     }
 
-    for( int t=0;t<argc;t++){
-
-      printf(" - %s\n", argv[t] );
-
+    if( argc > 3 ){
+        board[IDX_CASTLING] = atoi(argv[3]);
     }
+
+    if( argc > 4 ){
+        MAX_LEVEL = atoi(argv[4]);
+    }
+
 
 
     /*diagramToByteBoard( board, "\
@@ -190,8 +187,8 @@ void dig(int board[]){
         }
     }
     count(board);
-    if( MAX_LEVEL == 1 ){
-      if( board[IDX_MOVE_NUM] == 1){
+    if( MAX_LEVEL <= 2 ){
+      if( board[IDX_MOVE_NUM] == MAX_LEVEL){
         printDiagram( board );
       }
     }
@@ -1222,10 +1219,6 @@ void influenceMapForSquare(int b[], int idx) {
 }
 
 
-
-
-
-
 void count(int b[]) {
 
     const int level = b[IDX_MOVE_NUM];
@@ -1296,11 +1289,19 @@ void printDiagram( int board[] ){
 
 
   }
-  printf("\"\n");
+  printf( "\"");
+  printf( " %s", board[IDX_TURN] == WHITE_MASK ? "w" : "b" );
+  printf( " %d", board[IDX_CASTLING] );
+
+
+  printf("\n");
+
 }
 
 void printBoard( int board[] ){
+
     printf( "  A B C D E F G H");
+
     for( int s=0;(s & 64) == 0;s++){
         if( s % 8 == 0 ){
             printf("\n%d ",8-(s>>3));

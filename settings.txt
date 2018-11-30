@@ -1,0 +1,5 @@
+batchname=test
+depth=4
+turn=black
+numthreads=4
+workunits=workunits.txt
