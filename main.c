@@ -7,11 +7,11 @@
 
 typedef enum { FALSE, TRUE } boolean;
 
-void diagramToByteBoard( int board[], char diagram[] );
-void printBoard( int board[] );
-void printDiagram( int board[] );
-void printNumBoard( int board[] );
-void doSomethingToArray( int board[] );
+void diagramToByteBoard( long board[], char diagram[] );
+void printBoard( long board[] );
+void printDiagram( long board[] );
+void printNumBoard( long board[] );
+void doSomethingToArray( long board[] );
 long printStats();
 
 // Variations
@@ -24,17 +24,19 @@ long printStats();
 //     king in a possible move, making the PRREVIOUS move illegal.
 
 // Engine methods
-void dig(int board[]);
-void count(int board[]);
-void influenceMapForSquare(int b[], int idx);
-int findAllPossibleMoves(int originalBoard[]);
-boolean isSquaresThreatenedByColor(int board[], int indices[], int color);
-void makeNewBoard( int originalBoard[], int newBoard[] );
-int calculateCheckStatus(int board[]);
-int makeBlackPromotions(int b[], int from, int to, int moveMask, int castlingMask);
-int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMask);
-int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
+void dig(long board[]);
+void count(long board[]);
+void influenceMapForSquare(long b[], int idx);
+int findAllPossibleMoves(long originalBoard[]);
+boolean isSquaresThreatenedByColor(long board[], int indices[], int color);
+void makeNewBoard( long originalBoard[], long newBoard[] );
+int calculateCheckStatus(long board[]);
+int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMask);
+int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
+int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
+// assembly functions
+int influenceMapForSquare2( long board[],int idx );
 // unsigned long long otherBoard[64];
 
 int MAX_LEVEL = 6;
@@ -67,7 +69,10 @@ int main( int argc, char **argv){
                        P P P P P P P P\
                        R N B Q K B N R";
 
-    int board[NUM_BYTES];
+
+
+
+    long board[NUM_BYTES];
 
     if( argc > 1 ){
       initialBoard = argv[1];
@@ -79,7 +84,7 @@ int main( int argc, char **argv){
           board[IDX_TURN] = BLACK_MASK;
       }
       else {
-        board[IDX_TURN] = WHITE_MASK;
+          board[IDX_TURN] = WHITE_MASK;
       }
     }
 
@@ -91,8 +96,6 @@ int main( int argc, char **argv){
         MAX_LEVEL = atoi(argv[4]);
     }
 
-
-
     /*diagramToByteBoard( board, "\
                        r . . . k . . r\
                        p . p p q p b .\
@@ -103,8 +106,11 @@ int main( int argc, char **argv){
                        P P P B B P P P\
                        R . . . K . . R");*/
 
-      // TODO: take in from commandline, including maxlevel
+    // TODO: take in from commandline, including maxlevel
 
+    // Testing assembly function
+    long test = influenceMapForSquare2( board, 9  );
+    printf("%ld\n", test );
 
     printBoard( board );
 
@@ -134,7 +140,7 @@ int main( int argc, char **argv){
     printf( "%lu moveLinearInvocations\n", moveLinearInvocations );
 
     return 0;
-}
+} // end main
 
 long printStats(){
   printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
@@ -175,7 +181,7 @@ long printStats(){
  ************************************************************************************************************/
 
 
-void dig(int board[]){
+void dig(long board[]){
 
     // Uncomment to include testing for mates on the last level
     if (board[IDX_MOVE_NUM] < MAX_LEVEL
@@ -198,13 +204,13 @@ void dig(int board[]){
 }
 
 
-int findAllPossibleMoves(int originalBoard[]) {
+int findAllPossibleMoves(long originalBoard[]) {
 
     int numMovesFound = 0;
 
     for (int fromIdx = 0; !(fromIdx & 64) ; fromIdx++) {
 
-        int p = originalBoard[fromIdx];
+        long p = originalBoard[fromIdx];
 
         if (p == 0) {
             continue;
@@ -229,7 +235,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                 // White pawn
                 // Check if one and/or two moves ahead can be made
-                int m[NUM_BYTES];
+                long m[NUM_BYTES];
 
                 if (originalBoard[fromIdxm8] == 0) {
                     if (rank > 1) {
@@ -373,7 +379,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         if ((originalBoard[toIdx] & WHITE_MASK) == 0) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             if (originalBoard[toIdx] != 0) {
@@ -420,7 +426,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         if (originalBoard[toIdx] == 0 || (originalBoard[toIdx] & BLACK_MASK) != 0) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             if ((originalBoard[toIdx] & BLACK_MASK) != 0) {
@@ -453,7 +459,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED) == 0 &&
                             !isSquaresThreatenedByColor(originalBoard, squares, BLACK_MASK)) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
@@ -483,7 +489,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED) == 0 &&
                             !isSquaresThreatenedByColor(originalBoard, squares, BLACK_MASK)) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE;
@@ -523,7 +529,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                 // Check if one and/or two moves ahead can be made
                 if (originalBoard[fromIdxp8] == 0) {
                     if (rank < 6) {
-                        int m[NUM_BYTES];
+                        long m[NUM_BYTES];
                         makeNewBoard(originalBoard,m);
 
                         m[fromIdx] = 0;
@@ -551,7 +557,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                 }
                 if (rank == 1) {
                     if (originalBoard[fromIdxp16] == 0 && originalBoard[fromIdxp8] == 0) {
-                        int m[NUM_BYTES];
+                        long m[NUM_BYTES];
                         makeNewBoard(originalBoard,m);
 
                         m[fromIdx] = 0;
@@ -570,7 +576,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                 if (file < 7 && (originalBoard[fromIdxp9] & WHITE_MASK) != 0) { // strike left as seen from black
 
                     if (rank < 6) {
-                        int m[NUM_BYTES];
+                        long m[NUM_BYTES];
                         makeNewBoard(originalBoard,m);
 
                         m[fromIdx] = 0;
@@ -597,7 +603,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                 if (file > 0 && (originalBoard[fromIdxp7] & WHITE_MASK) != 0) { // strike right as seen from black
 
                     if (rank < 6) {
-                        int m[NUM_BYTES];
+                        long m[NUM_BYTES];
                         makeNewBoard(originalBoard,m);
                         m[fromIdx] = 0;
                         m[fromIdxp7] = p;
@@ -622,7 +628,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                 }
                 if (originalBoard[IDX_EP_IDX] != 0 && rank == 4) {
                     if (file < 7 && fromIdxp9 == originalBoard[IDX_EP_IDX]) {
-                        int m[NUM_BYTES];
+                        long m[NUM_BYTES];
                         makeNewBoard(originalBoard,m);
                         m[fromIdx] = 0;
                         m[fromIdxp9] = p;
@@ -638,7 +644,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                     }
                     else if (file > 0 && fromIdxp7 == originalBoard[IDX_EP_IDX]) {
-                        int m[NUM_BYTES];
+                        long m[NUM_BYTES];
                         makeNewBoard(originalBoard,m);
 
                         m[fromIdx] = 0;
@@ -671,7 +677,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         if ((originalBoard[toIdx] & BLACK_MASK) == 0) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             if (originalBoard[toIdx] != 0) {
@@ -713,7 +719,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 
                         if ((originalBoard[toIdx] & BLACK_MASK) == 0) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             if (originalBoard[toIdx] != 0) {
@@ -744,7 +750,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_BLACK_KING_CHECKED) == 0 &&
                             !isSquaresThreatenedByColor(originalBoard, squares, WHITE_MASK)) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
@@ -771,7 +777,7 @@ int findAllPossibleMoves(int originalBoard[]) {
                         if ((originalBoard[IDX_CHECK_STATUS] & MASK_BLACK_KING_CHECKED) == 0 &&
                             !isSquaresThreatenedByColor(originalBoard, squares, WHITE_MASK)) {
 
-                            int newBoard[NUM_BYTES];
+                            long newBoard[NUM_BYTES];
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE;
@@ -796,7 +802,7 @@ int findAllPossibleMoves(int originalBoard[]) {
 }
 
 
-int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength) {
+int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength) {
 
     moveLinearInvocations++;
 
@@ -818,7 +824,7 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
                 int pieceAtIdx = b[toIdx];
 
                 if ((pieceAtIdx & color) == 0) {
-                    int newBoard[NUM_BYTES];
+                    long newBoard[NUM_BYTES];
                     makeNewBoard(b,newBoard);
                     int breakAfterThis = 0;
                     if (pieceAtIdx != 0) {
@@ -872,13 +878,13 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
 }
 
 
-int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMask) {
+int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask) {
 
     int numMovesMade = 0;
 
     const int lastMove = (MASK_LAST_MOVE_WAS_PROMO | moveMask);
 
-    int promo[NUM_BYTES];
+    long promo[NUM_BYTES];
     makeNewBoard(b, promo );
 
     promo[from] = 0;
@@ -939,11 +945,11 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
 
 }
 
- int makeBlackPromotions(int b[], int from, int to, int moveMask, int castlingMask) {
+ int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMask) {
 
     const int lastMove = MASK_LAST_MOVE_WAS_PROMO | moveMask;
     int numMovesMade = 0;
-    int promo[NUM_BYTES];
+    long promo[NUM_BYTES];
     makeNewBoard(b,promo);
 
     promo[from] = 0;
@@ -1004,22 +1010,23 @@ int makeWhitePromotions(int b[], int from, int to, int moveMask, int castlingMas
 }
 
 
-void makeNewBoard(int oldBoard[], int newBoard[]) {
+void makeNewBoard(long oldBoard[], long newBoard[]) {
 
     makeNewBoardInvocations++;
 
     // TODO: Prøv å sette 0 på bare de bytsa som ikke blir aktivt kopiert, alle etter NUM_BYTES_TO_COPY til NUM_BYTES.
-    memset(newBoard+NUM_BYTES_TO_COPY, 0, 80); // sizeof(int)*(NUM_BYTES-NUM_BYTES_TO_COPY)
-    memcpy(newBoard, oldBoard, 284); // sizeof(int)*NUM_BYTES_TO_COPY
+    memset(newBoard+NUM_BYTES_TO_COPY, 0, sizeof(long)*(NUM_BYTES-NUM_BYTES_TO_COPY)); // sizeof(int)*(NUM_BYTES-NUM_BYTES_TO_COPY)
+    memcpy(newBoard, oldBoard,  sizeof(long)*NUM_BYTES_TO_COPY); // sizeof(int)*NUM_BYTES_TO_COPY
 
     newBoard[IDX_MOVE_NUM]++;
     newBoard[IDX_TURN] = oldBoard[IDX_TURN] ^ 4095;
     newBoard[IDX_CHECK_STATUS] = 0;
 
+
 }
 
 
-boolean isSquaresThreatenedByColor(int board[], int indices[], int color) {
+boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
     // only invoked just before castling
     isSquaresThreatenedByColorInvocations ++;
 
@@ -1087,7 +1094,7 @@ boolean isSquaresThreatenedByColor(int board[], int indices[], int color) {
 
 
 
-int calculateCheckStatus(int board[]) {
+int calculateCheckStatus(long board[]) {
 
     calculateCheckStatusInvocations++;
 
@@ -1097,7 +1104,7 @@ int calculateCheckStatus(int board[]) {
 
     boolean whiteKingIsInCheck = FALSE;
 
-    int* influemceMapPtr = board+IDX_START_INFLUENCE_MAP;
+    long* influemceMapPtr = board+IDX_START_INFLUENCE_MAP;
 
     if (((influemceMapPtr[0] | influemceMapPtr[2]) & Pieces_qbpk) != 0) {
         whiteKingIsInCheck = TRUE;
@@ -1149,11 +1156,11 @@ int calculateCheckStatus(int board[]) {
 
 
 
-void influenceMapForSquare(int b[], int idx) {
+void influenceMapForSquare(long b[], int idx) {
 
     influenceMapForSquareInvocations++;
 
-    int* influenceMap = b+IDX_START_INFLUENCE_MAP;
+    long* influenceMap = b+IDX_START_INFLUENCE_MAP;
 
     for( int t=0;t<16;t++){
       influenceMap[t] = 0;
@@ -1181,7 +1188,7 @@ void influenceMapForSquare(int b[], int idx) {
                 int checkIdx = newRank << 3 | newFile;
                 if (b[checkIdx] != 0) {
 
-                  int checkPiece = b[checkIdx];
+                  long checkPiece = b[checkIdx];
 
                   if ( (checkPiece & Pieces_PpKk ) != 0 && n > 1) {
                       break;
@@ -1207,19 +1214,17 @@ void influenceMapForSquare(int b[], int idx) {
         // Check that 0 > newRank|newFile < 8
         if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
             int checkIdx = newRank << 3 | newFile;
-            int checkPiece = b[checkIdx];
+            long checkPiece = b[checkIdx];
             if ( (checkPiece & Pieces_Nn) != 0) {
                 influenceMap[8 | (t >> 1)] = checkPiece;
             }
         }
     }
-    //long endTime = System.nanoTime();
-    //influenceMapsCalcTime += endTime - startTime;
 
 }
 
 
-void count(int b[]) {
+void count(long b[]) {
 
     const int level = b[IDX_MOVE_NUM];
     numMoves[level]++;
@@ -1253,16 +1258,16 @@ void count(int b[]) {
  **                                                                                                        **
  ************************************************************************************************************/
 
-void printNumBoard( int board[] ){
+void printNumBoard( long board[] ){
     for( int s=0;(s & 64) == 0;s++){
         if( s % 8 == 0 && s != 0 ){
             printf("\n");
         }
-        printf( " %u\t", board[s] );
+        printf( " %ld\t", board[s] );
     }
 }
 
-void printDiagram( int board[] ){
+void printDiagram( long board[] ){
   printf("\"");
   for( int s=0;(s & 64) == 0;s++){
 
@@ -1291,14 +1296,14 @@ void printDiagram( int board[] ){
   }
   printf( "\"");
   printf( " %s", board[IDX_TURN] == WHITE_MASK ? "w" : "b" );
-  printf( " %d", board[IDX_CASTLING] );
+  printf( " %ld", board[IDX_CASTLING] );
 
 
   printf("\n");
 
 }
 
-void printBoard( int board[] ){
+void printBoard( long board[] ){
 
     printf( "  A B C D E F G H");
 
@@ -1325,17 +1330,17 @@ void printBoard( int board[] ){
         }
     }
     printf("\n");
-    printf( "Move num: %d\n", board[IDX_MOVE_NUM] );
+    printf( "Move num: %ld\n", board[IDX_MOVE_NUM] );
     printf( "Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black" );
     printf( "\n\n");
     fflush(stdout);
 }
 
 
-void diagramToByteBoard( int board[], char diagram[] ) {
+void diagramToByteBoard( long board[], char diagram[] ) {
     int len = strlen( diagram );
 
-    memset(board, 0,  sizeof(int)*NUM_BYTES);
+    memset(board, 0,  sizeof(long)*NUM_BYTES);
     board[IDX_CASTLING] = 0b00001111;
     board[IDX_TURN] = WHITE_MASK;
 
