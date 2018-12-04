@@ -1,2 +1,5 @@
 chessengine
-.idea
+.idea*.o
+*.out
+.idea/
+*.o
