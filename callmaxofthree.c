@@ -1,6 +1,9 @@
 /*
  * A small program that illustrates how to call the maxofthree function we wrote in
  * assembly language.
+
+
+  nasm -fmacho64 influenceMapForSquare.asm && gcc -O3 main.c maxofthree.o && ./a.out
  */
 
 #include <stdio.h>

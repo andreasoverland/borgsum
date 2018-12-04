@@ -37,6 +37,9 @@ int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatr
 
 // assembly functions
 int influenceMapForSquare2( long board[],int idx );
+// nasm -fmacho64 influenceMapForSquare.asm
+// gcc -O3 main.c influenceMapForSquare.o
+
 // unsigned long long otherBoard[64];
 
 int MAX_LEVEL = 6;
