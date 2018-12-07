@@ -40,6 +40,11 @@ int influenceMapForSquare2( long board[],int idx );
 // nasm -fmacho64 influenceMapForSquare.asm
 // gcc -O3 main.c influenceMapForSquare.o
 
+// OR
+// make
+// ./chessengine "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR" w 15 1
+
+
 // unsigned long long otherBoard[64];
 
 int MAX_LEVEL = 6;
@@ -71,8 +76,6 @@ int main( int argc, char **argv){
                        . . . . . . . .\
                        P P P P P P P P\
                        R N B Q K B N R";
-
-
 
 
     long board[NUM_BYTES];
@@ -112,7 +115,7 @@ int main( int argc, char **argv){
     // TODO: take in from commandline, including maxlevel
 
     // Testing assembly function
-    long test = influenceMapForSquare2( board, 9  );
+    long test = influenceMapForSquare2( board, 10  );
     printf("%ld\n", test );
 
     printBoard( board );

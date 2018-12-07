@@ -3,8 +3,6 @@
 ;
 ;   int64_t _influenceMapForSquare(int64_t[] board, int32_t idx)
 ;
-; Note that the parameters have already been passed in rdi, rsi, and rdx.  We
-; just have to return the value in rax.
 ; -----------------------------------------------------------------------------
 
         global  _influenceMapForSquare2
@@ -44,20 +42,23 @@ multiplierLoop:
         and r10,0FFFFFFFFFFFFFFF8h
         jnz breakMultiplierLoop
 
-        inc r9
-        cmp r9,2
-        jne multiplierLoop
+        ;inc r9
+        ;cmp r9,2
+        ;jne multiplierLoop
 
-        cmp r8,0
-        jne cont
-        cmp r9,0
-        inc r9
-        jmp multiplierLoop
+        ;cmp r8,0
+        ;jne cont
+        ;cmp r9,0
+        ;inc r9
+        ;jmp multiplierLoop
 cont:
-        inc r8
-        cmp r8,2
-        jne directionLoop2
+        ;inc r8
+        ;cmp r8,2
+        ;jne directionLoop2
+        mov rax,rcx
 end:
+
+
         pop rdi
         pop rcx
         pop rbx
@@ -65,7 +66,7 @@ end:
         ret
 
 breakMultiplierLoop:
-        mov rax,10
+        mov rax,rcx
         jmp end
 
         section .data
