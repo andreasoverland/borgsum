@@ -10,6 +10,11 @@
         global  _influenceMapForSquare2
         section .text
 _influenceMapForSquare2:
+
+        push rbx
+        push rcx
+        push rdi
+
         mov     rax,[rdi+rsi*8] ; returns piece at position rsi
         add     rdi,74*8
         mov     rbx,16
@@ -23,7 +28,6 @@ clearMap:
         shr     rbx,3
         mov     rcx,rsi ; idx file in rcx
         and     rcx,7
-
 
         ; TODO: Keep MOVE_MATRIX in here somewhere
 
@@ -54,6 +58,10 @@ cont:
         cmp r8,2
         jne directionLoop2
 end:
+        pop rdi
+        pop rcx
+        pop rbx
+
         ret
 
 breakMultiplierLoop:
