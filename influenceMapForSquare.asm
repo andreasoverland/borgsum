@@ -49,20 +49,18 @@ multiplierLoop:
         add rcx,r9
         mov r10,rbx
         or  r10,rcx
-        and r10,0FFFFFFFFFFFFFFF8h
-        ; jnz skipCheck
+        and r10,-8
+        jnz skipCheck
 
         inc rax
 
+skipCheck:
         dec r11
         jnz multiplierLoop
-
-skipCheck:
 
         inc r9
         cmp r9,2
         jne directionLoop3
-
 
         inc r8
         cmp r8,2
