@@ -22,48 +22,53 @@ clearMap:
         dec     rbx
         jnz     clearMap ; continue clearing, until rbx == 0
 
-        ; calculate row and column based on index
+
+
+        ; TODO: Keep MOVE_MATRIX in here somewhere
+
+        mov rax,0
+
+directionLoop1:
+        mov r8, -1
+directionLoop2:
+        mov r9, -1
+
         mov     rbx,rsi ; idx rank in rbx
         shr     rbx,3
         mov     rcx,rsi ; idx file in rcx
         and     rcx,7
 
-        ; TODO: Keep MOVE_MATRIX in here somewhere
+directionLoop3:
+        mov     r11,8 ; count direction multiplier down from 8
 
-directionLoop1:
-        mov r8, -1
-directionLoop2:
-        add rbx,r8
-        mov r9, -1
 multiplierLoop:
+
+; check if both directions are 0, if so inc r9 and continue
+
+        add rbx,r8
         add rcx,r9
         mov r10,rbx
         or  r10,rcx
         and r10,0FFFFFFFFFFFFFFF8h
-        jnz breakMultiplierLoop
+        ; jnz skipCheck
+
+        inc rax
+
+        dec r11
+        jnz multiplierLoop
+
+skipCheck:
 
         inc r9
         cmp r9,2
-        jne multiplierLoop
+        jne directionLoop3
 
-        cmp r8,0
-        jne cont
-        cmp r9,0
-        inc r9
-        jmp multiplierLoop
-
-
-cont:   ; rank&file are ok
-        ; do the check
-        ; calculate index with new row and column
-        mov r10,rbx
-        shl r10,3
-        or  r10,rcx
-        mov rax,r10
 
         inc r8
         cmp r8,2
         jne directionLoop2
+
+        je end
 end:
 
         pop rdi
