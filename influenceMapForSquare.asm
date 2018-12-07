@@ -13,15 +13,16 @@ _influenceMapForSquare2:
         push rcx
         push rdi
 
-        mov     rax,[rdi+rsi*8] ; returns piece at position rsi
-        add     rdi,74*8
-        mov     rbx,16
+      ;  mov     rax,[rdi+rsi*8] ; returns piece at position rsi
+        ; add     rdi,74*8 ; point to influence map work space
+        mov     rbx,16 ; prepare to clear 16 longs on adress
 
 clearMap:
-        mov     qword [rdi+rbx],0
+        mov     qword [rdi+74*8+rbx],0
         dec     rbx
-        jnz     clearMap
+        jnz     clearMap ; continue clearing, until rbx == 0
 
+        ; calculate row and column based on index
         mov     rbx,rsi ; idx rank in rbx
         shr     rbx,3
         mov     rcx,rsi ; idx file in rcx
@@ -32,32 +33,38 @@ clearMap:
 directionLoop1:
         mov r8, -1
 directionLoop2:
+        add rbx,r8
         mov r9, -1
 multiplierLoop:
-        add rbx,r8
         add rcx,r9
-
         mov r10,rbx
         or  r10,rcx
         and r10,0FFFFFFFFFFFFFFF8h
         jnz breakMultiplierLoop
 
-        ;inc r9
-        ;cmp r9,2
-        ;jne multiplierLoop
+        inc r9
+        cmp r9,2
+        jne multiplierLoop
 
-        ;cmp r8,0
-        ;jne cont
-        ;cmp r9,0
-        ;inc r9
-        ;jmp multiplierLoop
-cont:
-        ;inc r8
-        ;cmp r8,2
-        ;jne directionLoop2
-        mov rax,rcx
+        cmp r8,0
+        jne cont
+        cmp r9,0
+        inc r9
+        jmp multiplierLoop
+
+
+cont:   ; rank&file are ok
+        ; do the check
+        ; calculate index with new row and column
+        mov r10,rbx
+        shl r10,3
+        or  r10,rcx
+        mov rax,r10
+
+        inc r8
+        cmp r8,2
+        jne directionLoop2
 end:
-
 
         pop rdi
         pop rcx
@@ -66,7 +73,6 @@ end:
         ret
 
 breakMultiplierLoop:
-        mov rax,rcx
         jmp end
 
         section .data

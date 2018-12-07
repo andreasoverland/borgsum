@@ -1330,6 +1330,7 @@ void printBoard( long board[] ){
             case Piece_b:printf("b ");break;
             case Piece_q:printf("q ");break;
             case Piece_k:printf("k ");break;
+            case Piece_Test:printf("T ");break;
             default:
                 printf(". ");
         }

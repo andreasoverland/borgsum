@@ -15,6 +15,8 @@ static const int Piece_b = 512;
 static const int Piece_q = 1024;
 static const int Piece_k = 2048;
 
+static const int Piece_Test = 4096;
+
 static const int Pieces_Nn = 4 | 256;
 static const int Pieces_PpKk = 1 | 64 | 32 | 2048;
 
