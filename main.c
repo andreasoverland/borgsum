@@ -112,7 +112,6 @@ int main( int argc, char **argv){
                        P P P B B P P P\
                        R . . . K . . R");*/
 
-    // TODO: take in from commandline, including maxlevel
 
     // Testing assembly function
     long test = influenceMapForSquare2( board, 10  );
