@@ -114,7 +114,15 @@ int main( int argc, char **argv){
 
 
     // Testing assembly function
+    for( int t=0;t<16;t++){
+        board[74+t] = 20;
+    }
     long test = influenceMapForSquare2( board, 10  );
+    printf( "influencemap:\n" );
+    for( int t=0;t<16;t++){
+        printf( "%ld ", board[74+t] );
+    }
+    printf( "\n");
     printf("%ld\n", test );
 
     printBoard( board );
@@ -1162,7 +1170,7 @@ int calculateCheckStatus(long board[]) {
 
 
 void influenceMapForSquare(long b[], int idx) {
-
+    // #asm
     influenceMapForSquareInvocations++;
 
     long* influenceMap = b+IDX_START_INFLUENCE_MAP;
