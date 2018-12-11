@@ -72,13 +72,13 @@ theInnerLoop:
         and rax, Pieces_PpKk
         jz notPpKk
         cmp r11,1
-        jg nextR9
+        jge nextR9
 
 notPpKk:
         mov rax,[rdi+r10*8] ; returns piece at position rsi
         and rax, Pieces_Nn
         jz setAndNextDirection
-        jmp nextMultiplier
+        jmp nextR9
 
 setAndNextDirection:
         mov rax,[rdi+r10*8]
