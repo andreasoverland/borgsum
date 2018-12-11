@@ -37,7 +37,7 @@ int moveLinear(int b[], int fromIdx, const int moveMatrix[], const int moveMatri
 
 // unsigned long long otherBoard[64];
 
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 5;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -57,7 +57,7 @@ int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-  char *initialBoard = "\
+  /*char *initialBoard = "\
                        r n b q k b n r\
                        p p p p p p p p\
                        . . . . . . . .\
@@ -65,7 +65,17 @@ int main( int argc, char **argv){
                        . . . . . . . .\
                        . . . . . . . .\
                        P P P P P P P P\
-                       R N B Q K B N R";
+                       R N B Q K B N R";*/
+
+   char *initialBoard = "\
+                      r . . . k . . r\
+                      p . p p q p b .\
+                      b n . . p n p .\
+                      . . . P N . . .\
+                      . p . . P . . .\
+                      . . N . . Q . p\
+                      P P P B B P P P\
+                      R . . . K . . R";
 
     int board[NUM_BYTES];
 
