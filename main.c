@@ -137,8 +137,6 @@ int main( int argc, char **argv){
 
     printBoard( board );
 
-    return 0;
-
     struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
 
