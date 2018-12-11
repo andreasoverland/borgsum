@@ -67,7 +67,7 @@ int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-  char *initialBoard = "\
+  /*char *initialBoard = "\
                        r n b q k b n r\
                        p p p p p p p p\
                        . . . . . . . .\
@@ -75,7 +75,18 @@ int main( int argc, char **argv){
                        . . . . . . . .\
                        . . . . . . . .\
                        P P P P P P P P\
-                       R N B Q K B N R";
+                       R N B Q K B N R";*/
+
+
+    char *initialBoard = "\
+                       r . . . k . . r\
+                       p . p p q p b .\
+                       b n . . p n p .\
+                       . . . P N . . .\
+                       . p . . P . . .\
+                       . . N . . Q . p\
+                       P P P B B P P P\
+                       R . . . K . . R";
 
 
     long board[NUM_BYTES];
@@ -102,16 +113,7 @@ int main( int argc, char **argv){
         MAX_LEVEL = atoi(argv[4]);
     }
 
-    /*diagramToByteBoard( board, "\
-                       r . . . k . . r\
-                       p . p p q p b .\
-                       b n . . p n p .\
-                       . . . P N . . .\
-                       . p . . P . . .\
-                       . . N . . Q . p\
-                       P P P B B P P P\
-                       R . . . K . . R");*/
-
+    printBoard( board );
 
     // Testing assembly function
     for( int t=0;t<16;t++){
@@ -136,6 +138,8 @@ int main( int argc, char **argv){
 
 
     printBoard( board );
+
+    return 0;
 
     struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
