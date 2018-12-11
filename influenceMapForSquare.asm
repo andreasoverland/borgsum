@@ -7,6 +7,7 @@
 
 Pieces_PpKk equ 1 | 64 | 32 | 2048
 Pieces_Nn equ   4 | 256
+Piece_Test equ  4096
 
 
         global  _influenceMapForSquare2
@@ -27,27 +28,27 @@ clearMap:
         mov     qword [rdi+74*8+rbx*8],0 ; kanskje xor,xor
         jnz     clearMap ; continue clearing, until rbx == 0
 
-        ; TODO: Keep MOVE_MATRIX in here somewhere
-
-        mov rax,[rdi+rsi*8]
 
 directionLoop1: ; vi skal aldri hoppe hit egentlig.
+        mov r13, 0
         mov r8, -1 ; for r8 = -1 .. 1
 directionLoop2:
         mov r9, -1 ; for r9 = -1 .. 1
+
 directionLoop3:
 
-        ; hvis r9 og r8 == 0, hopp til directionLoop2
         mov   r12,r8
         or    r12,r9
-        jz    nextR9
-
+        jnz   notZero   ; hvis r9 og r8 == 0, hopp til nextR9
+        dec   r13
+        jmp   nextR9
+notZero:
         mov     rbx,rsi ; idx rank in rbx
         shr     rbx,3
         mov     rcx,rsi ; idx file in rcx
         and     rcx,7
 
-        mov     r11,0 ; count direction multiplier down from 8
+        mov     r11,0 ; count direction multiplier up to 8
 
 multiplierLoop:
 
@@ -61,11 +62,11 @@ multiplierLoop:
 
 theInnerLoop:
 
-        mov r10,rbx
-        shl r10,3
-        or  r10,rcx
-        mov rax,[rdi+r10*8] ; returns piece at r10
-        cmp rax,0
+        mov r10,rbx ; move rank into r10
+        shl r10,3   ; multiply by 8
+        or  r10,rcx ; add file into r10
+        mov rax,[rdi+r10*8] ; move piece at index r10 into rax
+        cmp rax,0 ; is it empty ?
         jz nextMultiplier ; if piece == 0, go further
 
         and rax, Pieces_PpKk
@@ -81,7 +82,8 @@ notPpKk:
 
 setAndNextDirection:
         mov rax,[rdi+r10*8]
-        mov qword [rdi+74*8+r11*8],rax; flytt rax inn i riktig plass i m
+        ; mov qword [rdi+r10*8], Piece_Test ; for debugging
+        mov qword [rdi+74*8+r13*8],rax; flytt rax inn i riktig plass i m
         jmp nextR9
 
 nextMultiplier:
@@ -89,6 +91,7 @@ nextMultiplier:
         cmp r11,8
         jl multiplierLoop
 nextR9:
+        inc r13
         inc r9
         cmp r9,2
         jl directionLoop3
@@ -96,10 +99,54 @@ nextR9:
         inc r8
         cmp r8,2
         jl directionLoop2
+
+;; ------------------------- KNIGHTS ------------------------
+
+checkForKnights:
+        lea rdx,[rel KNIGHT_MOVE_MATRIX]
+        mov r12,0
+        mov r8,0
+        mov r13,8
+knightLoop:
+        mov r8,[rdx+r12*8] ; rank-offset
+        inc r12
+        mov r9,[rdx+r12*8] ; file-offset
+        inc r12
+
+        mov     rbx,rsi ; idx rank in rbx
+        shr     rbx,3
+        mov     rcx,rsi ; idx file in rcx
+        and     rcx,7
+
+        add rbx,r8    ; add offsets to rank&file
+        add rcx,r9
+
+        mov r10,rbx
+        or  r10,rcx
+        and r10,-8h
+        jnz knightIndexOutOfBoard ; if so, jump to next direction
+
+        mov r10,rbx ; move rank into r10
+        shl r10,3   ; multiply by 8
+        or  r10,rcx ; add file into r10
+        mov rax,[rdi+r10*8] ; move piece at index r10 into rax
+        ; mov qword [rdi+r10*8],Piece_Test
+
+        and rax, Pieces_Nn ; is piece at position a knight?
+        jz noKnightOnIndex
+
+        ; yes a knight was there
+        mov rax,[rdi+r10*8]
+        mov [rdi+74*8+r13*8],rax
+        mov rax, r10
+
+noKnightOnIndex:
+knightIndexOutOfBoard:
+        inc r13
+        cmp r13,16
+        jl knightLoop
+
 end:
-
-        ; do knight-checks
-
         sub rdi,74*8
         pop r12
         pop rdi
@@ -107,7 +154,6 @@ end:
 
         ret
 
-
-        section .data
+section .data
 ; MOVE_MATRIX: db -1, -1, 0, -1, 1, -1,-1, 0, 1,  0, -1,  1, 0,  1, 1,  1
-;KNIGHT_MOVE_MATRIX : db -1, -2, -1, 2, -2, -1, -2, 1, 1, -2,  1, 2,  2, -1,  2, 1
+KNIGHT_MOVE_MATRIX  dq -1, -2, -1, 2, -2, -1, -2, 1, 1, -2,  1, 2,  2, -1,  2, 1

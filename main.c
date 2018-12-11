@@ -117,15 +117,27 @@ int main( int argc, char **argv){
     for( int t=0;t<16;t++){
         board[74+t] = 20;
     }
-    long test = influenceMapForSquare2( board, 10  );
-    printf( "influencemap:\n" );
+    long test = influenceMapForSquare2( board, 18  );
+    printf( "influencemap asm:\n" );
     for( int t=0;t<16;t++){
-        printf( "%ld ", board[74+t] );
+        printf( "%5ld", board[74+t] );
     }
     printf( "\n");
     printf("%ld\n", test );
+    for( int t=0;t<16;t++){
+        board[74+t] = 20;
+    }
+    influenceMapForSquare( board, 18  );
+    printf( "influencemap c:\n" );
+    for( int t=0;t<16;t++){
+        printf( "%5ld", board[74+t] );
+    }
+    printf( "\n");
+
 
     printBoard( board );
+
+    return 0;
 
     struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
