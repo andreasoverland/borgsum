@@ -17,15 +17,17 @@ _influenceMapForSquare2:
         push rbx
         push rdi
         push r12
+        push r11
+        push r13
 
       ;  mov     rax,[rdi+rsi*8] ; returns piece at position rsi
         ;add     rdi,74*8 ; point to influence map work space
-        mov     rbx,16 ; prepare to clear 16 longs on adress
+        mov     rcx,16 ; prepare to clear 16 longs on adress
         ;add     rdi,73*8 ; why 73 and not 74??
 
 clearMap:
-        dec     rbx
-        mov     qword [rdi+74*8+rbx*8],0 ; kanskje xor,xor
+        dec     rcx
+        mov     qword [rdi+74*8+rcx*8],0
         jnz     clearMap ; continue clearing, until rbx == 0
 
 
@@ -147,7 +149,9 @@ knightIndexOutOfBoard:
         jl knightLoop
 
 end:
-        sub rdi,74*8
+
+        pop r13
+        pop r11
         pop r12
         pop rdi
         pop rbx

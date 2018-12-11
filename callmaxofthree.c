@@ -3,7 +3,9 @@
  * assembly language.
 
 
-  nasm -fmacho64 influenceMapForSquare.asm && gcc -O3 main.c maxofthree.o && ./a.out
+  nasm -fmacho64 influenceMapForSquare.asm 
+  gcc -O3 main.c maxofthree.o
+
  */
 
 #include <stdio.h>

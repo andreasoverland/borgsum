@@ -1129,6 +1129,7 @@ int calculateCheckStatus(long board[]) {
     int result = 0;
 
     influenceMapForSquare2(board, board[IDX_WHITE_KING_INDEX] );
+    influenceMapForSquareInvocations++;
 
     boolean whiteKingIsInCheck = FALSE;
 
@@ -1150,6 +1151,7 @@ int calculateCheckStatus(long board[]) {
     }
 
     influenceMapForSquare2(board, board[IDX_BLACK_KING_INDEX] );
+    influenceMapForSquareInvocations++;
 
     boolean blackKingIsInCheck = FALSE;
 
