@@ -11,6 +11,7 @@ Piece_Test equ  4096
 
 
         global  _influenceMapForSquare2
+
         section .text
 _influenceMapForSquare2:
 
@@ -85,7 +86,7 @@ notPpKk:
 setAndNextDirection:
         mov rax,[rdi+r10*8]
         ; mov qword [rdi+r10*8], Piece_Test ; for debugging
-        mov qword [rdi+74*8+r13*8],rax; flytt rax inn i riktig plass i m
+        mov qword [rdi+74*8+r13*8],rax; flytt rax inn i riktig plass i map
         jmp nextR9
 
 nextMultiplier:
@@ -159,5 +160,5 @@ end:
         ret
 
 section .data
-; MOVE_MATRIX: db -1, -1, 0, -1, 1, -1,-1, 0, 1,  0, -1,  1, 0,  1, 1,  1
+MOVE_MATRIX         dq -1, -1, 0, -1, 1, -1,-1, 0, 1,  0, -1,  1, 0,  1, 1,  1
 KNIGHT_MOVE_MATRIX  dq -1, -2, -1, 2, -2, -1, -2, 1, 1, -2,  1, 2,  2, -1,  2, 1
