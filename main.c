@@ -40,6 +40,9 @@ int influenceMapForSquare2( long board[],int idx );
 // nasm -fmacho64 influenceMapForSquare.asm
 // gcc -O3 main.c influenceMapForSquare.o
 
+// with c-version : 1 949 448 bps
+// with asm-version
+
 // OR
 // make
 // ./chessengine "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR" w 15 1
@@ -47,7 +50,7 @@ int influenceMapForSquare2( long board[],int idx );
 
 // unsigned long long otherBoard[64];
 
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 5;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -1125,7 +1128,7 @@ int calculateCheckStatus(long board[]) {
 
     int result = 0;
 
-    influenceMapForSquare(board, board[IDX_WHITE_KING_INDEX] );
+    influenceMapForSquare2(board, board[IDX_WHITE_KING_INDEX] );
 
     boolean whiteKingIsInCheck = FALSE;
 
@@ -1146,7 +1149,7 @@ int calculateCheckStatus(long board[]) {
         }
     }
 
-    influenceMapForSquare(board, board[IDX_BLACK_KING_INDEX] );
+    influenceMapForSquare2(board, board[IDX_BLACK_KING_INDEX] );
 
     boolean blackKingIsInCheck = FALSE;
 
