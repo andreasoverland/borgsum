@@ -23,14 +23,27 @@ _influenceMapForSquare2:
 
       ;  mov     rax,[rdi+rsi*8] ; returns piece at position rsi
         ;add     rdi,74*8 ; point to influence map work space
-        mov     rcx,16 ; prepare to clear 16 longs on adress
+
         ;add     rdi,73*8 ; why 73 and not 74??
 
 clearMap:
-        dec     rcx
-        mov     qword [rdi+74*8+rcx*8],0
-        jnz     clearMap ; continue clearing, until rbx == 0
 
+        mov     qword [rdi+74*8],0
+        mov     qword [rdi+74*8+8],0
+        mov     qword [rdi+74*8+16],0
+        mov     qword [rdi+74*8+24],0
+        mov     qword [rdi+74*8+32],0
+        mov     qword [rdi+74*8+40],0
+        mov     qword [rdi+74*8+48],0
+        mov     qword [rdi+74*8+56],0
+        mov     qword [rdi+74*8+64],0
+        mov     qword [rdi+74*8+72],0
+        mov     qword [rdi+74*8+80],0
+        mov     qword [rdi+74*8+88],0
+        mov     qword [rdi+74*8+96],0
+        mov     qword [rdi+74*8+104],0
+        mov     qword [rdi+74*8+112],0
+        mov     qword [rdi+74*8+120],0
 
 directionLoop1: ; vi skal aldri hoppe hit egentlig.
         mov r13, 0
@@ -160,5 +173,5 @@ end:
         ret
 
 section .data
-MOVE_MATRIX         dq -1, -1, 0, -1, 1, -1,-1, 0, 1,  0, -1,  1, 0,  1, 1,  1
+; MOVE_MATRIX         dq -1, -1, 0, -1, 1, -1,-1, 0, 1,  0, -1,  1, 0,  1, 1,  1
 KNIGHT_MOVE_MATRIX  dq -1, -2, -1, 2, -2, -1, -2, 1, 1, -2,  1, 2,  2, -1,  2, 1
