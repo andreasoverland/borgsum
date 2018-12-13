@@ -40,7 +40,7 @@ clearMap:
         mov     qword [rdi+74*8+120],0
 
 
-directionLoop1: ; vi skal aldri hoppe hit egentlig.
+; vi skal aldri hoppe hit egentlig.
         mov r13, 0
         mov r8, -1 ; for r8 = -1 .. 1
 directionLoop2:
