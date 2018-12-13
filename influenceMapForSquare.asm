@@ -130,7 +130,8 @@ knightLoop:
         and     rcx,7
 
         add rbx,r8    ; add offsets to rank&file
-        add rcx,r9
+        add rcx,r9    ; TODO: Sjekk om vi kan bruke noen av flaggene
+                      ;       for å sjekke om det ble mindre enn 0
 
         mov r10,rbx
         or  r10,rcx
