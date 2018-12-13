@@ -6,9 +6,8 @@
 ; -----------------------------------------------------------------------------
 
 Pieces_PpKk equ 1 | 64 | 32 | 2048
-Pieces_Nn equ   4 | 256
-Piece_Test equ  4096
-
+Pieces_Nn   equ   4 | 256
+Piece_Test  equ  4096
 
         global  _influenceMapForSquare2
 
@@ -21,13 +20,10 @@ _influenceMapForSquare2:
         push r11
         push r13
 
-      ;  mov     rax,[rdi+rsi*8] ; returns piece at position rsi
-        ;add     rdi,74*8 ; point to influence map work space
-
-        ;add     rdi,73*8 ; why 73 and not 74??
+        lea rdx,[rel COUNTER]
+        inc qword [rdx]
 
 clearMap:
-
         mov     qword [rdi+74*8],0
         mov     qword [rdi+74*8+8],0
         mov     qword [rdi+74*8+16],0
@@ -163,6 +159,8 @@ knightIndexOutOfBoard:
         jl knightLoop
 
 end:
+        lea rdx,[rel COUNTER]
+        mov rax,[rdx]
 
         pop r13
         pop r11
@@ -175,3 +173,4 @@ end:
 section .data
 ; MOVE_MATRIX         dq -1, -1, 0, -1, 1, -1,-1, 0, 1,  0, -1,  1, 0,  1, 1,  1
 KNIGHT_MOVE_MATRIX  dq -1, -2, -1, 2, -2, -1, -2, 1, 1, -2,  1, 2,  2, -1,  2, 1
+COUNTER             dq 0

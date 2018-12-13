@@ -50,7 +50,7 @@ int influenceMapForSquare2( long board[],int idx );
 
 // unsigned long long otherBoard[64];
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 6;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -70,7 +70,7 @@ int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-  /*char *initialBoard = "\
+  char *initialBoard = "\
                        r n b q k b n r\
                        p p p p p p p p\
                        . . . . . . . .\
@@ -78,10 +78,10 @@ int main( int argc, char **argv){
                        . . . . . . . .\
                        . . . . . . . .\
                        P P P P P P P P\
-                       R N B Q K B N R";*/
+                       R N B Q K B N R";
 
 
-    char *initialBoard = "\
+    /*char *initialBoard = "\
                        r . . . k . . r\
                        p . p p q p b .\
                        b n . . p n p .\
@@ -89,7 +89,7 @@ int main( int argc, char **argv){
                        . p . . P . . .\
                        . . N . . Q . p\
                        P P P B B P P P\
-                       R . . . K . . R";
+                       R . . . K . . R";*/
 
 
     long board[NUM_BYTES];
@@ -118,30 +118,6 @@ int main( int argc, char **argv){
 
     printBoard( board );
 
-    // Testing assembly function
-    for( int t=0;t<16;t++){
-        board[74+t] = 20;
-    }
-    long test = influenceMapForSquare2( board, 29  );
-    printf( "influencemap asm:\n" );
-    for( int t=0;t<16;t++){
-        printf( "%5ld", board[74+t] );
-    }
-    printf( "\n");
-    printf("%ld\n", test );
-    for( int t=0;t<16;t++){
-        board[74+t] = 20;
-    }
-    influenceMapForSquare( board, 29  );
-    printf( "influencemap c:\n" );
-    for( int t=0;t<16;t++){
-        printf( "%5ld", board[74+t] );
-    }
-    printf( "\n");
-
-
-    printBoard( board );
-
     struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
 
@@ -154,7 +130,7 @@ int main( int argc, char **argv){
     }
 
     int l = 14;
-
+    // influenceMapForSquareInvocations = influenceMapForSquare2( board, 29  ) - 1;
     long total = printStats();
 
     printf("\nTotal valid moves found : %lu \n" ,total);
@@ -1128,8 +1104,7 @@ int calculateCheckStatus(long board[]) {
 
     int result = 0;
 
-    influenceMapForSquare2(board, board[IDX_WHITE_KING_INDEX] );
-    influenceMapForSquareInvocations++;
+    influenceMapForSquare(board, board[IDX_WHITE_KING_INDEX] );
 
     boolean whiteKingIsInCheck = FALSE;
 
@@ -1150,8 +1125,7 @@ int calculateCheckStatus(long board[]) {
         }
     }
 
-    influenceMapForSquare2(board, board[IDX_BLACK_KING_INDEX] );
-    influenceMapForSquareInvocations++;
+    influenceMapForSquare(board, board[IDX_BLACK_KING_INDEX] );
 
     boolean blackKingIsInCheck = FALSE;
 
