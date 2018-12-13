@@ -31,7 +31,6 @@ fs.readFile("settings.txt", (err,res) => {
       numberOfWorkunits = workunits.length;
 
       for( let numthreads = 0; numthreads < settings.numthreads ; numthreads++ ){
-
           calculateNextUnit( settings );
       }
 
@@ -86,7 +85,6 @@ function calculateNextUnit( settings ){
                 }
 
            }
-
 
         });
 

@@ -119,8 +119,6 @@ int main( int argc, char **argv){
     // TODO: take in from commandline, including maxlevel
 
     // Testing assembly function
-    long test = influenceMapForSquare2( board, 9  );
-    printf("%ld\n", test );
 
     printBoard( board );
 
@@ -203,7 +201,7 @@ void dig(long board[]){
         }
     }
     count(board);
-    if( MAX_LEVEL <= 2 ){
+    if( MAX_LEVEL <= 3 ){
       if( board[IDX_MOVE_NUM] == MAX_LEVEL){
         printDiagram( board );
       }

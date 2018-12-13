@@ -1,4 +1,3 @@
-depth=5
-turn=black
+depth=2
 numthreads=4
 workunits=workunits.txt
