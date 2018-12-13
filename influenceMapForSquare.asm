@@ -30,6 +30,14 @@ clearMap:
         mov     qword [rdi+74*8+40],0
         mov     qword [rdi+74*8+48],0
         mov     qword [rdi+74*8+56],0
+        mov     qword [rdi+74*8+64],0
+        mov     qword [rdi+74*8+72],0
+        mov     qword [rdi+74*8+80],0
+        mov     qword [rdi+74*8+88],0
+        mov     qword [rdi+74*8+96],0
+        mov     qword [rdi+74*8+104],0
+        mov     qword [rdi+74*8+112],0
+        mov     qword [rdi+74*8+120],0
 
 
 directionLoop1: ; vi skal aldri hoppe hit egentlig.
@@ -142,8 +150,6 @@ knightLoop:
         mov [rdi+74*8+r13*8],rax
 
 noKnightOnIndex:
-        xor rax,rax
-        mov [rdi+74*8+r13*8],rax
 knightIndexOutOfBoard:
         inc r13
         cmp r13,16
