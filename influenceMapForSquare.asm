@@ -20,8 +20,6 @@ _influenceMapForSquare2:
         push r11
         push r13
 
-        lea rdx,[rel COUNTER]
-        inc qword [rdx]
 
 clearMap:
         mov     qword [rdi+74*8],0
@@ -32,14 +30,7 @@ clearMap:
         mov     qword [rdi+74*8+40],0
         mov     qword [rdi+74*8+48],0
         mov     qword [rdi+74*8+56],0
-        mov     qword [rdi+74*8+64],0
-        mov     qword [rdi+74*8+72],0
-        mov     qword [rdi+74*8+80],0
-        mov     qword [rdi+74*8+88],0
-        mov     qword [rdi+74*8+96],0
-        mov     qword [rdi+74*8+104],0
-        mov     qword [rdi+74*8+112],0
-        mov     qword [rdi+74*8+120],0
+
 
 directionLoop1: ; vi skal aldri hoppe hit egentlig.
         mov r13, 0
@@ -146,20 +137,20 @@ knightLoop:
 
         and rax, Pieces_Nn ; is piece at position a knight?
         jz noKnightOnIndex
-
         ; yes a knight was there
         mov rax,[rdi+r10*8]
         mov [rdi+74*8+r13*8],rax
-        mov rax, r10
 
 noKnightOnIndex:
+        xor rax,rax
+        mov [rdi+74*8+r13*8],rax
 knightIndexOutOfBoard:
         inc r13
         cmp r13,16
         jl knightLoop
-
 end:
         lea rdx,[rel COUNTER]
+        inc qword [rdx]
         mov rax,[rdx]
 
         pop r13

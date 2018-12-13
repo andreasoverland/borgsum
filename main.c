@@ -130,7 +130,7 @@ int main( int argc, char **argv){
     }
 
     int l = 14;
-    // influenceMapForSquareInvocations = influenceMapForSquare2( board, 29  ) - 1;
+    influenceMapForSquareInvocations = influenceMapForSquare2( board, 29  ) - 1;
     long total = printStats();
 
     printf("\nTotal valid moves found : %lu \n" ,total);
@@ -1104,7 +1104,7 @@ int calculateCheckStatus(long board[]) {
 
     int result = 0;
 
-    influenceMapForSquare(board, board[IDX_WHITE_KING_INDEX] );
+    influenceMapForSquare2(board, board[IDX_WHITE_KING_INDEX] );
 
     boolean whiteKingIsInCheck = FALSE;
 
@@ -1125,7 +1125,7 @@ int calculateCheckStatus(long board[]) {
         }
     }
 
-    influenceMapForSquare(board, board[IDX_BLACK_KING_INDEX] );
+    influenceMapForSquare2(board, board[IDX_BLACK_KING_INDEX] );
 
     boolean blackKingIsInCheck = FALSE;
 
