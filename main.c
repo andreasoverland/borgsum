@@ -1104,6 +1104,14 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
 
 int calculateCheckStatus(long board[]) {
 
+    // TODO: Rewrite this one completely. The two calls to a complete influenceMap
+    //       and then a check on every type of piece is overkill. We need only one
+    //       hit on a threatening piece to determine of the board is in check.
+    //       Still, keep the function, since we may want to use it for board
+    //       evaluation later, as it could be nice to know if the king is
+    //       attacked more than once. And to calculate real threatmaps.
+    //
+
     calculateCheckStatusInvocations++;
 
     int result = 0;
