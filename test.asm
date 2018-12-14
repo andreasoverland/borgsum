@@ -1,11 +1,11 @@
-; /usr/local/bin/nasm -f macho64 test.asm && ld -macosx_version_min 10.7.0 -lSystem -o test test.o && ./test
+; nasm -f macho64 test.asm && ld -macosx_version_min 10.7.0 -lSystem -o test test.o && ./test
 
-global start
+global _main
 
 
 section .text
 
-start:
+_:main
     mov     rax, 0x2000004 ; write
     mov     rdi, 1 ; stdout
     mov     rsi, msg

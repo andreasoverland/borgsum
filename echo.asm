@@ -2,26 +2,29 @@
 ; A 64-bit program that displays its command line arguments, one per line.
 ;
 ; On entry, rdi will contain argc and rsi will contain argv.
-; nasm -fmacho64 echo.asm && gcc echo.o && ./a.out dog 22 -zzz "hi there"
+; nasm -fmacho64 echo.asm && gcc echo.o && lldb a.out
+; nasm -fmacho64 echo.asm && gcc echo.o && ./a.out
 ; -----------------------------------------------------------------------------
 
         global  _main
-        extern  _puts
+
         section .text
 _main:
+beginning:
         push    rdi                     ; save registers that puts uses
         push    rsi
-        sub     rsp, 8                  ; must align stack before call
 
-        lea     rdi, [rsi]              ; First argument is address of message
-        call    _puts                   ; print it
+        mov rax,10
+        mov rbx,0
+        add rax,rbx
+        js signed
+        mov rax,0
 
-        add     rsp, 8                  ; restore %rsp to pre-aligned value
+signed:
+
         pop     rsi                     ; restore registers puts used
         pop     rdi
 
-        add     rsi, 8                  ; point to next argument
-        dec     rdi                     ; count down
-        jnz     _main                    ; if not done counting keep going
+
 
         ret

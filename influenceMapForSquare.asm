@@ -39,7 +39,6 @@ clearMap:
         mov     qword [rdi+74*8+112],0
         mov     qword [rdi+74*8+120],0
 
-
 ; vi skal aldri hoppe hit egentlig.
         mov r13, 0
         mov r8, -1 ; for r8 = -1 .. 1
@@ -65,10 +64,9 @@ multiplierLoop:
 
         add rbx,r8    ; is rank or file smaller than 0 or bigger than 7
         add rcx,r9
-        mov r10,rbx
-        or  r10,rcx
-        and r10,-8h
-
+        mov rax,rbx
+        or  rax,rcx
+        and rax,-8h
         jnz nextR9 ; if so, jump to next direction
 
 theInnerLoop:
@@ -77,6 +75,7 @@ theInnerLoop:
         shl r10,3   ; multiply by 8
         or  r10,rcx ; add file into r10
         mov rax,[rdi+r10*8] ; move piece at index r10 into rax
+        mov rdx,rax
         cmp rax,0 ; is it empty ?
         jz nextMultiplier ; if piece == 0, go further
 
@@ -86,13 +85,14 @@ theInnerLoop:
         jge nextR9
 
 notPpKk:
-        mov rax,[rdi+r10*8] ; returns piece at position rsi
+        mov rax,rdx
+        ; mov rax,[rdi+r10*8] ; returns piece at position rsi
         and rax, Pieces_Nn
         jz setAndNextDirection
         jmp nextR9
 
 setAndNextDirection:
-        mov rax,[rdi+r10*8]
+        mov rax,rdx
         ; mov qword [rdi+r10*8], Piece_Test ; for debugging
         mov qword [rdi+74*8+r13*8],rax; flytt rax inn i riktig plass i map
         jmp nextR9
