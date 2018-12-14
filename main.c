@@ -202,11 +202,11 @@ void dig(long board[]){
         }
     }
     count(board);
-    if( MAX_LEVEL <= 3 ){
+    /*if( MAX_LEVEL <= 3 ){
       if( board[IDX_MOVE_NUM] == MAX_LEVEL){
         printDiagram( board );
       }
-    }
+    }*/
     /*if( board[IDX_MOVE_NUM] == 2){
       printStats();
     }*/
@@ -1104,19 +1104,19 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
  const int WHITE_ATTACK_MAP_PIECES[] = {
   0,Pieces_QBK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
   0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
-  0,Pieces_QBPK,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
-  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
   0,Pieces_QBK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
   0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
-  0,Pieces_QBPK,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
+  0,Pieces_QBPK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
+  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
+  0,Pieces_QBPK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
   0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR
 };
  const int BLACK_ATTACK_MAP_PIECES[] = {
-  0,Pieces_qbpk,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
+  0,Pieces_qbpk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
+  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
+  0,Pieces_qbpk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
   0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
   0,Pieces_qbk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
-  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
-  0,Pieces_qbpk,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
   0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
   0,Pieces_qbk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
   0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr
@@ -1133,6 +1133,9 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
     0,-1
 };
 
+int numFaults = 0;
+
+// #rewrite
 int calculateCheckStatus( long board[] ){
 
   calculateCheckStatusInvocations++;
@@ -1149,12 +1152,10 @@ int calculateCheckStatus( long board[] ){
     int rank = idx >> 3;
     int file = idx & 7;
 
-    int mapOffset = d<<1;
+    int mapOffset = d<<3;
 
-    int dRank = ATTACK_MAP_INDEXES[mapOffset];
-    int dFile = ATTACK_MAP_INDEXES[mapOffset|1];
-
-    mapOffset <<= 2;
+    int dRank = ATTACK_MAP_INDEXES[d<<1];
+    int dFile = ATTACK_MAP_INDEXES[(d<<1)+1];
 
     for( int m=1;m<8;m++){
 
@@ -1163,7 +1164,7 @@ int calculateCheckStatus( long board[] ){
 
       if ( ((rank | file) & 0xFFFFFFF8) == 0 ) { // rank | file >= 0 and < 8
 
-        int newIdx = rank << 3 | file;
+        int newIdx = (rank << 3) | file;
         if( board[newIdx ] == 0 ){
           continue;
         }
@@ -1180,7 +1181,6 @@ int calculateCheckStatus( long board[] ){
 
   }
 
-
   if( !whiteKingIsInCheck ){
     int rank = idx >> 3;
     int file = idx & 7;
@@ -1191,14 +1191,14 @@ int calculateCheckStatus( long board[] ){
 
         // Check that 0 > newRank|newFile < 8
         if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-            int checkIdx = newRank << 3 | newFile;
-            int checkPiece = board[checkIdx];
-            if (checkPiece == Piece_n) {
+            int checkIdx = (newRank << 3) | newFile;
+            if (board[checkIdx] == Piece_n) {
                 whiteKingIsInCheck = TRUE;
                 break;
             }
         }
     }
+
   }
 
   // --------------------------- BLACK KING ------------------------
@@ -1213,7 +1213,7 @@ int calculateCheckStatus( long board[] ){
     int mapOffset = d<<3;
 
     int dRank = ATTACK_MAP_INDEXES[d<<1];
-    int dFile = ATTACK_MAP_INDEXES[(d<<1)|1];
+    int dFile = ATTACK_MAP_INDEXES[(d<<1)+1];
 
     for( int m=1;m<8;m++){
 
@@ -1222,13 +1222,14 @@ int calculateCheckStatus( long board[] ){
 
       if ( ((rank | file) & 0xFFFFFFF8) == 0 ) { // rank | file >= 0 and < 8
 
-        int newIdx = rank << 3 | file;
+        int newIdx = (rank << 3) + file;
 
         if( board[ newIdx ] == 0 ){
           continue;
         }
+        int attackPiece = WHITE_ATTACK_MAP_PIECES[m+mapOffset];
 
-        if( (board[newIdx] & WHITE_ATTACK_MAP_PIECES[m+mapOffset]) != 0 ){
+        if( (board[newIdx] & attackPiece ) != 0 ){
           blackKingIsInCheck = TRUE;
         }
         break;
@@ -1250,9 +1251,8 @@ int calculateCheckStatus( long board[] ){
 
         // Check that 0 > newRank|newFile < 8
         if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-            int checkIdx = newRank << 3 | newFile;
-            int checkPiece = board[checkIdx];
-            if (checkPiece == Piece_N) {
+            int checkIdx = (newRank << 3) | newFile;
+            if (board[checkIdx] == Piece_N) {
                 blackKingIsInCheck = TRUE;
                 break;
             }
@@ -1268,8 +1268,6 @@ int calculateCheckStatus( long board[] ){
   if (blackKingIsInCheck) {
       result |= MASK_BLACK_KING_CHECKED;
   }
-
-
 
   return result;
 }
@@ -1440,9 +1438,9 @@ void count(long b[]) {
         numCheckmates[level]++;
     }
 
-    if( level == 3 && b[IDX_CHECK_STATUS] & (MASK_WHITE_KING_CHECKED | MASK_BLACK_KING_CHECKED) ){
+    /*if( level == 3 && b[IDX_CHECK_STATUS] & (MASK_WHITE_KING_CHECKED | MASK_BLACK_KING_CHECKED) ){
       printBoard( b);
-    }
+    }*/
 }
 
 
@@ -1502,7 +1500,7 @@ void printDiagram( long board[] ){
 
 void printBoard( long board[] ){
 
-    printf( "  A B C D E F G H");
+    printf( "\n\n  A B C D E F G H");
 
     for( int s=0;(s & 64) == 0;s++){
         if( s % 8 == 0 ){
@@ -1541,7 +1539,7 @@ void printBoard( long board[] ){
     if( board[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED ) {
         printf( "Black is in check\n");
     }
-    printf( "\n\n");
+
     fflush(stdout);
 }
 
