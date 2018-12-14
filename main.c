@@ -31,6 +31,7 @@ int findAllPossibleMoves(long originalBoard[]);
 boolean isSquaresThreatenedByColor(long board[], int indices[], int color);
 void makeNewBoard( long originalBoard[], long newBoard[] );
 int calculateCheckStatus(long board[]);
+int calculateCheckStatus3( long board[] );
 int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
@@ -39,7 +40,7 @@ int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatr
 int influenceMapForSquare2( long board[],int idx );
 // unsigned long long otherBoard[64];
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 6;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -59,7 +60,7 @@ int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-  /*char *initialBoard = "\
+  char *initialBoard = "\
                        r n b q k b n r\
                        p p p p p p p p\
                        . . . . . . . .\
@@ -67,9 +68,9 @@ int main( int argc, char **argv){
                        . . . . . . . .\
                        . . . . . . . .\
                        P P P P P P P P\
-                       R N B Q K B N R";*/
+                       R N B Q K B N R";
 
-   char *initialBoard = "\
+   /*char *initialBoard = "\
                       r . . . k . . r\
                       p . p p q p b .\
                       b n . . p n p .\
@@ -77,7 +78,7 @@ int main( int argc, char **argv){
                       . p . . P . . .\
                       . . N . . Q . p\
                       P P P B B P P P\
-                      R . . . K . . R";
+                      R . . . K . . R";*/
 
 
 
@@ -1100,9 +1101,180 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
     return FALSE;
 }
 
+ const int WHITE_ATTACK_MAP_PIECES[] = {
+  0,Pieces_QBK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
+  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
+  0,Pieces_QBPK,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
+  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
+  0,Pieces_QBK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
+  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
+  0,Pieces_QBPK,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
+  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR
+};
+ const int BLACK_ATTACK_MAP_PIECES[] = {
+  0,Pieces_qbpk,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
+  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
+  0,Pieces_qbk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
+  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
+  0,Pieces_qbpk,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
+  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
+  0,Pieces_qbk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
+  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr
+};
+
+ const int ATTACK_MAP_INDEXES[] = {
+   -1,-1,
+   -1,0,
+   -1,1,
+    0,1,
+    1,-1,
+    1,0,
+    1,1,
+    0,-1
+};
+
+int calculateCheckStatus( long board[] ){
+
+  calculateCheckStatusInvocations++;
+
+  int result = 0;
 
 
-int calculateCheckStatus(long board[]) {
+  // -------------------------------- WHITE KING -----------------------
+  boolean whiteKingIsInCheck = FALSE;
+  int idx = board[IDX_WHITE_KING_INDEX];
+
+  for( int d=0;d<8; d++){
+
+    int rank = idx >> 3;
+    int file = idx & 7;
+
+    int mapOffset = d<<1;
+
+    int dRank = ATTACK_MAP_INDEXES[mapOffset];
+    int dFile = ATTACK_MAP_INDEXES[mapOffset|1];
+
+    mapOffset <<= 2;
+
+    for( int m=1;m<8;m++){
+
+      rank += dRank;
+      file += dFile;
+
+      if ( ((rank | file) & 0xFFFFFFF8) == 0 ) { // rank | file >= 0 and < 8
+
+        int newIdx = rank << 3 | file;
+        if( board[newIdx ] == 0 ){
+          continue;
+        }
+        if( (board[newIdx] & BLACK_ATTACK_MAP_PIECES[m+mapOffset]) != 0 ){
+          whiteKingIsInCheck = TRUE;
+        }
+        break;
+
+      }
+
+    }
+
+    if( whiteKingIsInCheck ) break;
+
+  }
+
+
+  if( !whiteKingIsInCheck ){
+    int rank = idx >> 3;
+    int file = idx & 7;
+
+    for (int t = 0; t < KNIGHT_MOVE_MATRIX_LENGTH; t += 2) {
+        int newFile = file + KNIGHT_MOVE_MATRIX[t];
+        int newRank = rank + KNIGHT_MOVE_MATRIX[t | 1];
+
+        // Check that 0 > newRank|newFile < 8
+        if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
+            int checkIdx = newRank << 3 | newFile;
+            int checkPiece = board[checkIdx];
+            if (checkPiece == Piece_n) {
+                whiteKingIsInCheck = TRUE;
+                break;
+            }
+        }
+    }
+  }
+
+  // --------------------------- BLACK KING ------------------------
+  boolean blackKingIsInCheck = FALSE;
+  idx = board[IDX_BLACK_KING_INDEX];
+
+  for( int d=0;d<8; d++){
+
+    int rank = idx >> 3;
+    int file = idx & 7;
+
+    int mapOffset = d<<3;
+
+    int dRank = ATTACK_MAP_INDEXES[d<<1];
+    int dFile = ATTACK_MAP_INDEXES[(d<<1)|1];
+
+    for( int m=1;m<8;m++){
+
+      rank += dRank;
+      file += dFile;
+
+      if ( ((rank | file) & 0xFFFFFFF8) == 0 ) { // rank | file >= 0 and < 8
+
+        int newIdx = rank << 3 | file;
+
+        if( board[ newIdx ] == 0 ){
+          continue;
+        }
+
+        if( (board[newIdx] & WHITE_ATTACK_MAP_PIECES[m+mapOffset]) != 0 ){
+          blackKingIsInCheck = TRUE;
+        }
+        break;
+      }
+
+    }
+
+    if( blackKingIsInCheck ) break;
+
+  }
+
+  if( !blackKingIsInCheck ){
+    int rank = idx >> 3;
+    int file = idx & 7;
+
+    for (int t = 0; t < KNIGHT_MOVE_MATRIX_LENGTH ; t += 2) {
+        int newFile = file + KNIGHT_MOVE_MATRIX[t];
+        int newRank = rank + KNIGHT_MOVE_MATRIX[t | 1];
+
+        // Check that 0 > newRank|newFile < 8
+        if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
+            int checkIdx = newRank << 3 | newFile;
+            int checkPiece = board[checkIdx];
+            if (checkPiece == Piece_N) {
+                blackKingIsInCheck = TRUE;
+                break;
+            }
+        }
+    }
+  }
+
+
+  if (whiteKingIsInCheck) {
+      result = MASK_WHITE_KING_CHECKED;
+  }
+
+  if (blackKingIsInCheck) {
+      result |= MASK_BLACK_KING_CHECKED;
+  }
+
+
+
+  return result;
+}
+
+int calculateCheckStatus3(long board[]) {
 
     // TODO: Rewrite this one completely. The two calls to a complete influenceMap
     //       and then a check on every type of piece is overkill. We need only one
@@ -1267,6 +1439,10 @@ void count(long b[]) {
     if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_MATED) ) {
         numCheckmates[level]++;
     }
+
+    if( level == 3 && b[IDX_CHECK_STATUS] & (MASK_WHITE_KING_CHECKED | MASK_BLACK_KING_CHECKED) ){
+      printBoard( b);
+    }
 }
 
 
@@ -1353,6 +1529,18 @@ void printBoard( long board[] ){
     printf("\n");
     printf( "Move num: %ld\n", board[IDX_MOVE_NUM] );
     printf( "Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black" );
+
+
+
+    if ((board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED) ) {
+        printf( "There is a MATE\n");
+    }
+    if( board[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED ) {
+        printf( "White is in check\n");
+    }
+    if( board[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED ) {
+        printf( "Black is in check\n");
+    }
     printf( "\n\n");
     fflush(stdout);
 }

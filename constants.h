@@ -21,10 +21,15 @@ static const int Pieces_PpKk = 1 | 64 | 32 | 2048;
 static const int Pieces_qbpk = 1024 | 512 | 2048 | 64 ;
 static const int Pieces_qbk  = 1024 | 512 | 2048;
 static const int Pieces_qrk  = 1024 | 128 | 2048;
+static const int Pieces_qb   = 1024 | 512;
+static const int Pieces_qr   = 1024 | 128;
+
 
 static const int Pieces_QBPK = 16 | 8 | 1 | 32;
 static const int Pieces_QBK =  16 | 8 | 32;
 static const int Pieces_QRK =  16 | 2 | 32;
+static const int Pieces_QB =   16 | 8;
+static const int Pieces_QR =   16 | 2;
 
 static const int WHITE_MASK = 0b000000111111;
 static const int BLACK_MASK = 0b111111000000;
