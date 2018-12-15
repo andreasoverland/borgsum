@@ -80,9 +80,6 @@ int main( int argc, char **argv){
                       P P P B B P P P\
                       R . . . K . . R";*/
 
-
-
-
     long board[NUM_BYTES];
 
     if( argc > 1 ){
@@ -107,19 +104,6 @@ int main( int argc, char **argv){
         MAX_LEVEL = atoi(argv[4]);
     }
 
-    /*diagramToByteBoard( board, "\
-                       r . . . k . . r\
-                       p . p p q p b .\
-                       b n . . p n p .\
-                       . . . P N . . .\
-                       . p . . P . . .\
-                       . . N . . Q . p\
-                       P P P B B P P P\
-                       R . . . K . . R");*/
-
-    // TODO: take in from commandline, including maxlevel
-
-    // Testing assembly function
 
     printBoard( board );
 
@@ -821,13 +805,14 @@ int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatr
     const int p = b[fromIdx];
     const int color = b[IDX_TURN];
 
-
     for (int t = 0; t < moveMatrixLength; t += 2) {
         int newFile = file;
         int newRank = rank;
+        int dFile = moveMatrix[t];
+        int dRank = moveMatrix[t | 1];
         for (int n = 1; (n & 8) == 0; n++) {
-            newFile += moveMatrix[t];
-            newRank += moveMatrix[t | 1];
+            newFile += dFile;
+            newRank += dRank;
             if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
                 int toIdx = newRank << 3 | newFile;
                 int pieceAtIdx = b[toIdx];
@@ -1102,24 +1087,24 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
 }
 
  const int WHITE_ATTACK_MAP_PIECES[] = {
-  0,Pieces_QBK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
-  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
-  0,Pieces_QBK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
-  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
-  0,Pieces_QBPK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
-  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,
-  0,Pieces_QBPK, Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,Pieces_QB,
-  0,Pieces_QRK, Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR,Pieces_QR
+  Pieces_QBK,  Pieces_QB,
+  Pieces_QRK,  Pieces_QR,
+  Pieces_QBK,  Pieces_QB,
+  Pieces_QRK,  Pieces_QR,
+  Pieces_QBPK, Pieces_QB,
+  Pieces_QRK,  Pieces_QR,
+  Pieces_QBPK, Pieces_QB,
+  Pieces_QRK,  Pieces_QR,
 };
  const int BLACK_ATTACK_MAP_PIECES[] = {
-  0,Pieces_qbpk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
-  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
-  0,Pieces_qbpk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
-  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
-  0,Pieces_qbk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
-  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,
-  0,Pieces_qbk, Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,Pieces_qb,
-  0,Pieces_qrk, Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr,Pieces_qr
+  Pieces_qbpk,Pieces_qb,
+  Pieces_qrk, Pieces_qr,
+  Pieces_qbpk,Pieces_qb,
+  Pieces_qrk, Pieces_qr,
+  Pieces_qbk, Pieces_qb,
+  Pieces_qrk, Pieces_qr,
+  Pieces_qbk, Pieces_qb,
+  Pieces_qrk, Pieces_qr,
 };
 
  const int ATTACK_MAP_INDEXES[] = {
@@ -1142,38 +1127,43 @@ int calculateCheckStatus( long board[] ){
 
   int result = 0;
 
-
   // -------------------------------- WHITE KING -----------------------
   boolean whiteKingIsInCheck = FALSE;
   int idx = board[IDX_WHITE_KING_INDEX];
 
-  for( int d=0;d<8; d++){
+  for( int d=0;!(d&8); d++){
 
     int rank = idx >> 3;
     int file = idx & 7;
 
-    int mapOffset = d<<3;
+    int mapOffset = d<<1;
 
-    int dRank = ATTACK_MAP_INDEXES[d<<1];
-    int dFile = ATTACK_MAP_INDEXES[(d<<1)+1];
+    int dRank = ATTACK_MAP_INDEXES[mapOffset];
+    int dFile = ATTACK_MAP_INDEXES[mapOffset|1];
 
-    for( int m=1;m<8;m++){
+    int checkPiece = 0;
+    for( int m=0;m<7;m++){
 
       rank += dRank;
       file += dFile;
 
-      if ( ((rank | file) & 0xFFFFFFF8) == 0 ) { // rank | file >= 0 and < 8
-
-        int newIdx = (rank << 3) | file;
-        if( board[newIdx ] == 0 ){
-          continue;
-        }
-        if( (board[newIdx] & BLACK_ATTACK_MAP_PIECES[m+mapOffset]) != 0 ){
-          whiteKingIsInCheck = TRUE;
-        }
+      if ( ((rank | file) & 0xFFFFFFF8) != 0 ) { // rank | file >= 0 and < 8
         break;
-
       }
+
+      if( m < 2 ){
+        checkPiece = BLACK_ATTACK_MAP_PIECES[m|mapOffset];
+      }
+
+      int newIdx = (rank << 3) | file;
+      if( board[newIdx ] == 0 ){
+        continue;
+      }
+
+      if( (board[newIdx] & checkPiece ) != 0 ){
+        whiteKingIsInCheck = TRUE;
+      }
+      break;
 
     }
 
@@ -1185,55 +1175,62 @@ int calculateCheckStatus( long board[] ){
     int rank = idx >> 3;
     int file = idx & 7;
 
-    for (int t = 0; t < KNIGHT_MOVE_MATRIX_LENGTH; t += 2) {
-        int newFile = file + KNIGHT_MOVE_MATRIX[t];
-        int newRank = rank + KNIGHT_MOVE_MATRIX[t | 1];
+    for (int t = 0; !(t&8); t ++ ) {
+        int newFile = file + KNIGHT_MOVE_MATRIX_2[t];
+        int newRank = rank + KNIGHT_MOVE_MATRIX_2[t + 1];
 
         // Check that 0 > newRank|newFile < 8
         if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-            int checkIdx = (newRank << 3) | newFile;
-            if (board[checkIdx] == Piece_n) {
-                whiteKingIsInCheck = TRUE;
-                break;
-            }
-        }
-    }
 
+
+          if (board[(newRank << 3) | newFile] == Piece_n) {
+            whiteKingIsInCheck = TRUE;
+            break;
+          }
+        }
+
+     }
   }
 
   // --------------------------- BLACK KING ------------------------
   boolean blackKingIsInCheck = FALSE;
   idx = board[IDX_BLACK_KING_INDEX];
 
-  for( int d=0;d<8; d++){
+  for( int d=0;!(d&8); d++){
 
     int rank = idx >> 3;
     int file = idx & 7;
 
-    int mapOffset = d<<3;
+    int mapOffset = d<<1;
 
-    int dRank = ATTACK_MAP_INDEXES[d<<1];
-    int dFile = ATTACK_MAP_INDEXES[(d<<1)+1];
+    int dRank = ATTACK_MAP_INDEXES[mapOffset];
+    int dFile = ATTACK_MAP_INDEXES[mapOffset|1];
 
-    for( int m=1;m<8;m++){
+    int checkPiece = 0;
+
+    for( int m=0;m<7;m++){
 
       rank += dRank;
       file += dFile;
 
-      if ( ((rank | file) & 0xFFFFFFF8) == 0 ) { // rank | file >= 0 and < 8
-
-        int newIdx = (rank << 3) + file;
-
-        if( board[ newIdx ] == 0 ){
-          continue;
-        }
-        int attackPiece = WHITE_ATTACK_MAP_PIECES[m+mapOffset];
-
-        if( (board[newIdx] & attackPiece ) != 0 ){
-          blackKingIsInCheck = TRUE;
-        }
+      if ( ((rank | file) & 0xFFFFFFF8) != 0 ) { // rank | file >= 0 and < 8
         break;
       }
+
+      if( m < 2 ){
+        checkPiece = WHITE_ATTACK_MAP_PIECES[m|mapOffset];
+      }
+
+      int newIdx = (rank << 3) | file;
+
+      if( board[ newIdx ] == 0 ){
+        continue;
+      }
+      if( (board[newIdx] & checkPiece ) != 0 ){
+        blackKingIsInCheck = TRUE;
+      }
+      break;
+
 
     }
 
@@ -1245,21 +1242,22 @@ int calculateCheckStatus( long board[] ){
     int rank = idx >> 3;
     int file = idx & 7;
 
-    for (int t = 0; t < KNIGHT_MOVE_MATRIX_LENGTH ; t += 2) {
-        int newFile = file + KNIGHT_MOVE_MATRIX[t];
-        int newRank = rank + KNIGHT_MOVE_MATRIX[t | 1];
+    for (int t = 0; !(t&8) ; t ++) {
+        int newFile = file + KNIGHT_MOVE_MATRIX_2[t];
+        int newRank = rank + KNIGHT_MOVE_MATRIX_2[t + 1];
 
         // Check that 0 > newRank|newFile < 8
         if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-            int checkIdx = (newRank << 3) | newFile;
-            if (board[checkIdx] == Piece_N) {
-                blackKingIsInCheck = TRUE;
-                break;
-            }
+
+          if (board[(newRank << 3) | newFile] == Piece_N) {
+            blackKingIsInCheck = TRUE;
+            break;
+          }
         }
+
+
     }
   }
-
 
   if (whiteKingIsInCheck) {
       result = MASK_WHITE_KING_CHECKED;

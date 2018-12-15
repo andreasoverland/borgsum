@@ -97,6 +97,9 @@ static const int KNIGHT_MOVE_MATRIX[] = {
     -1, -2, -1, 2, -2, -1, -2, 1,
      1, -2,  1, 2,  2, -1,  2, 1
 };
+static const int KNIGHT_MOVE_MATRIX_2[] = {
+  -1, -2, -1, 2, 1, -2, 1, 2, -1
+};
 
 static const int BISHOP_MOVE_MATRIX_LENGTH = 8;
 static const int BISHOP_MOVE_MATRIX[] = {
