@@ -31,7 +31,6 @@ int findAllPossibleMoves(long originalBoard[]);
 boolean isSquaresThreatenedByColor(long board[], int indices[], int color);
 void makeNewBoard( long originalBoard[], long newBoard[] );
 int calculateCheckStatus(long board[]);
-int calculateCheckStatus3( long board[] );
 int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
@@ -218,7 +217,6 @@ int findAllPossibleMoves(long originalBoard[]) {
              ***************************************  WHITE  *******************************************
              *******************************************************************************************
              */
-
             if (p == Piece_P) {
 
                 int fromIdxm7 = fromIdx - 7;
@@ -230,12 +228,12 @@ int findAllPossibleMoves(long originalBoard[]) {
                 // Check if one and/or two moves ahead can be made
                 long m[NUM_BYTES];
 
-                if (originalBoard[fromIdxm8] == 0) {
+                if (originalBoard[fromIdx-8] == 0) {
                     if (rank > 1) {
 
                         makeNewBoard(originalBoard,m);
                         m[fromIdx] = 0;
-                        m[fromIdxm8] = p;
+                        m[fromIdx-8] = p;
 
                         const int checkStatus = calculateCheckStatus(m);
                         if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
@@ -1270,77 +1268,6 @@ int calculateCheckStatus( long board[] ){
   return result;
 }
 
-int calculateCheckStatus3(long board[]) {
-
-    // TODO: Rewrite this one completely. The two calls to a complete influenceMap
-    //       and then a check on every type of piece is overkill. We need only one
-    //       hit on a threatening piece to determine of the board is in check.
-    //       Still, keep the function, since we may want to use it for board
-    //       evaluation later, as it could be nice to know if the king is
-    //       attacked more than once. And to calculate real threatmaps.
-    //
-
-    calculateCheckStatusInvocations++;
-
-    int result = 0;
-
-    influenceMapForSquare(board, board[IDX_WHITE_KING_INDEX] );
-
-    boolean whiteKingIsInCheck = FALSE;
-
-    long* influemceMapPtr = board+IDX_START_INFLUENCE_MAP;
-
-    // int mapping[8] = {2,0,2,0,0,1,0,1}
-    if (((influemceMapPtr[1] | influemceMapPtr[3] | influemceMapPtr[4] | influemceMapPtr[6]) & Pieces_qrk) != 0) {
-        whiteKingIsInCheck = TRUE;
-    }
-    else if (((influemceMapPtr[5] | influemceMapPtr[7]) & Pieces_qbk) != 0) {
-        whiteKingIsInCheck = TRUE;
-    }
-    else if (((influemceMapPtr[0] | influemceMapPtr[2]) & Pieces_qbpk) != 0) {
-        whiteKingIsInCheck = TRUE;
-    }
-
-    for (int t = 8; t < 16 && !whiteKingIsInCheck; t++) {
-        if (influemceMapPtr[t] == Piece_n) {
-            whiteKingIsInCheck = TRUE;
-            break;
-        }
-    }
-
-    influenceMapForSquare(board, board[IDX_BLACK_KING_INDEX] );
-
-    boolean blackKingIsInCheck = FALSE;
-
-    // go through all and check all 1..6 piece entries
-
-
-    if (((influemceMapPtr[1] | influemceMapPtr[3] | influemceMapPtr[4] | influemceMapPtr[6]) & Pieces_QRK) != 0) {
-        blackKingIsInCheck = TRUE;
-    } else if (((influemceMapPtr[5] | influemceMapPtr[7]) & Pieces_QBPK) != 0) {
-        blackKingIsInCheck = TRUE;
-    } else if (((influemceMapPtr[0] | influemceMapPtr[2]) & Pieces_QBK) != 0) {
-        blackKingIsInCheck = TRUE;
-    }
-
-
-    for (int t = 8; t < 16 && !blackKingIsInCheck; t++) {
-        if (influemceMapPtr[t] == Piece_N) {
-            blackKingIsInCheck = TRUE;
-            break;
-        }
-    }
-
-    if (whiteKingIsInCheck) {
-        result = MASK_WHITE_KING_CHECKED;
-    }
-
-    if (blackKingIsInCheck) {
-        result |= MASK_BLACK_KING_CHECKED;
-    }
-
-    return result;
-}
 
 
 

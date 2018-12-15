@@ -47,9 +47,9 @@ static const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE = 16;
 
 static const int MASK_EMPTY = 0;
 
-static const int MASK_WHITE_KING_CHECKED = 1;
-static const int MASK_BLACK_KING_CHECKED = 2;
-static const int MASK_KING_IS_MATED = 4;
+static const int MASK_WHITE_KING_CHECKED = 0b000000111111;
+static const int MASK_BLACK_KING_CHECKED = 0b111111000000;
+static const int MASK_KING_IS_MATED = 0b1000000000000;
 
 static const int IDX_CASTLING = 65;
 static const int IDX_MOVE_NUM = 66;
