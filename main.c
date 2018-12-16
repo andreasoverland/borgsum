@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "constants.h"
 
@@ -11,7 +12,6 @@ void diagramToByteBoard( long board[], char diagram[] );
 void printBoard( long board[] );
 void printDiagram( long board[] );
 void printNumBoard( long board[] );
-void doSomethingToArray( long board[] );
 long printStats();
 
 // Variations
@@ -35,11 +35,7 @@ int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMa
 int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
-// assembly functions
-int influenceMapForSquare2( long board[],int idx );
-// unsigned long long otherBoard[64];
-
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 7;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -54,8 +50,9 @@ long isSquaresThreatenedByColorInvocations = 0;
 long influenceMapForSquareInvocations = 0;
 long moveLinearInvocations = 0;
 
-int main( int argc, char **argv){
+char *workUnitId = NULL;
 
+int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
@@ -82,6 +79,12 @@ int main( int argc, char **argv){
     long board[NUM_BYTES];
 
     if( argc > 1 ){
+      if( strcmp(argv[1],"SLEEP") ==0 ){
+        printf("SLEEPING");
+        fflush(stdout);
+        sleep(60);
+        return 0;
+      }
       initialBoard = argv[1];
     }
     diagramToByteBoard( board, initialBoard);
@@ -103,6 +106,10 @@ int main( int argc, char **argv){
         MAX_LEVEL = atoi(argv[4]);
     }
 
+    if( argc > 5 ){
+        workUnitId = argv[5];
+        printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
+    }
 
     printBoard( board );
 
@@ -135,6 +142,8 @@ int main( int argc, char **argv){
 } // end main
 
 long printStats(){
+
+
   printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
           "Depth",
           "Nodes",
@@ -174,7 +183,6 @@ long printStats(){
 
 
 void dig(long board[]){
-
 
     if (board[IDX_MOVE_NUM] < MAX_LEVEL
        || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
