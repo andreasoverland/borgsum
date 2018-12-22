@@ -54,15 +54,10 @@ char *workUnitId = NULL;
 
 
 const long PIECE_COMBOS =
-  (long)Pieces_QBK |
-  (long)Pieces_QB << 6 |
-  (long)Pieces_QBPK << 12 |
-  (long)Pieces_QB << 18 |
-  (long)Pieces_QRK << 24 |
-  (long)Pieces_QR << 30 |
-  (long)Pieces_QRK << 36 |
-  (long)Pieces_QR << 42
-
+  (long)Pieces_QBK        |  (long)Pieces_QB <<  6 |
+  (long)Pieces_QBPK << 12 |  (long)Pieces_QB << 18 |
+  (long)Pieces_QRK <<  24 |  (long)Pieces_QR << 30 |
+  (long)Pieces_QRK <<  36 |  (long)Pieces_QR << 42
   ;
 
 int main( int argc, char **argv){
