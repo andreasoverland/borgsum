@@ -52,6 +52,19 @@ long moveLinearInvocations = 0;
 
 char *workUnitId = NULL;
 
+
+const long PIECE_COMBOS =
+  (long)Pieces_QBK |
+  (long)Pieces_QB << 6 |
+  (long)Pieces_QBPK << 12 |
+  (long)Pieces_QB << 18 |
+  (long)Pieces_QRK << 24 |
+  (long)Pieces_QR << 30 |
+  (long)Pieces_QRK << 36 |
+  (long)Pieces_QR << 42
+
+  ;
+
 int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
@@ -75,6 +88,8 @@ int main( int argc, char **argv){
                       . . N . . Q . p\
                       P P P B B P P P\
                       R . . . K . . R";*/
+
+  printf( "%ld\n",PIECE_COMBOS );
 
     long board[NUM_BYTES];
 
@@ -142,7 +157,6 @@ int main( int argc, char **argv){
 } // end main
 
 long printStats(){
-
 
   printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
           "Depth",
@@ -1092,36 +1106,37 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
     return FALSE;
 }
 
+
  const int WHITE_ATTACK_MAP_PIECES[] = {
   Pieces_QBK,  Pieces_QB,
-  Pieces_QRK,  Pieces_QR,
   Pieces_QBK,  Pieces_QB,
-  Pieces_QRK,  Pieces_QR,
+  Pieces_QBPK, Pieces_QB,
   Pieces_QBPK, Pieces_QB,
   Pieces_QRK,  Pieces_QR,
-  Pieces_QBPK, Pieces_QB,
+  Pieces_QRK,  Pieces_QR,
+  Pieces_QRK,  Pieces_QR,
   Pieces_QRK,  Pieces_QR,
 };
  const int BLACK_ATTACK_MAP_PIECES[] = {
   Pieces_qbpk,Pieces_qb,
-  Pieces_qrk, Pieces_qr,
   Pieces_qbpk,Pieces_qb,
-  Pieces_qrk, Pieces_qr,
+  Pieces_qbk, Pieces_qb,
   Pieces_qbk, Pieces_qb,
   Pieces_qrk, Pieces_qr,
-  Pieces_qbk, Pieces_qb,
+  Pieces_qrk, Pieces_qr,
+  Pieces_qrk, Pieces_qr,
   Pieces_qrk, Pieces_qr,
 };
 
  const int ATTACK_MAP_INDEXES[] = {
    -1,-1,
-   -1,0,
    -1,1,
-    0,1,
     1,-1,
-    1,0,
     1,1,
-    0,-1
+    0,-1,
+    -1,0,
+    1,0,
+    0,1,
 };
 
 int numFaults = 0;
