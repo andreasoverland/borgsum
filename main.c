@@ -35,7 +35,11 @@ int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMa
 int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
-int MAX_LEVEL = 7;
+// bitboard functions
+void diagramToBitBoard( long board[], char diagram[] );
+void printBitBoard( long board[] );
+
+int MAX_LEVEL = 6;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -84,8 +88,6 @@ int main( int argc, char **argv){
                       P P P B B P P P\
                       R . . . K . . R";*/
 
-  printf( "%ld\n",PIECE_COMBOS );
-
     long board[NUM_BYTES];
 
     if( argc > 1 ){
@@ -98,6 +100,10 @@ int main( int argc, char **argv){
       initialBoard = argv[1];
     }
     diagramToByteBoard( board, initialBoard);
+
+    printf("bitboard conversion\n");
+
+    diagramToBitBoard( board, initialBoard);
 
     if( argc > 2 ){
       if( strcmp(argv[2], "b" ) == 0 ){
@@ -121,7 +127,9 @@ int main( int argc, char **argv){
         printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
     }
 
-    printBoard( board );
+    printBitBoard( board );
+
+    return 0;
 
     struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
@@ -1441,6 +1449,56 @@ void printDiagram( long board[] ){
 
 }
 
+void printBitBoard( long board[] ){
+    printf( "\n\n  A B C D E F G H");
+    char str[65] = "................................................................\0";
+    for( int t=0;t<32;t++){
+      long pieceInfo = board[t];
+      long piece = pieceInfo & 0xFFF;
+      long pos = pieceInfo >> 12;
+      fflush(stdout);
+      switch( piece ){
+        case Piece_P: str[pos] = 'P'; break;
+        case Piece_R: str[pos] = 'R'; break;
+        case Piece_N: str[pos] = 'N'; break;
+        case Piece_B: str[pos] = 'B'; break;
+        case Piece_Q: str[pos] = 'Q'; break;
+        case Piece_K: str[pos] = 'K'; break;
+        case Piece_p: str[pos] = 'p'; break;
+        case Piece_r: str[pos] = 'r'; break;
+        case Piece_n: str[pos] = 'n'; break;
+        case Piece_b: str[pos] = 'b'; break;
+        case Piece_q: str[pos] = 'q'; break;
+        case Piece_k: str[pos] = 'k'; break;
+      }
+    }
+
+    for( int s=0;(s & 64) == 0;s++){
+        if( s % 8 == 0 ){
+            printf("\n%d ",8-(s>>3));
+        }
+        printf("%c ", str[s] );
+    }
+    printf("\n");
+    printf( "Move num: %ld\n", board[IDX_MOVE_NUM] );
+    printf( "Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black" );
+
+
+
+    if ((board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED) ) {
+        printf( "There is a MATE\n");
+    }
+    if( board[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED ) {
+        printf( "White is in check\n");
+    }
+    if( board[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED ) {
+        printf( "Black is in check\n");
+    }
+
+    fflush(stdout);
+
+}
+
 void printBoard( long board[] ){
 
     printf( "\n\n  A B C D E F G H");
@@ -1486,6 +1544,136 @@ void printBoard( long board[] ){
     fflush(stdout);
 }
 
+void diagramToBitBoard( long board[], char diagram[] ){
+
+    int len = strlen( diagram );
+
+    memset(board, 0,  sizeof(long)*NUM_BYTES);
+    board[IDX_CASTLING] = 0b00001111;
+    board[IDX_TURN] = WHITE_MASK;
+
+    int pos = 0;
+    int pieceIdx = 0;
+    for( int t=0;t<len;t++){
+      switch( diagram[t] ){
+          // BLACK PIECES
+          case ' ':
+              break;
+          case '.':
+              pos++;
+              break;
+          case 'p':
+              board[pieceIdx] = Piece_p;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_BLACK_PAWNS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'r':
+              board[pieceIdx] = Piece_r;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_BLACK_ROOKS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'b':
+              board[pieceIdx] = Piece_b;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_BLACK_BISHOPS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'n':
+              board[pieceIdx] = Piece_n;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_BLACK_KNIGHTS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'q':
+              board[pieceIdx] = Piece_q;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_BLACK_QUEENS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'k':
+              board[pieceIdx] = Piece_k;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_BLACK_KING_INDEX] = pos;
+              board[IDX_BLACK_KING] = (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+              // WHITE PIECES
+          case 'P':
+              board[pieceIdx] = Piece_P;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_WHITE_PAWNS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'R':
+              board[pieceIdx] = Piece_R;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_WHITE_ROOKS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'N':
+              board[pieceIdx] = Piece_N;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_WHITE_KNIGHTS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'B':
+              board[pieceIdx] = Piece_B;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_WHITE_BISHOPS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'Q':
+              board[pieceIdx] = Piece_Q;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_WHITE_QUEENS] |= (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+          case 'K':
+              board[pieceIdx] = Piece_K;
+              board[pieceIdx] |= (pos << 12l);
+              board[IDX_WHITE_KING_INDEX] = pos;
+              board[IDX_WHITE_KING] = (1l << pos);
+              pieceIdx++;
+              pos++;
+              break;
+
+        }// switch
+
+    } // 0..len
+
+    board[IDX_WHITE_PIECES] = board[IDX_WHITE_PAWNS]|
+                              board[IDX_WHITE_ROOKS]|
+                              board[IDX_WHITE_KNIGHTS]|
+                              board[IDX_WHITE_BISHOPS]|
+                              board[IDX_WHITE_QUEENS]|
+                              board[IDX_WHITE_KING];
+
+    board[IDX_BLACK_PIECES] = board[IDX_BLACK_PAWNS]|
+                              board[IDX_BLACK_ROOKS]|
+                              board[IDX_BLACK_KNIGHTS]|
+                              board[IDX_BLACK_BISHOPS]|
+                              board[IDX_BLACK_QUEENS]|
+                              board[IDX_BLACK_KING];
+
+    board[IDX_ALL_PIECES]   = board[IDX_WHITE_PIECES]|
+                              board[IDX_BLACK_PIECES];
+
+
+
+} // diagramToBitBoard
 
 void diagramToByteBoard( long board[], char diagram[] ) {
     int len = strlen( diagram );
