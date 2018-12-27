@@ -167,6 +167,26 @@ int allComparePieces[8*16] = {
     0, c, a, a, a, a, a, a,
 };
 
+// BITMAPS
+
+const long R1 = 0xFF00000000000000;
+const long R2 = 0x00FF000000000000;
+const long R3 = 0x0000FF0000000000;
+const long R4 = 0x000000FF00000000;
+const long R5 = 0x00000000FF000000;
+const long R6 = 0x0000000000FF0000;
+const long R7 = 0x000000000000FF00;
+const long R8 = 0x00000000000000FF;
+
+const long FH = 0x8080808080808080;
+const long FG = 0x4040404040404040;
+const long FF = 0x2020202020202020;
+const long FE = 0x1010101010101010;
+const long FD = 0x0808080808080808;
+const long FC = 0x0404040404040404;
+const long FB = 0x0202020202020202;
+const long FA = 0x0101010101010101;
+
 // GENERATED BITMAPS
 const long KING_ATTACK_MAPS[] = {
 	770,
