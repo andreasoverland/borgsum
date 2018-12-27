@@ -38,8 +38,14 @@ int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatr
 // bitboard functions
 void diagramToBitBoard( long board[], char diagram[] );
 void printBitBoard( long board[] );
+int calculateWhiteKingCheckStatus( long board[] );
+int calculateBlackKingCheckStatus( long board[] );
+void printLongAsBitBoard( long bitstream );
+int isOneBitSet( int i );
+int numberOfSetBits(int i);
+void clearPieceAtIndex( long board[], int idx );
 
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 1;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -68,7 +74,7 @@ int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-  char *initialBoard = "\
+  /*char *initialBoard = "\
                        r n b q k b n r\
                        p p p p p p p p\
                        . . . . . . . .\
@@ -76,7 +82,18 @@ int main( int argc, char **argv){
                        . . . . . . . .\
                        . . . . . . . .\
                        P P P P P P P P\
-                       R N B Q K B N R";
+                       R N B Q K B N R";*/
+
+   char *initialBoard = "\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . . . . .\
+                        . . . . K . . .\
+                        . . . . . . . .\
+                        . . . r b n . .\
+                        . . . . P . . .\
+                        . . . . . . . .";
+
 
    /*char *initialBoard = "\
                       r . . . k . . r\
@@ -99,11 +116,9 @@ int main( int argc, char **argv){
       }
       initialBoard = argv[1];
     }
-    diagramToByteBoard( board, initialBoard);
-
-    printf("bitboard conversion\n");
 
     diagramToBitBoard( board, initialBoard);
+  //  printLongAsBitBoard( board[IDX_ALL_PIECES]  );
 
     if( argc > 2 ){
       if( strcmp(argv[2], "b" ) == 0 ){
@@ -128,8 +143,6 @@ int main( int argc, char **argv){
     }
 
     printBitBoard( board );
-
-    return 0;
 
     struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
@@ -210,11 +223,11 @@ void dig(long board[]){
         }
     }
     count(board);
-    /*if( MAX_LEVEL <= 3 ){
+    if( MAX_LEVEL <= 3 ){
       if( board[IDX_MOVE_NUM] == MAX_LEVEL){
-        printDiagram( board );
+        printBitBoard( board );
       }
-    }*/
+    }
     /*if( board[IDX_MOVE_NUM] == 2){
       printStats();
     }*/
@@ -225,9 +238,12 @@ int findAllPossibleMoves(long originalBoard[]) {
 
     int numMovesFound = 0;
 
-    for (int fromIdx = 0; !(fromIdx & 64) ; fromIdx++) {
+    for (int pieceIndex = 0; pieceIndex<32 ; pieceIndex++) {
 
-        long p = originalBoard[fromIdx];
+        long pieceInfo = originalBoard[pieceIndex];
+        long fromIdx = pieceInfo >> 12;
+        long p = pieceInfo & 0xFFF;
+        long pieceMask = 1l<<fromIdx;
 
         if (p == 0) {
             continue;
@@ -244,116 +260,128 @@ int findAllPossibleMoves(long originalBoard[]) {
              */
             if (p == Piece_P) {
 
-                int fromIdxm7 = fromIdx - 7;
-                int fromIdxm8 = fromIdx - 8;
-                int fromIdxm9 = fromIdx - 9;
-                int fromIdxm16 = fromIdx - 16;
+                long fromIdxm8Map = 1l<<(fromIdx-8);
+                long fromIdxm7Map = 1l<<(fromIdx-7);
+                long fromIdxm9Map = 1l<<(fromIdx-9);
+                long fromIdxm16Map = 1l<<(fromIdx-16);
 
                 // White pawn
                 // Check if one and/or two moves ahead can be made
                 long m[NUM_BYTES];
 
-                if (originalBoard[fromIdx-8] == 0) {
+                long allPieces = originalBoard[IDX_ALL_PIECES];
+
+                if ( (allPieces & fromIdxm8Map) == 0 ) { // go one up
                     if (rank > 1) {
-
                         makeNewBoard(originalBoard,m);
-                        m[fromIdx] = 0;
-                        m[fromIdx-8] = p;
+                        clearPieceAtIndex( m, fromIdx );
+                        clearPieceAtIndex( m, fromIdx-8 );
+                        m[pieceIndex] = ((fromIdx-8)<<12)|Piece_P ;
+                        m[IDX_WHITE_PAWNS] |= fromIdxm8Map;
+                        m[IDX_WHITE_PIECES] |= fromIdxm8Map;
+                        m[IDX_ALL_PIECES] = m[IDX_WHITE_PIECES]|m[IDX_BLACK_PIECES];
 
-                        const int checkStatus = calculateCheckStatus(m);
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            m[IDX_CHECK_STATUS] = checkStatus;
+                        // update pawns & all white pieces
+                        if ( calculateWhiteKingCheckStatus(m) == 0) {
+                            m[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(m);;
                             numMovesFound++;
                             dig(m);
                         }
                     }
                     else {
                         // if target = any one rook corner, adjust castling aproprieately
-                        int castlingMask = originalBoard[IDX_CASTLING];
-                        if (fromIdxm8 == A8) {
+                        /*int castlingMask = originalBoard[IDX_CASTLING];
+                        if (fromIdxm8Map == A8) {
                             castlingMask &= 0xf ^ MASK_CASTLING_BLACK_QUEEN_SIDE;
                         }
-                        else if (fromIdxm8 == H8) {
+                        else if (fromIdxm8Map == H8) {
                             castlingMask &= 0xf ^ MASK_CASTLING_BLACK_KING_SIDE;
                         }
-                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, fromIdxm8, MASK_EMPTY, castlingMask);
+                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, fromIdxm8Map, MASK_EMPTY, castlingMask);
+                        */
                     }
                 }
                 if (rank == 6) {
-                    if (originalBoard[fromIdxm16] == 0 && originalBoard[fromIdxm8] == 0) {
+                    if ( (allPieces & fromIdxm8Map) == 0 && (allPieces & fromIdxm16Map) == 0) {
 
                         makeNewBoard(originalBoard,m);
-                        m[fromIdx] = 0;
-                        m[fromIdxm16] = p;
-                        m[IDX_EP_IDX] = fromIdxm8; // set en passant strike index
-
-                        const int checkStatus = calculateCheckStatus(m);
-
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            m[IDX_CHECK_STATUS] = checkStatus;
+                        m[pieceIndex] = ((fromIdx-16)<<12)|Piece_P ;
+                        m[IDX_WHITE_PAWNS] ^= pieceMask;
+                        m[IDX_WHITE_PAWNS] |= fromIdxm16Map;
+                        m[IDX_WHITE_PIECES] ^=  pieceMask;
+                        m[IDX_WHITE_PIECES] |= fromIdxm16Map;
+                        m[IDX_ALL_PIECES] = m[IDX_WHITE_PIECES]|m[IDX_BLACK_PIECES];
+                        m[IDX_EP_IDX] = fromIdx-8;
+                        if ( calculateWhiteKingCheckStatus(m) == 0) {
+                            m[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(m);;
                             numMovesFound++;
                             dig(m);
                         }
                     }
                 }
-                if (file > 0 && (originalBoard[fromIdxm9] & BLACK_MASK) != 0) { // strike left
 
-                    if (rank > 1) {
-                        makeNewBoard(originalBoard,m);
-                        m[fromIdx] = 0;
-                        m[fromIdxm9] = p;
-                        m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
+                if (file > 0 && (originalBoard[IDX_BLACK_PIECES] & fromIdxm9Map ) != 0) { // strike left
 
-                        const int checkStatus = calculateCheckStatus(m);
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            m[IDX_CHECK_STATUS] = checkStatus;
-                            numMovesFound++;
-                            dig(m);
-                        }
+                  if (rank > 1) {
+                      makeNewBoard(originalBoard,m);
+                      clearPieceAtIndex( m, fromIdx );
+                      clearPieceAtIndex( m, fromIdx-9 );
+                      m[pieceIndex] = ((fromIdx-9)<<12)|Piece_P ;
+                      m[IDX_WHITE_PAWNS] |= fromIdxm9Map;
+                      m[IDX_WHITE_PIECES] |= fromIdxm9Map;
+                      m[IDX_ALL_PIECES] = m[IDX_WHITE_PIECES] | m[IDX_BLACK_PIECES];
 
-                    }
+                      // update pawns & all white pieces
+                      if ( calculateWhiteKingCheckStatus(m) == 0) {
+                          m[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(m);
+                          numMovesFound++;
+                          dig(m);
+                      }
+                  }/*
                     else {
                         int castlingMask = originalBoard[IDX_CASTLING];
-                        if (fromIdxm9 == A8) {
+                        if (fromIdxm9Map == A8) {
                             castlingMask &= 0xf ^ MASK_CASTLING_BLACK_QUEEN_SIDE;
                         }
-                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, fromIdxm9, MASK_LAST_MOVE_WAS_CAPTURE, castlingMask);
-                    }
+                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, fromIdxm9Map, MASK_LAST_MOVE_WAS_CAPTURE, castlingMask);
+                    }*/
 
                 }
-                if (file < 7 && (originalBoard[fromIdxm7] & BLACK_MASK) != 0) { // strike right
 
-                    if (rank > 1) {
+                if (file < 7 && (originalBoard[IDX_BLACK_PIECES] & fromIdxm7Map) != 0) { // strike right
 
-                        makeNewBoard(originalBoard,m);
+                  if (rank > 1) {
+                      makeNewBoard(originalBoard,m);
+                      clearPieceAtIndex( m, fromIdx );
+                      clearPieceAtIndex( m, fromIdx-7 );
+                      m[pieceIndex] = ((fromIdx-7)<<12)|Piece_P ;
+                      m[IDX_WHITE_PAWNS] |= fromIdxm7Map;
+                      m[IDX_WHITE_PIECES] |= fromIdxm7Map;
+                      m[IDX_ALL_PIECES] = m[IDX_WHITE_PIECES] | m[IDX_BLACK_PIECES];
 
-                        m[fromIdx] = 0;
-                        m[fromIdxm7] = p;
-                        m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
-
-                        const int checkStatus = calculateCheckStatus(m);
-                        m[IDX_CHECK_STATUS] = checkStatus;
-                        if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                            numMovesFound++;
-                            dig(m);
-                        }
-
-                    }
+                      // update pawns & all white pieces
+                      if ( calculateWhiteKingCheckStatus(m) == 0) {
+                          m[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(m);
+                          numMovesFound++;
+                          dig(m);
+                      }
+                  }
+                  /*
                     else {
                         int castlingMask = originalBoard[IDX_CASTLING];
-                        if (fromIdxm7 == H8) {
+                        if (fromIdxm7Map == H8) {
                             castlingMask &= 0xf ^ MASK_CASTLING_BLACK_KING_SIDE;
                         }
-                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, fromIdxm7, MASK_LAST_MOVE_WAS_CAPTURE, castlingMask);
-                    }
-                }
+                        numMovesFound += makeWhitePromotions(originalBoard, fromIdx, fromIdxm7Map, MASK_LAST_MOVE_WAS_CAPTURE, castlingMask);
+                    }*/
+                }/*
                 if (originalBoard[IDX_EP_IDX] != 0 && rank == 3) {
-                    if (file < 7 && fromIdxm7 == originalBoard[IDX_EP_IDX]) {
+                    if (file < 7 && fromIdxm7Map == originalBoard[IDX_EP_IDX]) {
 
                         makeNewBoard(originalBoard,m);
 
                         m[fromIdx] = 0;
-                        m[fromIdxm7] = p;
+                        m[fromIdxm7Map] = p;
                         m[fromIdx + 1] = 0;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
                         const int checkStatus = calculateCheckStatus(m);
@@ -364,12 +392,12 @@ int findAllPossibleMoves(long originalBoard[]) {
                         }
 
                     }
-                    else if (file > 0 && fromIdxm9 == originalBoard[IDX_EP_IDX]) {
+                    else if (file > 0 && fromIdxm9Map == originalBoard[IDX_EP_IDX]) {
 
                         makeNewBoard(originalBoard,m);
 
                         m[fromIdx] = 0;
-                        m[fromIdxm9] = p;
+                        m[fromIdxm9Map] = p;
                         m[fromIdx - 1] = 0;
                         m[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE | MASK_LAST_MOVE_WAS_EP_STRIKE;
 
@@ -380,9 +408,9 @@ int findAllPossibleMoves(long originalBoard[]) {
                             dig(m);
                         }
                     }
-                }
+                }*/
             }
-
+/*
             else if (p == Piece_N) {
                 // White Knight
 
@@ -525,7 +553,7 @@ int findAllPossibleMoves(long originalBoard[]) {
                         }
                     }
                 }
-            }
+            }*/
         }
         /*
          *******************************************************************************************
@@ -1142,7 +1170,199 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
     0,1,
 };
 
-int numFaults = 0;
+
+
+int calculateWhiteKingCheckStatus( long board[] ){
+
+  // first the one-of threats.
+  long idx = board[IDX_WHITE_KING_INDEX];
+  long king = 1l << idx;
+  printf( "King position:%ld\n%lu\n%lu\n",idx,king,board[IDX_WHITE_KING]);
+
+  if( N_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS] ){
+    printf("KING ATTACKED BY BLACK KNIGHT(S)\n");
+    printBitBoard(board);
+    printf("N_ATTACK_MAP:\n");
+    printLongAsBitBoard(N_ATTACK_MAPS[idx]);
+    printf("IDX_BLACK_KNIGHTS:\n");
+    printLongAsBitBoard(board[IDX_BLACK_KNIGHTS]);
+    printf("IDX_BLACK_PIECES:\n");
+    printLongAsBitBoard(board[IDX_BLACK_PIECES]);
+    printf("IDX_BLACK_ROOKS:\n");
+    printLongAsBitBoard(board[IDX_BLACK_ROOKS]);
+    return MASK_WHITE_KING_CHECKED;
+  }
+
+  if( BLACK_PAWN_ATTACK_MAPS[idx] & board[IDX_BLACK_PAWNS] ){
+    printf("KING ATTACKED BY BLACK PAWN(S)\n");
+    return MASK_WHITE_KING_CHECKED;
+  }
+
+  if( KING_ATTACK_MAPS[idx] & board[IDX_BLACK_KING] ){
+    printf("KING ATTACKED BY BLACK KING\n");
+    return MASK_WHITE_KING_CHECKED;
+  }
+
+
+  // now for the vector threats. a piece may be on the map, but can be blocked
+  if( QB_ATTACK_MAPS[idx] & (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_BISHOPS])){
+
+    // need to check each direction for a block
+    long qb = (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_BISHOPS]);
+    long allPieces = board[IDX_ALL_PIECES];
+
+    // if the only pieces intersecting the attackmap is a Q or B, then white
+    // is in check
+    long test = allPieces & QB_ATTACK_MAPS[idx];
+
+    if( __builtin_popcountll (test ) == 1){
+      return MASK_WHITE_KING_CHECKED;
+    }
+
+    int rank = idx >> 3;
+    int file = idx & 7;
+
+    long testMap = king;
+    // TODO: regn up hvor langt testen skal gå. ikke noe vits i å teste for hver file&dRank
+    // pluss at vi kan bruke bitmap i stedet for
+    int maxM = 7-rank;
+    maxM = 7-file < maxM ? 7-file : maxM;
+    for( int m=0;m<maxM;m++){
+        testMap <<= 9;
+        if( testMap & qb ){
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+
+    maxM = 7-rank;
+    maxM = file < maxM ? file : maxM;
+    testMap = king;
+    for( int m=0;m<maxM;m++){
+        testMap <<= 7;
+        if( testMap & qb ){
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+
+
+    maxM = rank;
+    maxM = maxM > (7-file) ? (7-file) : maxM;
+    testMap = king;
+    for( int m=0;m<maxM;m++){
+        testMap >>= 7;
+        if( testMap & qb ){
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+
+    maxM = rank;
+    maxM = maxM > file ? file : maxM;
+    testMap = king;
+    for( int m=0;m<maxM;m++){
+        testMap >>= 9;
+        if( testMap & qb ){
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+  }
+  // now for the vector threats. a piece may be on the map, but can be blocked
+  if( QR_ATTACK_MAPS[idx] & (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS])){
+
+    // need to check each direction for a block
+    long qr = (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS]);
+    long allPieces = board[IDX_ALL_PIECES];
+
+    // if the only pieces intersecting the attackmap is a Q or B, then white
+    // is in check
+    long test = allPieces & QR_ATTACK_MAPS[idx];
+    if( __builtin_popcountll (test ) == 1){
+      return MASK_WHITE_KING_CHECKED;
+    }
+
+    // TODO : also hit if threatmap & piecemap == piecemap
+
+    int rank = idx >> 3;
+    int file = idx & 7;
+
+    int maxM = file;
+    long testMap = king;
+
+    for( int m=0;m<maxM;m++){
+        testMap >>= 1;
+        if( testMap & qr ){
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+
+    maxM = 7-file;
+    testMap = king;
+    for( int m=0;m<maxM;m++){
+        testMap <<= 1;
+        if( testMap & qr ){
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+
+    maxM = rank;
+    testMap = king;
+    printf( "Doing >> 8 test with map:\n");
+    printLongAsBitBoard( testMap );
+    for( int m=0;m<maxM;m++){
+        testMap >>= 8;
+        printLongAsBitBoard( testMap );
+        if( testMap & qr ){
+            //printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+
+    maxM = 7-rank;
+    testMap = king;
+    printf( "Doing << 8 test with map:\n");
+    printLongAsBitBoard( testMap );
+    for( int m=0;m<maxM;m++){
+        testMap <<= 8;
+        printLongAsBitBoard( testMap );
+        if( testMap & qr ){
+            //printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
+            return MASK_WHITE_KING_CHECKED;
+        }
+        if( testMap & allPieces){
+            break;
+        }
+    }
+
+
+  }
+
+  return 0;
+
+}
+
+int calculateBlackKingCheckStatus( long board[] ){
+  return 0;
+}
 
 // #rewrite
 int calculateCheckStatus( long board[] ){
@@ -1153,135 +1373,11 @@ int calculateCheckStatus( long board[] ){
 
   // -------------------------------- WHITE KING -----------------------
   boolean whiteKingIsInCheck = FALSE;
+  boolean blackKingIsInCheck = FALSE;
   int idx = board[IDX_WHITE_KING_INDEX];
 
-  for( int d=0;!(d&8); d++){
-
-    int rank = idx >> 3;
-    int file = idx & 7;
-
-    int mapOffset = d<<1;
-
-    int dRank = ATTACK_MAP_INDEXES[mapOffset];
-    int dFile = ATTACK_MAP_INDEXES[mapOffset|1];
-
-    int checkPiece = 0;
-    for( int m=0;m<7;m++){
-
-      rank += dRank;
-      file += dFile;
-
-      if ( ((rank | file) & 0xFFFFFFF8) != 0 ) { // rank | file >= 0 and < 8
-        break;
-      }
-
-      if( m < 2 ){
-        checkPiece = BLACK_ATTACK_MAP_PIECES[m|mapOffset];
-      }
-
-      int newIdx = (rank << 3) | file;
-      if( board[newIdx ] == 0 ){
-        continue;
-      }
-
-      if( (board[newIdx] & checkPiece ) != 0 ){
-        whiteKingIsInCheck = TRUE;
-      }
-      break;
-
-    }
-
-    if( whiteKingIsInCheck ) break;
-
-  }
-
-  if( !whiteKingIsInCheck ){
-    int rank = idx >> 3;
-    int file = idx & 7;
-
-    for (int t = 0; !(t&8); t ++ ) {
-        int newFile = file + KNIGHT_MOVE_MATRIX_2[t];
-        int newRank = rank + KNIGHT_MOVE_MATRIX_2[t + 1];
-
-        // Check that 0 > newRank|newFile < 8
-        if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
 
 
-          if (board[(newRank << 3) | newFile] == Piece_n) {
-            whiteKingIsInCheck = TRUE;
-            break;
-          }
-        }
-
-     }
-  }
-
-  // --------------------------- BLACK KING ------------------------
-  boolean blackKingIsInCheck = FALSE;
-  idx = board[IDX_BLACK_KING_INDEX];
-
-  for( int d=0;!(d&8); d++){
-
-    int rank = idx >> 3;
-    int file = idx & 7;
-
-    int mapOffset = d<<1;
-
-    int dRank = ATTACK_MAP_INDEXES[mapOffset];
-    int dFile = ATTACK_MAP_INDEXES[mapOffset|1];
-
-    int checkPiece = 0;
-
-    for( int m=0;m<7;m++){
-
-      rank += dRank;
-      file += dFile;
-
-      if ( ((rank | file) & 0xFFFFFFF8) != 0 ) { // rank | file >= 0 and < 8
-        break;
-      }
-
-      if( m < 2 ){
-        checkPiece = WHITE_ATTACK_MAP_PIECES[m|mapOffset];
-      }
-
-      int newIdx = (rank << 3) | file;
-
-      if( board[ newIdx ] == 0 ){
-        continue;
-      }
-      if( (board[newIdx] & checkPiece ) != 0 ){
-        blackKingIsInCheck = TRUE;
-      }
-      break;
-
-
-    }
-
-    if( blackKingIsInCheck ) break;
-
-  }
-
-  if( !blackKingIsInCheck ){
-    int rank = idx >> 3;
-    int file = idx & 7;
-
-    for (int t = 0; !(t&8) ; t ++) {
-        int newFile = file + KNIGHT_MOVE_MATRIX_2[t];
-        int newRank = rank + KNIGHT_MOVE_MATRIX_2[t + 1];
-
-        // Check that 0 > newRank|newFile < 8
-        if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-
-          if (board[(newRank << 3) | newFile] == Piece_N) {
-            blackKingIsInCheck = TRUE;
-            break;
-          }
-        }
-
-
-    }
-  }
 
   if (whiteKingIsInCheck) {
       result = MASK_WHITE_KING_CHECKED;
@@ -1293,7 +1389,6 @@ int calculateCheckStatus( long board[] ){
 
   return result;
 }
-
 
 
 
@@ -1361,6 +1456,22 @@ void influenceMapForSquare(long b[], int idx) {
                 influenceMap[8 | (t >> 1)] = checkPiece;
             }
         }
+    }
+
+}
+
+void clearPieceAtIndex( long board[], int idx ){
+    long match = idx << 12;
+
+    for( int t=0;t<32;t++){
+        if( (board[t] & 0x3F000) == match ){
+            board[t] = 0l;
+            break;
+        }
+    }
+    long clear = 1l<<idx;
+    for( int t=IDX_WHITE_PAWNS;t<=IDX_BLACK_KING;t++){
+      board[t] &= ~clear;
     }
 
 }
@@ -1447,6 +1558,25 @@ void printDiagram( long board[] ){
 
   printf("\n");
 
+}
+
+void printLongAsBitBoard( long bitstream ){
+  printf( "  A B C D E F G H");
+  char str[65] = "................................................................\0";
+  for( int t=0;t<64;t++){
+    if( 1 & bitstream ){
+        str[t] = '1';
+    }
+    bitstream >>= 1;
+  }
+
+  for( int s=0;(s & 64) == 0;s++){
+      if( s % 8 == 0 ){
+          printf("\n%d ",8-(s>>3));
+      }
+      printf("%c ", str[s] );
+  }
+  printf("\n\n\n");
 }
 
 void printBitBoard( long board[] ){
