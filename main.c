@@ -107,12 +107,12 @@ int main( int argc, char **argv){
   char *initialBoard = "\
                        . . . . . . . .\
                        k . . . . . . .\
-                       R . . R . . . .\
+                       . . . R . . . .\
                        . . . . . . . .\
+                       . . . n . . . R\
                        . . . . . . . .\
-                       . . . . . . . .\
-                       r . . . K . . .\
-                       . . R . . . . .";
+                       . . . . K . . .\
+                       . . . R . . . .";
 
 /*
    char *initialBoard = "\
@@ -503,8 +503,6 @@ int moveWhiteRooks( long b[] ){
     int file = idx & 7;
     int rank = idx >> 3;
 
-    printf( "Rook at %d,%d\n", rank, file );
-
     long moveToMap = pieceMap;
     long clearMap = ~pieceMap;
 
@@ -519,7 +517,6 @@ int moveWhiteRooks( long b[] ){
       makeNewBoard( b, move );
 
       if( moveToMap & blackPieces ){
-        printf("CAPTURE\n");
         move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
         clearBlackPiecesWithClearMap( move, ~moveToMap );
       }
@@ -530,7 +527,7 @@ int moveWhiteRooks( long b[] ){
       move[IDX_WHITE_PIECES] |= moveToMap;
       move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
       if ( calculateWhiteKingCheckStatus(move) == 0) {
-        if( (pieceMap | moveToMap) & (R8|R1) ){ // TODO: test om det er kjappere å ikke teste på dette.
+        if( (pieceMap | moveToMap) & (R1_R8) ){ // TODO: test om det er kjappere å ikke teste på dette.
           move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
         }
 
@@ -559,7 +556,6 @@ int moveWhiteRooks( long b[] ){
       makeNewBoard( b, move );
 
       if( moveToMap & blackPieces ){
-        printf("CAPTURE\n");
         move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
         clearBlackPiecesWithClearMap( move, ~moveToMap );
       }
@@ -599,7 +595,6 @@ int moveWhiteRooks( long b[] ){
       makeNewBoard( b, move );
 
       if( moveToMap & blackPieces ){
-        printf("CAPTURE\n");
         move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
         clearBlackPiecesWithClearMap( move, ~moveToMap );
       }
@@ -610,10 +605,7 @@ int moveWhiteRooks( long b[] ){
       move[IDX_WHITE_PIECES] |= moveToMap;
       move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
 
-      printf("TRYING MOVE RIGHT:\n");
-      printBitBoard( move );
       if ( calculateWhiteKingCheckStatus(move) == 0) {
-        printf( "AND IT IS OK!!\n");
         if( (pieceMap | moveToMap) & (R8|R1) ){ // TODO: test om det er kjappere å ikke teste på dette.
           move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
         }
@@ -642,7 +634,6 @@ int moveWhiteRooks( long b[] ){
       makeNewBoard( b, move );
 
       if( moveToMap & blackPieces ){
-        printf("CAPTURE\n");
         move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
         clearBlackPiecesWithClearMap( move, ~moveToMap );
       }
@@ -671,7 +662,7 @@ int moveWhiteRooks( long b[] ){
 
     }
 
-    printLongAsBitBoard( testMap );
+    //printLongAsBitBoard( testMap );
 
     pieces >>= (shift+1);
     idx++;
@@ -1010,39 +1001,6 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
 }
 
 
- const int WHITE_ATTACK_MAP_PIECES[] = {
-  Pieces_QBK,  Pieces_QB,
-  Pieces_QBK,  Pieces_QB,
-  Pieces_QBPK, Pieces_QB,
-  Pieces_QBPK, Pieces_QB,
-  Pieces_QRK,  Pieces_QR,
-  Pieces_QRK,  Pieces_QR,
-  Pieces_QRK,  Pieces_QR,
-  Pieces_QRK,  Pieces_QR,
-};
- const int BLACK_ATTACK_MAP_PIECES[] = {
-  Pieces_qbpk,Pieces_qb,
-  Pieces_qbpk,Pieces_qb,
-  Pieces_qbk, Pieces_qb,
-  Pieces_qbk, Pieces_qb,
-  Pieces_qrk, Pieces_qr,
-  Pieces_qrk, Pieces_qr,
-  Pieces_qrk, Pieces_qr,
-  Pieces_qrk, Pieces_qr,
-};
-
- const int ATTACK_MAP_INDEXES[] = {
-   -1,-1,
-   -1,1,
-    1,-1,
-    1,1,
-    0,-1,
-    -1,0,
-    1,0,
-    0,1,
-};
-
-
 int calculateWhiteKingCheckStatus( long board[] ){
 
   // first the one-of threats.
@@ -1050,20 +1008,14 @@ int calculateWhiteKingCheckStatus( long board[] ){
   long king = board[IDX_WHITE_KING];
 
   if( N_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS] ){
-    printf( "White king in check by knights:\n");
-    printLongAsBitBoard(N_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS]);
-    printLongAsBitBoard(N_ATTACK_MAPS[idx]);
     return MASK_WHITE_KING_CHECKED;
   }
 
   if( BLACK_PAWN_REVERSE_ATTACK_MAPS[idx] & board[IDX_BLACK_PAWNS] ){
-    printf("KING ATTACKED BY BLACK PAWN(S)\n");
     return MASK_WHITE_KING_CHECKED;
   }
 
   if( KING_ATTACK_MAPS[idx] & board[IDX_BLACK_KING] ){
-    printf("KING ATTACKED BY BLACK KING\n");
-    printLongAsBitBoard(KING_ATTACK_MAPS[idx]);
     return MASK_WHITE_KING_CHECKED;
   }
 
@@ -1163,7 +1115,7 @@ int calculateWhiteKingCheckStatus( long board[] ){
     long testMap = king;
 
     for( int m=0;m<maxM;m++){
-        testMap >>= 1;
+        testMap <<= 1;
         if( testMap & qr ){
             return MASK_WHITE_KING_CHECKED;
         }
@@ -1175,7 +1127,7 @@ int calculateWhiteKingCheckStatus( long board[] ){
     maxM = 7-file;
     testMap = king;
     for( int m=0;m<maxM;m++){
-        testMap <<= 1;
+        testMap >>= 1;
         if( testMap & qr ){
             return MASK_WHITE_KING_CHECKED;
         }
@@ -1188,7 +1140,7 @@ int calculateWhiteKingCheckStatus( long board[] ){
     testMap = king;
 
     for( int m=0;m<maxM;m++){
-        testMap >>= 8;
+        testMap <<= 8;
         if( testMap & qr ){
             //printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
             return MASK_WHITE_KING_CHECKED;
@@ -1202,7 +1154,7 @@ int calculateWhiteKingCheckStatus( long board[] ){
     testMap = king;
 
     for( int m=0;m<maxM;m++){
-        testMap <<= 8;
+        testMap >>= 8;
         if( testMap & qr ){
             //printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
             return MASK_WHITE_KING_CHECKED;
