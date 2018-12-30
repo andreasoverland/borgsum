@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "constants.h"
+#include "maps.h"
 
 typedef enum { FALSE, TRUE } boolean;
 
@@ -25,32 +26,36 @@ long printStats();
 // Engine methods
 void dig(long board[]);
 void count(long board[]);
+
 void influenceMapForSquare(long b[], int idx);
 boolean isSquaresThreatenedByColor(long board[], int indices[], int color);
-void makeNewBoard( long originalBoard[], long newBoard[] );
-int calculateCheckStatus(long board[]);
-int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
-// bitboard functions
-void diagramToBitBoard( long board[], char diagram[] );
-void printBitBoard( long board[] );
+int calculateCheckStatus(long board[]);
+
+// bitboard functions, highly speed sensitive
+void makeNewBoard( long originalBoard[], long newBoard[] );
+
 int calculateWhiteKingCheckStatus( long board[] );
 int calculateBlackKingCheckStatus( long board[] );
-void printLongAsBitBoard( long bitstream );
-int isOneBitSet( int i );
-int numberOfSetBits(int i);
-void clearPieceAtIndex( long board[], int idx );
+
 int findAllPossibleMoves2( long originalBoard[]);
 
-int moveWhitePawns( long board[] );
+int moveWhitePawns( long b[] );
 int moveWhiteRooks( long b[] );
+int moveWhiteKnights( long b[] );
 
-void setBitsToChar( char *str, long bits, char c);
+void clearPieceAtIndex( long board[], int idx );
 void clearWhitePieceAtIndex( long board[], int idx ); // todo: replace with map-version
 void clearBlackPieceAtIndex( long board[], int idx ); // todo:  replace with map-version
 void clearBlackPiecesWithClearMap( long board[], long clear );
 
 int makeWhiteBitPromos( long board[], long map );
+
+// util for board printing and conversion. not speed sensitive
+void setBitsToChar( char *str, long bits, char c);
+void printBitBoard( long board[] );
+void diagramToBitBoard( long board[], char diagram[] );
+void printLongAsBitBoard( long bitstream );
 
 int MAX_LEVEL = 1;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
@@ -79,6 +84,19 @@ const long PIECE_COMBOS =
 
 int main( int argc, char **argv){
 
+
+/*
+  for( int idx=0;idx<64;idx++){
+    printf("------- %d -------\n",idx);
+    printLongAsBitBoard( KING_ATTACK_MAPS[idx] );
+    printLongAsBitBoard( KNIGHT_ATTACK_MAPS[idx] );
+    printLongAsBitBoard( BLACK_PAWN_REVERSE_ATTACK_MAPS[idx] );
+    printLongAsBitBoard( WHITE_PAWN_ATTACK_MAPS[idx] );
+    printLongAsBitBoard( QB_ATTACK_MAPS[idx] );
+    printLongAsBitBoard( QR_ATTACK_MAPS[idx] );
+  }
+*/
+
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
   /*char *initialBoard = "\
@@ -106,13 +124,13 @@ int main( int argc, char **argv){
 
   char *initialBoard = "\
                        . . . . . . . .\
-                       k . . . . . . .\
-                       . . . R . . . .\
+                       k . . . B . . .\
                        . . . . . . . .\
-                       . . . n . . . R\
+                       . . r . . . . .\
+                       . B . . . . . .\
+                       . . . . . B . .\
                        . . . . . . . .\
-                       . . . . K . . .\
-                       . . . R . . . .";
+                       . . K . . . . .";
 
 /*
    char *initialBoard = "\
@@ -267,23 +285,14 @@ int findAllPossibleMoves2( long originalBoard[]) {
 
       // numMovesFound += moveWhitePawns( originalBoard );
 
-      numMovesFound += moveWhiteRooks( originalBoard );
+      // numMovesFound += moveWhiteRooks( originalBoard );
+
+      // numMovesFound += moveWhiteKnights( originalBoard );
+
+
+      numMovesFound += moveWhiteBishops( originalBoard );
 
 /*
-      //printf( "White knights\n");
-      pieces = originalBoard[IDX_WHITE_KNIGHTS];
-      originalPieces = pieces;
-      //printLongAsBitBoard( pieces );
-      idx = 0;
-      while( pieces ){
-        int shift =  __builtin_clzll( pieces );
-        idx += shift;
-        pieces <<= (shift+1);
-        //printf( "Knight pos %d,%d\n", idx >> 3, 7-(idx & 7) );
-        idx++;
-        // TODO: test og flytt hvitt tårn på IDX
-      }
-
       //printf( "White bishops\n");
       pieces = originalBoard[IDX_WHITE_BISHOPS];
       originalPieces = pieces;
@@ -480,6 +489,38 @@ int moveWhitePawns( long b[] ){
 
 }
 
+//////////////////////////////////// MOVE WHITE BISHOPS /////////////////////////////////////
+int moveWhiteBishops( long b[] ){
+
+  int numMovesFound = 0;
+
+  long pieces = b[IDX_WHITE_BISHOPS];
+  long originalPieces = pieces;
+  int idx = 0;
+
+  long move[NUM_BYTES];
+  long allPieces = b[IDX_ALL_PIECES];
+  long blackPieces = b[IDX_BLACK_PIECES];
+  long whitePieces = b[IDX_WHITE_PIECES];
+
+  while( pieces ){
+    int shift =  __builtin_ctzll( pieces );
+    idx += shift;
+    long pieceMap = 1l << idx;
+
+    long moveToMap = pieceMap;
+    long clearMap = ~pieceMap;
+
+    printLongAsBitBoard( pieceMap );
+
+    // TODO: copy rank&file calculation from generator
+
+    pieces >>= (shift+1);
+    idx++;
+
+  }
+}
+
 ///////////////////////////////////// MOVE WHITE ROOKS //////////////////////////////////////
 int moveWhiteRooks( long b[] ){
 
@@ -506,7 +547,6 @@ int moveWhiteRooks( long b[] ){
     long moveToMap = pieceMap;
     long clearMap = ~pieceMap;
 
-    long testMap = 0;
     // up
     for( int m=0;m<7-rank;m++){
       moveToMap <<= 8;
@@ -534,8 +574,6 @@ int moveWhiteRooks( long b[] ){
         move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
         numMovesFound++;
         dig(move);
-
-        testMap |= moveToMap;
 
       }
 
@@ -575,7 +613,6 @@ int moveWhiteRooks( long b[] ){
         numMovesFound++;
         dig(move);
 
-        testMap |= moveToMap;
       }
 
       if( moveToMap & blackPieces ){
@@ -614,7 +651,6 @@ int moveWhiteRooks( long b[] ){
         numMovesFound++;
         dig(move);
 
-        testMap |= moveToMap;
       }
 
       if( moveToMap & blackPieces ){
@@ -653,7 +689,6 @@ int moveWhiteRooks( long b[] ){
         numMovesFound++;
         dig(move);
 
-        testMap |= moveToMap;
       }
 
       if( moveToMap & blackPieces ){
@@ -669,88 +704,80 @@ int moveWhiteRooks( long b[] ){
 
   }
 
+  return numMovesFound;
 
+}
+
+///////////////////////////////////// MOVE WHITE KNIGHTS //////////////////////////////////////
+int moveWhiteKnights( long b[] ){
+
+  int numMovesFound = 0;
+
+  long pieces = b[IDX_WHITE_KNIGHTS];
+  long originalPieces = pieces;
+
+  int idx = 0;
+
+  long move[NUM_BYTES];
+  long allPieces = b[IDX_ALL_PIECES];
+  long blackPieces = b[IDX_BLACK_PIECES];
+  long whitePieces = b[IDX_WHITE_PIECES];
+
+  while( pieces ){
+    int shift =  __builtin_ctzll( pieces );
+    idx += shift;
+    long pieceMap = 1l << idx;
+    long clearMap = ~pieceMap;
+
+    long moveToMaps = KNIGHT_ATTACK_MAPS[idx];
+
+    int moveToIdx = 0;
+
+    while( moveToMaps ){
+
+      int moveToShift = __builtin_ctzll( moveToMaps );
+      moveToIdx += moveToShift;
+
+      long moveToMap = 1l<<moveToIdx;
+
+      makeNewBoard( b, move );
+      if( moveToMap & blackPieces ){
+        move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
+        clearBlackPiecesWithClearMap( move, ~moveToMap );
+      }
+
+      move[IDX_WHITE_KNIGHTS] &= clearMap;
+      move[IDX_WHITE_KNIGHTS] |= moveToMap;
+      move[IDX_WHITE_PIECES] &= clearMap;
+      move[IDX_WHITE_PIECES] |= moveToMap;
+
+      move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
+      if ( calculateWhiteKingCheckStatus(move) == 0) {
+
+        if( moveToMap & R1_R8 ){ // TODO: test om det er kjappere å ikke teste på dette.
+          move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+        }
+
+        move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
+        numMovesFound++;
+        dig(move);
+
+      }
+
+      moveToMaps >>= (moveToShift+1);
+      moveToIdx++;
+
+    }
+
+    pieces >>= (shift+1);
+    idx++;
+
+  }
 
   return numMovesFound;
 
 }
 
-
-int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength) {
-
-    moveLinearInvocations++;
-
-    int numMovesFound = 0;
-    const int rank = fromIdx >> 3;
-    const int file = fromIdx & 7;
-    const int p = b[fromIdx];
-    const int color = b[IDX_TURN];
-
-    for (int t = 0; t < moveMatrixLength; t += 2) {
-        int newFile = file;
-        int newRank = rank;
-        int dFile = moveMatrix[t];
-        int dRank = moveMatrix[t | 1];
-        for (int n = 1; (n & 8) == 0; n++) {
-            newFile += dFile;
-            newRank += dRank;
-            if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-                int toIdx = newRank << 3 | newFile;
-                int pieceAtIdx = b[toIdx];
-
-                if ((pieceAtIdx & color) == 0) {
-                    long newBoard[NUM_BYTES];
-                    makeNewBoard(b,newBoard);
-                    int breakAfterThis = 0;
-                    if (pieceAtIdx != 0) {
-                        newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
-                        breakAfterThis = 1;
-                    }
-                    newBoard[toIdx] = p;
-                    newBoard[fromIdx] = 0;
-
-                    const int checkStatus = calculateCheckStatus(newBoard);
-                    newBoard[IDX_CHECK_STATUS] = checkStatus;
-                    if (color == WHITE_MASK && (checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-                        if (p == Piece_R) {
-                            if (fromIdx == A1) {
-                                newBoard[IDX_CASTLING] &= 0xf ^ MASK_CASTLING_WHITE_QUEEN_SIDE;
-                            }
-                            else if (fromIdx == H1) {
-                                newBoard[IDX_CASTLING] &= 0xf ^ MASK_CASTLING_WHITE_KING_SIDE;
-                            }
-                        }
-                        numMovesFound++;
-                        dig(newBoard);
-                    }
-                    else if (color == BLACK_MASK && (checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-
-                        if (p == Piece_r) {
-                            if (fromIdx == A8) {
-                                newBoard[IDX_CASTLING] &= 0xf ^ MASK_CASTLING_BLACK_QUEEN_SIDE;
-                            }
-                            else if (fromIdx == H8) {
-                                newBoard[IDX_CASTLING] &= 0xf ^ MASK_CASTLING_BLACK_KING_SIDE;
-                            }
-                        }
-                        numMovesFound++;
-                        dig(newBoard);
-                    }
-                    if (breakAfterThis == 1) {
-                        break;
-                    }
-                }
-                else {
-                    break;
-                }
-            }
-            else {
-                break;
-            }
-        }
-    }
-    return numMovesFound;
-}
 
 int makeWhiteBitPromos( long board[], long newPieceMap ){
 
@@ -786,137 +813,6 @@ int makeWhiteBitPromos( long board[], long newPieceMap ){
   return numMoves;
 }
 
-int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask) {
-
-    int numMovesMade = 0;
-
-    const int lastMove = (MASK_LAST_MOVE_WAS_PROMO | moveMask);
-
-    long promo[NUM_BYTES];
-    makeNewBoard(b, promo );
-
-    promo[from] = 0;
-    promo[to] = Piece_Q;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    int checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-    //int[] queen =makeNewBoard(b);
-    makeNewBoard(b, promo );
-    promo[from] = 0;
-    promo[to] = Piece_B;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-
-    makeNewBoard(b, promo );
-    promo[from] = 0;
-    promo[to] = Piece_R;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-
-    makeNewBoard(b, promo );
-    promo[from] = 0;
-    promo[to] = Piece_N;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-    return numMovesMade;
-
-}
-
- int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMask) {
-
-    const int lastMove = MASK_LAST_MOVE_WAS_PROMO | moveMask;
-    int numMovesMade = 0;
-    long promo[NUM_BYTES];
-    makeNewBoard(b,promo);
-
-    promo[from] = 0;
-    promo[to] = Piece_q;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    int checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-
-    makeNewBoard(b, promo);
-    promo[from] = 0;
-    promo[to] = Piece_b;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-    makeNewBoard(b, promo);
-    promo[from] = 0;
-    promo[to] = Piece_r;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-
-    makeNewBoard(b, promo);
-    promo[from] = 0;
-    promo[to] = Piece_n;
-    promo[IDX_LAST_MOVE_WAS] = lastMove;
-    promo[IDX_CASTLING] = castlingMask;
-
-    checkStatus = calculateCheckStatus(promo);
-    if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
-        promo[IDX_CHECK_STATUS] = checkStatus;
-        dig(promo);
-        numMovesMade++;
-    }
-
-    return numMovesMade;
-
-}
-
 
 void makeNewBoard(long oldBoard[], long newBoard[]) {
 
@@ -929,7 +825,6 @@ void makeNewBoard(long oldBoard[], long newBoard[]) {
     newBoard[IDX_MOVE_NUM]++;
     newBoard[IDX_TURN] = oldBoard[IDX_TURN] ^ 4095;
     newBoard[IDX_CHECK_STATUS] = 0;
-
 
 }
 
@@ -1004,10 +899,21 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
 int calculateWhiteKingCheckStatus( long board[] ){
 
   // first the one-of threats.
-  long idx = board[IDX_WHITE_KING_INDEX];
-  long king = board[IDX_WHITE_KING];
 
-  if( N_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS] ){
+  long king = board[IDX_WHITE_KING];
+  long idx = board[IDX_WHITE_KING_INDEX];
+
+/*
+  printf("--------- %ld ----------\n",idx);
+  printLongAsBitBoard( 1l<<idx );
+  printLongAsBitBoard( king );
+  printLongAsBitBoard( board[IDX_BLACK_KNIGHTS] );
+  printLongAsBitBoard( KNIGHT_ATTACK_MAPS[idx] );
+  printLongAsBitBoard( board[IDX_WHITE_KNIGHTS] );
+  printf("--\n");
+*/
+
+  if( KNIGHT_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS] ){
     return MASK_WHITE_KING_CHECKED;
   }
 
@@ -1533,7 +1439,7 @@ void diagramToBitBoard( long board[], char diagram[] ){
               pos++;
               break;
           case 'k':
-              board[IDX_BLACK_KING_INDEX] = pos;
+              board[IDX_BLACK_KING_INDEX] = 63-pos;
               board[IDX_BLACK_KING] = (1l << (63-pos));
               pos++;
               break;
@@ -1559,7 +1465,7 @@ void diagramToBitBoard( long board[], char diagram[] ){
               pos++;
               break;
           case 'K':
-              board[IDX_WHITE_KING_INDEX] = pos;
+              board[IDX_WHITE_KING_INDEX] = 63-pos;
               board[IDX_WHITE_KING] = (1l << (63-pos));
               pos++;
               break;
