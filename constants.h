@@ -107,6 +107,21 @@ const int F8 = 5;
 const int G8 = 6;
 const int H8 = 7;
 
+const long A1_MASK = (1L <<(63-A1));
+const long B1_MASK = (1L <<(63-B1));
+const long C1_MASK = (1L <<(63-C1));
+const long D1_MASK = (1L <<(63-D1));
+const long E1_MASK = (1L <<(63-E1));
+const long F1_MASK = (1L <<(63-F1));
+const long G1_MASK = (1L <<(63-G1));
+const long H1_MASK = (1L <<(63-H1));
+
+const long B1_C1_D1_MASK = B1_MASK|C1_MASK|D1_MASK;
+const long F1_G1_MASK = F1_MASK|G1_MASK;
+
+const long B8_C8_D8_MASK = (1L << (63-B8)) | (1L << (63-C8)) | (1L << (63-D8));
+const long F8_G8_MASK = (1L << (63-F8)) | (1L << (63-G8));
+
 
 const int MOVE_MATRIX_LENGTH = 16;
 const int MOVE_MATRIX[] = {
