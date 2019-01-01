@@ -134,18 +134,18 @@ int main( int argc, char **argv){
 
 
 
-  /*char *initialBoard = "\
-					   . . . . . . . .\
-					   . . p . . . . .\
-					   . R . . p . k .\
+	char *initialBoard = "\
 					   . . . . . . . .\
 					   . . . . . . . .\
+					   . . . . . . k .\
 					   . . . . . . . .\
-					   . P . . . . . .\
-					   . . . . . K . .";*/
+					   . . . q . . . .\
+					   . . . . . . . .\
+					   . . . . . . . .\
+					   . R K . . . . .";
 
 
-   char *initialBoard = "\
+   /*char *initialBoard = "\
 					  r . . . k . . r\
 					  p . p p q p b .\
 					  b n . . p n p .\
@@ -153,7 +153,7 @@ int main( int argc, char **argv){
 					  . p . . P . . .\
 					  . . N . . Q . p\
 					  P P P B B P P P\
-					  R . . . K . . R";
+					  R . . . K . . R";*/
 
 
 
@@ -326,21 +326,21 @@ int findAllPossibleMoves2( long originalBoard[]) {
   if (originalBoard[IDX_TURN] == WHITE_MASK) { // turn == white
 
 	  numMovesFound += moveWhitePawns( originalBoard );
-	  /*numMovesFound += moveWhiteRooksOrQueens( originalBoard, IDX_WHITE_QUEENS );
+	  numMovesFound += moveWhiteRooksOrQueens( originalBoard, IDX_WHITE_QUEENS );
 	  numMovesFound += moveWhiteRooksOrQueens( originalBoard, IDX_WHITE_ROOKS );
 	  numMovesFound += moveWhiteBishopsOrQueens( originalBoard, IDX_WHITE_QUEENS );
 	  numMovesFound += moveWhiteBishopsOrQueens( originalBoard, IDX_WHITE_BISHOPS );
 	  numMovesFound += moveWhiteKnights( originalBoard );
-	  numMovesFound += moveWhiteKing( originalBoard );*/
+	  //numMovesFound += moveWhiteKing( originalBoard );
 
   }
   else {
 
 	  numMovesFound += moveBlackPawns( originalBoard );
 	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_QUEENS );
-	  /*
 	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_ROOKS );
-	  numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_QUEENS );
+
+	  /*numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_QUEENS );
 	  numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_BISHOPS );
 	  numMovesFound += moveBlackKnights( originalBoard );
 	  numMovesFound += moveBlackKing( originalBoard );*/
@@ -2175,6 +2175,8 @@ void printBitBoard( long board[] ){
 	}
 	printf("\n");
 	printf( "Move num: %ld\n", board[IDX_MOVE_NUM] );
+
+
 	printf( "Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black" );
 
 
@@ -2184,7 +2186,7 @@ void printBitBoard( long board[] ){
 	if( board[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED ) {
 		printf( "White is in check\n");
 	}
-	if( board[IDX_CHECK_STATUS] & MASK_WHITE_KING_CHECKED ) {
+	if( board[IDX_CHECK_STATUS] & MASK_BLACK_KING_CHECKED ) {
 		printf( "Black is in check\n");
 	}
 	if( board[IDX_EP_IDX]){
