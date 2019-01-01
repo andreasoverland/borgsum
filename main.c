@@ -68,7 +68,7 @@ void printBitBoard( long board[] );
 void diagramToBitBoard( long board[], char diagram[] );
 void printLongAsBitBoard( long bitstream );
 
-int MAX_LEVEL = 2;
+int MAX_LEVEL = 1;
 long numMoves[]	  = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]		 = {0,0,0,0,0,0,0,0,0,0,0};
@@ -136,13 +136,13 @@ int main( int argc, char **argv){
 
 	char *initialBoard = "\
 					   . . . . . . . .\
-					   . . . . . . . .\
 					   . . . . . . k .\
 					   . . . . . . . .\
-					   . . . q . . . .\
 					   . . . . . . . .\
 					   . . . . . . . .\
-					   . R K . . . . .";
+					   . . . . . . . .\
+					   . . K . . . . .\
+					   . Q . . . . . .";
 
 
    /*char *initialBoard = "\
@@ -301,7 +301,7 @@ long printStats(){
 void dig(long board[]){
 
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
-	   || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
+//	   || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
 	) {
 		int numMoves = findAllPossibleMoves2(board);
 		if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
@@ -309,10 +309,10 @@ void dig(long board[]){
 		}
 	}
 	count(board);
-	if( MAX_LEVEL <= 3 ){
-	  if( board[IDX_MOVE_NUM] <= MAX_LEVEL){
+	if( MAX_LEVEL <= 4 ){
+
 		printBitBoard( board );
-	  }
+
 	}
 	/*if( board[IDX_MOVE_NUM] == 2){
 	  printStats();
@@ -337,12 +337,12 @@ int findAllPossibleMoves2( long originalBoard[]) {
   else {
 
 	  numMovesFound += moveBlackPawns( originalBoard );
-	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_QUEENS );
-	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_ROOKS );
+//	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_QUEENS );
+//	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_ROOKS );
 
-	  /*numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_QUEENS );
+	  numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_QUEENS );
 	  numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_BISHOPS );
-	  numMovesFound += moveBlackKnights( originalBoard );
+/*	  numMovesFound += moveBlackKnights( originalBoard );
 	  numMovesFound += moveBlackKing( originalBoard );*/
 
   }
@@ -352,7 +352,7 @@ int findAllPossibleMoves2( long originalBoard[]) {
 }
 
 
-// Move genration
+// ----------------------------------- WHITE KING ---------------------------------
 
 int moveWhiteKing( long b[] ){
 
@@ -645,7 +645,6 @@ int moveWhitePawns( long b[] ){
 	  }
   }
 
-  printf( "Found %d white pawn moves\n",numPawnMoves);
   return numPawnMoves;
 
 }
@@ -994,6 +993,171 @@ int moveWhiteBishopsOrQueens( long b[], int pieceMapIndex ){
   return numMovesFound;
 }
 
+//////////////////////////////////// MOVE BLACK BISHOPS /////////////////////////////////////
+int moveBlackBishopsOrQueens( long b[], int pieceMapIndex ){
+
+  int numMovesFound = 0;
+
+  long pieces = b[pieceMapIndex];
+  long originalPieces = pieces;
+  int idx = 0;
+
+  long move[NUM_BYTES];
+  long allPieces = b[IDX_ALL_PIECES];
+  long blackPieces = b[IDX_BLACK_PIECES];
+  long whitePieces = b[IDX_WHITE_PIECES];
+
+  while( pieces ){
+	int shift =  __builtin_ctzll( pieces );
+	idx += shift;
+	long pieceMap = 1l << idx;
+
+	long moveToMap = pieceMap;
+	long clearMap = ~pieceMap;
+
+	//--
+
+	int rank = idx >> 3;
+	int file = idx & 7;
+
+	// TODO: regn up hvor langt testen skal gå. ikke noe vits i å teste for hver file&dRank
+	// pluss at vi kan bruke bitmap i stedet for
+	int maxM = 7-rank;
+	maxM = 7-file < maxM ? 7-file : maxM;
+
+	for( int m=0;m<maxM;m++){
+		moveToMap <<= 9;
+
+		if( moveToMap & blackPieces ){
+		  break;
+		}
+
+		makeNewBoard( b, move );
+		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+
+		if ( calculateBlackKingCheckStatus(move) == 0) {
+		  #ifdef TEST_IF_ON_R1_R8
+		  if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+		  #endif
+			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+		  move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+		  numMovesFound++;
+		  dig(move);
+
+		}
+
+		if( moveToMap & whitePieces ){
+		  break;
+		}
+
+	}
+
+	maxM = 7-rank;
+	maxM = file < maxM ? file : maxM;
+
+	moveToMap = pieceMap;
+
+	for( int m=0;m<maxM;m++){
+		moveToMap <<= 7;
+		if( moveToMap & blackPieces ){
+		  break;
+		}
+
+		makeNewBoard( b, move );
+		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+
+		if ( calculateBlackKingCheckStatus(move) == 0) {
+		  #ifdef TEST_IF_ON_R1_R8
+		  if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+		  #endif
+			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+		  move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+		  numMovesFound++;
+		  dig(move);
+
+		}
+
+		if( moveToMap & whitePieces ){
+		  break;
+		}
+
+	}
+
+	maxM = rank;
+	maxM = maxM > (7-file) ? (7-file) : maxM;
+
+	moveToMap = pieceMap;
+
+	for( int m=0;m<maxM;m++){
+		moveToMap >>= 7;
+
+		if( moveToMap & blackPieces ){
+		  break;
+		}
+
+		makeNewBoard( b, move );
+		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+
+		if ( calculateBlackKingCheckStatus(move) == 0) {
+		  #ifdef TEST_IF_ON_R1_R8
+		  if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+		  #endif
+			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+		  move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+		  numMovesFound++;
+		  dig(move);
+
+		}
+
+		if( moveToMap & whitePieces ){
+		  break;
+		}
+
+	}
+
+	maxM = rank;
+	maxM = maxM > file ? file : maxM;
+	moveToMap = pieceMap;
+
+	for( int m=0;m<maxM;m++){
+		moveToMap  >>= 9;
+		if( moveToMap & blackPieces ){
+		  break;
+		}
+
+		makeNewBoard( b, move );
+		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+
+		if ( calculateBlackKingCheckStatus(move) == 0) {
+		  #ifdef TEST_IF_ON_R1_R8
+		  if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+		  #endif
+			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+		  move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+		  numMovesFound++;
+		  dig(move);
+
+		}
+
+		if( moveToMap & whitePieces ){
+		  break;
+		}
+
+
+	}
+
+	pieces >>= (shift+1);
+	idx++;
+
+  }
+
+  return numMovesFound;
+}
+
 ///////////////////////////////////// MOVE WHITE ROOKS //////////////////////////////////////
 int moveWhiteRooksOrQueens( long b[], int pieceMapIndex  ){
 
@@ -1252,8 +1416,6 @@ int moveBlackRooksOrQueens( long b[], int pieceMapIndex  ){
 		#endif
 			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
 
-		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-		numMovesFound++;
 		dig(move);
 
 	  }
@@ -1443,14 +1605,14 @@ int makeBlackBitPromos( long board[], long newPieceMap ){
 }
 
 
-void makeNewBoard(long oldBoard[], long newBoard[]) {
+void makeNewBoard( long oldBoard[], long newBoard[]) {
 
 	makeNewBoardInvocations++;
 
 	// TODO: Prøv å sette 0 på bare de bytsa som ikke blir aktivt kopiert, alle etter NUM_BYTES_TO_COPY til NUM_BYTES.
 	memset(newBoard+NUM_BYTES_TO_COPY, 0, sizeof(long)*(NUM_BYTES-NUM_BYTES_TO_COPY)); // sizeof(int)*(NUM_BYTES-NUM_BYTES_TO_COPY)
 	memcpy(newBoard, oldBoard,  sizeof(long)*NUM_BYTES_TO_COPY); // sizeof(int)*NUM_BYTES_TO_COPY
-
+	newBoard[IDX_MOVE_ID] = makeNewBoardInvocations;
 	newBoard[IDX_MOVE_NUM]++;
 	newBoard[IDX_TURN] = oldBoard[IDX_TURN] ^ 4095;
 	newBoard[IDX_CHECK_STATUS] = 0;
@@ -1458,77 +1620,11 @@ void makeNewBoard(long oldBoard[], long newBoard[]) {
 }
 
 
-boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
-	// only invoked just before castling
-	isSquaresThreatenedByColorInvocations ++;
 
-	int offset = color == WHITE_MASK ? 0 : 64;
-
-	for (int i=0;i<2;i++){
-
-		int rank = indices[i] >> 3;
-		int file = indices[i] & 7;
-
-		for (int direction = 0; direction < MOVE_MATRIX_LENGTH; direction += 2) {
-			int newFile = file;
-			int newRank = rank;
-
-			for (int n = 1; (n & 8) == 0; n++) {
-
-				newFile += MOVE_MATRIX[direction];
-				newRank += MOVE_MATRIX[direction | 1];
-
-				// Check that 0 > newRank|newFile < 8
-				if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-
-					int checkIdx = newRank << 3 | newFile;
-					int checkPiece = board[checkIdx];
-
-					if (checkPiece == 0) {
-						continue;
-					}
-
-					int comparePiece = allComparePieces[offset + (direction << 2 | n)];
-
-					if ((checkPiece & comparePiece) != 0) {
-						return TRUE;
-					}
-					break; // own color piece, stop search line
-				}
-				else {
-					break; // edge detected, continue to next direction
-				}
-
-			}
-		}
-
-		for (int t = 0; t < KNIGHT_MOVE_MATRIX_LENGTH; t += 2) {
-			int newFile = file + KNIGHT_MOVE_MATRIX[t];
-			int newRank = rank + KNIGHT_MOVE_MATRIX[t | 1];
-
-			// Check that 0 > newRank|newFile < 8
-			if ( ((newRank | newFile) & 0xFFFFFFF8) == 0 ) {
-				int checkIdx = newRank << 3 | newFile;
-				int checkPiece = board[checkIdx];
-				if (color == BLACK_MASK && checkPiece == Piece_n) {
-					return TRUE;
-				}
-				if (color == WHITE_MASK && checkPiece == Piece_N) {
-					return TRUE;
-				}
-			}
-		}
-
-	}
-
-	return FALSE;
-}
-
-
-void makeWhiteMove( long move[], int pieceIndex, long moveToMap, long clearMap, long blackPieces ){
-	move[pieceIndex] &= clearMap;
+void makeWhiteMove( long move[], int pieceMapIndex, long moveToMap, long clearMap, long blackPieces ){
+	move[pieceMapIndex] &= clearMap;
+	move[pieceMapIndex] |= moveToMap;
 	move[IDX_WHITE_PIECES] &= clearMap;
-	move[pieceIndex] |= moveToMap;
 	move[IDX_WHITE_PIECES] |= moveToMap;
 	move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|blackPieces;
 
@@ -1538,10 +1634,10 @@ void makeWhiteMove( long move[], int pieceIndex, long moveToMap, long clearMap, 
 	}
 }
 
-void makeBlackMove( long move[], int pieceIndex, long moveToMap, long clearMap, long whitePieces ){
-	move[pieceIndex] &= clearMap;
+void makeBlackMove( long move[], int pieceMapIndex, long moveToMap, long clearMap, long whitePieces ){
+	move[pieceMapIndex] &= clearMap;
+	move[pieceMapIndex] |= moveToMap;
 	move[IDX_BLACK_PIECES] &= clearMap;
-	move[pieceIndex] |= moveToMap;
 	move[IDX_BLACK_PIECES] |= moveToMap;
 	move[IDX_ALL_PIECES] = move[IDX_BLACK_PIECES]|whitePieces;
 
@@ -1554,20 +1650,8 @@ void makeBlackMove( long move[], int pieceIndex, long moveToMap, long clearMap, 
 
 int calculateWhiteKingCheckStatus( long board[] ){
 
-  // first the one-of threats.
-
   long king = board[IDX_WHITE_KING];
   long idx = __builtin_ctzll( king );
-
-/*
-  printf("--------- %ld ----------\n",idx);
-  printLongAsBitBoard( 1l<<idx );
-  printLongAsBitBoard( king );
-  printLongAsBitBoard( board[IDX_BLACK_KNIGHTS] );
-  printLongAsBitBoard( KNIGHT_ATTACK_MAPS[idx] );
-  printLongAsBitBoard( board[IDX_WHITE_KNIGHTS] );
-  printf("--\n");
-*/
 
   if( KNIGHT_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS] ){
 	return MASK_WHITE_KING_CHECKED;
@@ -1592,20 +1676,21 @@ int calculateWhiteKingCheckStatus( long board[] ){
 	// is in check
 	long test = allPieces & QB_ATTACK_MAPS[idx];
 
+
 	if( __builtin_popcountll (test ) == 1){
-	  return MASK_WHITE_KING_CHECKED;
+		return MASK_WHITE_KING_CHECKED;
 	}
 
 	int rank = idx >> 3;
 	int file = idx & 7;
 
 	long testMap = king;
-	// TODO: regn up hvor langt testen skal gå. ikke noe vits i å teste for hver file&dRank
-	// pluss at vi kan bruke bitmap i stedet for
+
 	int maxM = 7-rank;
 	maxM = 7-file < maxM ? 7-file : maxM;
 	for( int m=0;m<maxM;m++){
-		testMap >>= 9;
+		testMap <<= 9;
+
 		if( testMap & qb ){
 			return MASK_WHITE_KING_CHECKED;
 		}
@@ -1618,7 +1703,9 @@ int calculateWhiteKingCheckStatus( long board[] ){
 	maxM = file < maxM ? file : maxM;
 	testMap = king;
 	for( int m=0;m<maxM;m++){
-		testMap >>= 7;
+
+		testMap <<= 7;
+
 		if( testMap & qb ){
 			return MASK_WHITE_KING_CHECKED;
 		}
@@ -1632,7 +1719,8 @@ int calculateWhiteKingCheckStatus( long board[] ){
 	maxM = maxM > (7-file) ? (7-file) : maxM;
 	testMap = king;
 	for( int m=0;m<maxM;m++){
-		testMap <<= 7;
+		testMap >>= 7;
+
 		if( testMap & qb ){
 			return MASK_WHITE_KING_CHECKED;
 		}
@@ -1645,7 +1733,8 @@ int calculateWhiteKingCheckStatus( long board[] ){
 	maxM = maxM > file ? file : maxM;
 	testMap = king;
 	for( int m=0;m<maxM;m++){
-		testMap  <<= 9;
+		testMap >>= 9;
+
 		if( testMap & qb ){
 			return MASK_WHITE_KING_CHECKED;
 		}
@@ -1725,8 +1814,6 @@ int calculateWhiteKingCheckStatus( long board[] ){
 			break;
 		}
 	}
-
-
   }
 
   return 0;
@@ -1737,16 +1824,6 @@ int calculateBlackKingCheckStatus( long board[] ){
 
 	long king = board[IDX_BLACK_KING];
     long idx = __builtin_ctzll( king );
-
-  /*
-    printf("--------- %ld ----------\n",idx);
-    printLongAsBitBoard( 1l<<idx );
-    printLongAsBitBoard( king );
-    printLongAsBitBoard( board[IDX_BLACK_KNIGHTS] );
-    printLongAsBitBoard( KNIGHT_ATTACK_MAPS[idx] );
-    printLongAsBitBoard( board[IDX_WHITE_KNIGHTS] );
-    printf("--\n");
-  */
 
     if( KNIGHT_ATTACK_MAPS[idx] & board[IDX_WHITE_KNIGHTS] ){
   		return MASK_BLACK_KING_CHECKED;
@@ -1764,148 +1841,151 @@ int calculateBlackKingCheckStatus( long board[] ){
     // now for the vector threats. a piece may be on the map, but can be blocked
     if( QB_ATTACK_MAPS[idx] & (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS])){
 
-  	// need to check each direction for a block
-  	long qb = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS]);
-  	long allPieces = board[IDX_ALL_PIECES];
+	  	// need to check each direction for a block
+	  	long qb = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS]);
+	  	long allPieces = board[IDX_ALL_PIECES];
 
-  	// if the only pieces intersecting the attackmap is a Q or B, then white
-  	// is in check
-  	long test = allPieces & QB_ATTACK_MAPS[idx];
+	  	// if the only pieces intersecting the attackmap is a Q or B, then white
+	  	// is in check
+	  	long test = allPieces & QB_ATTACK_MAPS[idx];
 
-  	if( __builtin_popcountll (test ) == 1){
-  	  return MASK_BLACK_KING_CHECKED;
-  	}
+	  	if( __builtin_popcountll (test ) == 1){
+		 	return MASK_BLACK_KING_CHECKED;
+	  	}
 
-  	int rank = idx >> 3;
-  	int file = idx & 7;
+	  	int rank = idx >> 3;
+	  	int file = idx & 7;
 
-  	long testMap = king;
-  	// TODO: regn up hvor langt testen skal gå. ikke noe vits i å teste for hver file&dRank
-  	// pluss at vi kan bruke bitmap i stedet for
-  	int maxM = 7-rank;
-  	maxM = 7-file < maxM ? 7-file : maxM;
-  	for( int m=0;m<maxM;m++){
-  		testMap >>= 9;
-  		if( testMap & qb ){
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
+	  	long testMap = king;
+	  	// TODO: regn up hvor langt testen skal gå. ikke noe vits i å teste for hver file&dRank
+	  	// pluss at vi kan bruke bitmap i stedet for
+	  	int maxM = 7-rank;
+	  	maxM = 7-file < maxM ? 7-file : maxM;
+	  	for( int m=0;m<maxM;m++){
+	  		testMap <<= 9;
 
-  	maxM = 7-rank;
-  	maxM = file < maxM ? file : maxM;
-  	testMap = king;
-  	for( int m=0;m<maxM;m++){
-  		testMap >>= 7;
-  		if( testMap & qb ){
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
+	  		if( testMap & qb ){
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
+
+	  	maxM = 7-rank;
+	  	maxM = file < maxM ? file : maxM;
+	  	testMap = king;
+	  	for( int m=0;m<maxM;m++){
+	  		testMap <<= 7;
+
+	  		if( testMap & qb ){
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
 
 
-  	maxM = rank;
-  	maxM = maxM > (7-file) ? (7-file) : maxM;
-  	testMap = king;
-  	for( int m=0;m<maxM;m++){
-  		testMap <<= 7;
-  		if( testMap & qb ){
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
+	  	maxM = rank;
+	  	maxM = maxM > (7-file) ? (7-file) : maxM;
+	  	testMap = king;
+	  	for( int m=0;m<maxM;m++){
+	  		testMap >>= 7;
 
-  	maxM = rank;
-  	maxM = maxM > file ? file : maxM;
-  	testMap = king;
-  	for( int m=0;m<maxM;m++){
-  		testMap  <<= 9;
-  		if( testMap & qb ){
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
+	  		if( testMap & qb ){
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
+
+	  	maxM = rank;
+	  	maxM = maxM > file ? file : maxM;
+	  	testMap = king;
+	  	for( int m=0;m<maxM;m++){
+	  		testMap >>= 9;
+
+	  		if( testMap & qb ){
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
     }
     // now for the vector threats. a piece may be on the map, but can be blocked
     if( QR_ATTACK_MAPS[idx] & (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS])){
 
-  	// need to check each direction for a block
-  	long qr = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS]);
-  	long allPieces = board[IDX_ALL_PIECES];
+	  	// need to check each direction for a block
+	  	long qr = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS]);
+	  	long allPieces = board[IDX_ALL_PIECES];
 
-  	// if the only pieces intersecting the attackmap is a Q or B, then white
-  	// is in check
-  	long test = allPieces & QR_ATTACK_MAPS[idx];
-  	if( __builtin_popcountll (test ) == 1){
-  	  return MASK_BLACK_KING_CHECKED;
-  	}
+	  	// if the only pieces intersecting the attackmap is a Q or B, then white
+	  	// is in check
+	  	long test = allPieces & QR_ATTACK_MAPS[idx];
+	  	if( __builtin_popcountll (test ) == 1){
+	  	  return MASK_BLACK_KING_CHECKED;
+	  	}
 
-  	// TODO : also hit if threatmap & piecemap == piecemap
+	  	// TODO : also hit if threatmap & piecemap == piecemap
 
-  	int rank = idx >> 3;
-  	int file = idx & 7;
+	  	int rank = idx >> 3;
+	  	int file = idx & 7;
 
-  	int maxM = file;
-  	long testMap = king;
+	  	int maxM = file;
+	  	long testMap = king;
 
-  	for( int m=0;m<maxM;m++){
-  		testMap >>= 1;
-  		if( testMap & qr ){
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
+	  	for( int m=0;m<maxM;m++){
+	  		testMap >>= 1;
+	  		if( testMap & qr ){
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
 
-  	maxM = 7-file;
-  	testMap = king;
-  	for( int m=0;m<maxM;m++){
-  		testMap <<= 1;
-  		if( testMap & qr ){
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
+	  	maxM = 7-file;
+	  	testMap = king;
+	  	for( int m=0;m<maxM;m++){
+	  		testMap <<= 1;
+	  		if( testMap & qr ){
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
 
-  	maxM = rank;
-  	testMap = king;
+	  	maxM = rank;
+	  	testMap = king;
 
-  	for( int m=0;m<maxM;m++){
-  		testMap >>= 8;
-  		if( testMap & qr ){
-  			//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
+	  	for( int m=0;m<maxM;m++){
+	  		testMap >>= 8;
+	  		if( testMap & qr ){
+	  			//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
 
-  	maxM = 7-rank;
-  	testMap = king;
+	  	maxM = 7-rank;
+	  	testMap = king;
 
-  	for( int m=0;m<maxM;m++){
-  		testMap <<= 8;
-  		if( testMap & qr ){
-  			//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
-  			return MASK_BLACK_KING_CHECKED;
-  		}
-  		if( testMap & allPieces){
-  			break;
-  		}
-  	}
-
+	  	for( int m=0;m<maxM;m++){
+	  		testMap <<= 8;
+	  		if( testMap & qr ){
+	  			//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
+	  			return MASK_BLACK_KING_CHECKED;
+	  		}
+	  		if( testMap & allPieces){
+	  			break;
+	  		}
+	  	}
 
     }
 
@@ -1986,7 +2066,6 @@ void clearBlackPiecesWithClearMap( long board[], long clear ){
 	for( int t=IDX_BLACK_PAWNS;t<=IDX_BLACK_KING;t++){ // no need to clear the king, ever. hopefully. but test forst. todo:test
 		board[t] &= clear;
 	}
-	board[IDX_ALL_PIECES] &= clear;
 	board[IDX_BLACK_PIECES] &= clear;
 }
 
@@ -1994,7 +2073,6 @@ void clearWhitePiecesWithClearMap( long board[], long clear ){
 	for( int t=IDX_WHITE_PAWNS;t<=IDX_WHITE_KING;t++){ // no need to clear the king, ever. hopefully. but test forst. todo:test
 		board[t] &= clear;
 	}
-	board[IDX_ALL_PIECES] &= clear;
 	board[IDX_WHITE_PIECES] &= clear;
 }
 
@@ -2133,9 +2211,9 @@ void printLongAsBitBoard( long bitstream ){
 
 void setBitsToChar( char *str, long bits, char c){
 
-  //printLongAsBitBoard( pieces );
+	long originalBits = bits;
   int idx = 0;
-  while( bits ){
+  while( bits && idx < 64){
 	int shift =  __builtin_clzll( bits );
 	idx += shift;
 	bits <<= (shift+1);
@@ -2147,21 +2225,26 @@ void setBitsToChar( char *str, long bits, char c){
 
 void printBitBoard( long board[] ){
 	printf( "\n  A B C D E F G H");
-	char str[65] = "................................................................\0";
+	char str[] = ".................................................................\0";
 
 	setBitsToChar( str, board[IDX_WHITE_PAWNS],   'P' );
 	setBitsToChar( str, board[IDX_WHITE_ROOKS],   'R' );
 	setBitsToChar( str, board[IDX_WHITE_BISHOPS], 'B' );
 	setBitsToChar( str, board[IDX_WHITE_KNIGHTS], 'N' );
+	/*if( board[IDX_MOVE_ID] == 14){
+		printf(" abouut to crash\n");
+		printLongAsBitBoard( board[IDX_WHITE_QUEENS] );
+	 	fflush(stdout);
+	}*/
 	setBitsToChar( str, board[IDX_WHITE_QUEENS],  'Q' );
-	setBitsToChar( str, board[IDX_WHITE_KING],	'K' );
+	setBitsToChar( str, board[IDX_WHITE_KING],    'K' );
 
 	setBitsToChar( str, board[IDX_BLACK_PAWNS],   'p' );
 	setBitsToChar( str, board[IDX_BLACK_ROOKS],   'r' );
 	setBitsToChar( str, board[IDX_BLACK_BISHOPS], 'b' );
 	setBitsToChar( str, board[IDX_BLACK_KNIGHTS], 'n' );
 	setBitsToChar( str, board[IDX_BLACK_QUEENS],  'q' );
-	setBitsToChar( str, board[IDX_BLACK_KING],	'k' );
+	setBitsToChar( str, board[IDX_BLACK_KING],    'k' );
 
 	if( board[IDX_EP_IDX] ){
 		setBitsToChar( str, board[IDX_EP_IDX], '*' );
@@ -2175,6 +2258,7 @@ void printBitBoard( long board[] ){
 	}
 	printf("\n");
 	printf( "Move num: %ld\n", board[IDX_MOVE_NUM] );
+	printf( "Move ID: %ld\n", board[IDX_MOVE_ID]);
 
 
 	printf( "Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black" );
@@ -2200,6 +2284,7 @@ void printBitBoard( long board[] ){
 	  ( board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ? "q" : ""
 	)  ;
 	printf("\n");
+
 	fflush(stdout);
 
 }
