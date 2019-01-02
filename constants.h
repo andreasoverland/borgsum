@@ -51,9 +51,10 @@ const int MASK_WHITE_KING_CHECKED = 0b0000000111111;
 const int MASK_BLACK_KING_CHECKED = 0b0111111000000;
 const int MASK_KING_IS_MATED      = 0b1000000000000;
 
-// everything below 31 is zero..
+// everything below 30 is zero..
 
-const int IDX_MOVE_ID = 31;
+const int IDX_MOVE_ID = 30;
+const int IDX_PARENT_MOVE_ID = 31;
 // bitboard spesific indexes
 
 const int IDX_WHITE_PIECES = 32;

@@ -68,7 +68,7 @@ void printBitBoard( long board[] );
 void diagramToBitBoard( long board[], char diagram[] );
 void printLongAsBitBoard( long bitstream );
 
-int MAX_LEVEL = 1;
+int MAX_LEVEL = 2;
 long numMoves[]	  = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]		 = {0,0,0,0,0,0,0,0,0,0,0};
@@ -136,13 +136,13 @@ int main( int argc, char **argv){
 
 	char *initialBoard = "\
 					   . . . . . . . .\
-					   . . . . . . k .\
 					   . . . . . . . .\
 					   . . . . . . . .\
+					   . n . . k . . .\
 					   . . . . . . . .\
 					   . . . . . . . .\
-					   . . K . . . . .\
-					   . Q . . . . . .";
+					   . . . P . . . .\
+					   . . . . . K . .";
 
 
    /*char *initialBoard = "\
@@ -337,13 +337,12 @@ int findAllPossibleMoves2( long originalBoard[]) {
   else {
 
 	  numMovesFound += moveBlackPawns( originalBoard );
-//	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_QUEENS );
-//	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_ROOKS );
-
+	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_QUEENS );
+	  numMovesFound += moveBlackRooksOrQueens( originalBoard, IDX_BLACK_ROOKS );
 	  numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_QUEENS );
 	  numMovesFound += moveBlackBishopsOrQueens( originalBoard, IDX_BLACK_BISHOPS );
-/*	  numMovesFound += moveBlackKnights( originalBoard );
-	  numMovesFound += moveBlackKing( originalBoard );*/
+ 	  numMovesFound += moveBlackKnights( originalBoard );
+	  //numMovesFound += moveBlackKing( originalBoard );
 
   }
 
@@ -1539,6 +1538,69 @@ int moveWhiteKnights( long b[] ){
 
 }
 
+///////////////////////////////////// MOVE BLACK KNIGHTS //////////////////////////////////////
+int moveBlackKnights( long b[] ){
+
+  int numMovesFound = 0;
+
+  long pieces = b[IDX_BLACK_KNIGHTS];
+  long originalPieces = pieces;
+
+  int idx = 0;
+
+  long move[NUM_BYTES];
+  long allPieces = b[IDX_ALL_PIECES];
+  long blackPieces = b[IDX_BLACK_PIECES];
+  long whitePieces = b[IDX_WHITE_PIECES];
+
+  while( pieces ){
+	int shift =  __builtin_ctzll( pieces );
+	idx += shift;
+	long pieceMap = 1l << idx;
+	long clearMap = ~pieceMap;
+
+	long moveToMaps = KNIGHT_ATTACK_MAPS[idx];
+
+	int moveToIdx = 0;
+
+	while( moveToMaps ){
+
+	  int moveToShift = __builtin_ctzll( moveToMaps );
+	  moveToIdx += moveToShift;
+
+	  long moveToMap = 1l<<moveToIdx;
+	  if( !(moveToMap & blackPieces) ){
+
+		makeNewBoard( b, move );
+		makeBlackMove( move, IDX_BLACK_KNIGHTS, moveToMap, clearMap, whitePieces );
+
+		if ( calculateBlackKingCheckStatus(move) == 0) {
+			#ifdef TEST_IF_ON_R1_R8
+			if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+			#endif
+				move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+			  move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+			  numMovesFound++;
+			  dig(move);
+    	}
+
+	  }
+
+	  moveToMaps >>= (moveToShift+1);
+	  moveToIdx++;
+
+	}
+
+	pieces >>= (shift+1);
+	idx++;
+
+  }
+
+  return numMovesFound;
+
+}
+
 //////////////////////////////// ----------- white bit promos ---------
 int makeWhiteBitPromos( long board[], long newPieceMap ){
 
@@ -1612,8 +1674,10 @@ void makeNewBoard( long oldBoard[], long newBoard[]) {
 	// TODO: Prøv å sette 0 på bare de bytsa som ikke blir aktivt kopiert, alle etter NUM_BYTES_TO_COPY til NUM_BYTES.
 	memset(newBoard+NUM_BYTES_TO_COPY, 0, sizeof(long)*(NUM_BYTES-NUM_BYTES_TO_COPY)); // sizeof(int)*(NUM_BYTES-NUM_BYTES_TO_COPY)
 	memcpy(newBoard, oldBoard,  sizeof(long)*NUM_BYTES_TO_COPY); // sizeof(int)*NUM_BYTES_TO_COPY
+
 	newBoard[IDX_MOVE_ID] = makeNewBoardInvocations;
-	newBoard[IDX_MOVE_NUM]++;
+	newBoard[IDX_PARENT_MOVE_ID] = oldBoard[IDX_MOVE_ID];
+ 	newBoard[IDX_MOVE_NUM]++;
 	newBoard[IDX_TURN] = oldBoard[IDX_TURN] ^ 4095;
 	newBoard[IDX_CHECK_STATUS] = 0;
 
