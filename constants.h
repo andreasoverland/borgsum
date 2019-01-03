@@ -94,38 +94,48 @@ const int IDX_START_INFLUENCE_MAP = 74;
 const int NUM_BYTES_TO_COPY = 71;
 const int NUM_BYTES = 91;
 
-const int A1 = 56;
-const int B1 = 57;
-const int C1 = 58;
-const int D1 = 59;
-const int E1 = 60;
-const int F1 = 61;
-const int G1 = 62;
-const int H1 = 63;
+const int A1 = 7;
+const int B1 = 6;
+const int C1 = 5;
+const int D1 = 4;
+const int E1 = 3;
+const int F1 = 2;
+const int G1 = 1;
+const int H1 = 0;
 
-const int A8 = 0;
-const int B8 = 1;
-const int C8 = 2;
-const int D8 = 3;
-const int E8 = 4;
-const int F8 = 5;
-const int G8 = 6;
-const int H8 = 7;
+const int A8 = 63;
+const int B8 = 62;
+const int C8 = 61;
+const int D8 = 60;
+const int E8 = 59;
+const int F8 = 58;
+const int G8 = 57;
+const int H8 = 56;
 
-const long A1_MASK = (1L <<(63-A1));
-const long B1_MASK = (1L <<(63-B1));
-const long C1_MASK = (1L <<(63-C1));
-const long D1_MASK = (1L <<(63-D1));
-const long E1_MASK = (1L <<(63-E1));
-const long F1_MASK = (1L <<(63-F1));
-const long G1_MASK = (1L <<(63-G1));
-const long H1_MASK = (1L <<(63-H1));
+const long A1_MASK = (1L << A1);
+const long B1_MASK = (1L << B1);
+const long C1_MASK = (1L << C1);
+const long D1_MASK = (1L << D1);
+const long E1_MASK = (1L << E1);
+const long F1_MASK = (1L << F1);
+const long G1_MASK = (1L << G1);
+const long H1_MASK = (1L << H1);
+
+const long A8_MASK = (1L << A8);
+const long B8_MASK = (1L << B8);
+const long C8_MASK = (1L << C8);
+const long D8_MASK = (1L << D8);
+const long E8_MASK = (1L << E8);
+const long F8_MASK = (1L << F8);
+const long G8_MASK = (1L << G8);
+const long H8_MASK = (1L << H8);
+
 
 const long B1_C1_D1_MASK = B1_MASK|C1_MASK|D1_MASK;
-const long F1_G1_MASK = F1_MASK|G1_MASK;
+const long F1_G1_MASK    = F1_MASK|G1_MASK;
 
-const long B8_C8_D8_MASK = (1L << (63-B8)) | (1L << (63-C8)) | (1L << (63-D8));
-const long F8_G8_MASK = (1L << (63-F8)) | (1L << (63-G8));
+const long B8_C8_D8_MASK = B8_MASK|C8_MASK|D8_MASK;
+const long F8_G8_MASK    = F8_MASK|G8_MASK;
 
 
 const int MOVE_MATRIX_LENGTH = 16;
