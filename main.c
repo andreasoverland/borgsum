@@ -61,7 +61,7 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 
-int MAX_LEVEL = 4;
+int MAX_LEVEL = 5;
 unsigned long numMoves[]	  = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numEP[]		  = {0,0,0,0,0,0,0,0,0,0,0};
@@ -365,7 +365,6 @@ int moveWhiteKing( unsigned long b[] ){
 	unsigned long moveToMap = 1l<<moveToIdx;
 	if( !(moveToMap & whitePieces) ){
 
-
 	  makeNewBoard( b, move );
 	  makeWhiteMove( move, IDX_WHITE_KING, moveToMap, clearMap, blackPieces );
 	  move[IDX_WHITE_KING] = moveToMap;
@@ -376,7 +375,6 @@ int moveWhiteKing( unsigned long b[] ){
 		if( moveToMap & R1_R8 ) // TODO: test om det er kjappere å ikke teste på dette.
 		#endif
 			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
-
 
 		move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
 		numMovesFound++;
@@ -477,64 +475,61 @@ int moveBlackKing( unsigned long b[] ){
 
   while( moveToMaps ){
 
-	int moveToShift = __builtin_ctzll( moveToMaps );
-	moveToIdx += moveToShift;
+	  int moveToShift = __builtin_ctzll( moveToMaps );
+  	moveToIdx += moveToShift;
 
-	unsigned long moveToMap = 1l<<moveToIdx;
-	if( !(moveToMap & blackPieces) ){
+  	unsigned long moveToMap = 1l<<moveToIdx;
+  	if( !(moveToMap & blackPieces) ){
 
-	  makeNewBoard( b, move );
-	  makeBlackMove( move, IDX_BLACK_KING, moveToMap, clearMap, whitePieces );
-	  move[IDX_BLACK_KING] = moveToMap;
+  	  makeNewBoard( b, move );
+  	  makeBlackMove( move, IDX_BLACK_KING, moveToMap, clearMap, whitePieces );
+  	  move[IDX_BLACK_KING] = moveToMap;
 
-	  if ( calculateBlackKingCheckStatus(move) == 0) {
+  	  if ( calculateBlackKingCheckStatus(move) == 0) {
 
-		#ifdef TEST_IF_ON_R1_R8
-		if( moveToMap & R1_R8 ) // TODO: test om det er kjappere å ikke teste på dette.
-		#endif
-			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+  		#ifdef TEST_IF_ON_R1_R8
+  		if( moveToMap & R1_R8 ) // TODO: test om det er kjappere å ikke teste på dette.
+  		#endif
+  			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
 
-
-		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-		numMovesFound++;
-		dig(move);
-	  }
-	}
-	moveToMaps >>= (moveToShift+1);
-	moveToIdx++;
+  		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+  		numMovesFound++;
+  		dig(move);
+  	  }
+  	}
+  	moveToMaps >>= (moveToShift+1);
+  	moveToIdx++;
 
   }
-
 
   if( (b[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ){
 	  // calculate if squares on queen side are threatened and free
 	  if( !(B1_C1_D1_MASK & allPieces) ){
-
-		b[IDX_BLACK_KING] = B8_MASK;
-		int threat = calculateBlackKingCheckStatus( b );
-		if( !threat ){
-		  b[IDX_BLACK_KING] = C8_MASK;
-		  threat = calculateBlackKingCheckStatus( b );
-		  if( !threat ){
-			b[IDX_BLACK_KING] = D8_MASK;
-			threat = calculateBlackKingCheckStatus( b );
-			if( !threat ){
-			  b[IDX_BLACK_KING] = pieceMap;
-			  if( !calculateBlackKingCheckStatus( b ) ){
-				// do Castling
-				makeNewBoard( b, move );
-				makeWhiteMove( move, IDX_BLACK_KING, C8_MASK, clearMap, blackPieces );
-				makeWhiteMove( move, IDX_BLACK_ROOKS, D8_MASK, ~A8_MASK, blackPieces );
-				move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-				move[IDX_CASTLING] &= ~(MASK_CASTLING_BLACK_QUEEN_SIDE|MASK_CASTLING_BLACK_KING_SIDE);
-				move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
-				numMovesFound++;
-				dig(move);
-			  }
-			}
-		  }
-		}
-		b[IDX_BLACK_KING] = pieceMap;
+  		b[IDX_BLACK_KING] = B8_MASK;
+  		int threat = calculateBlackKingCheckStatus( b );
+  		if( !threat ){
+  		  b[IDX_BLACK_KING] = C8_MASK;
+  		  threat = calculateBlackKingCheckStatus( b );
+    		if( !threat ){
+    			b[IDX_BLACK_KING] = D8_MASK;
+    			threat = calculateBlackKingCheckStatus( b );
+    			if( !threat ){
+    			  b[IDX_BLACK_KING] = pieceMap;
+    			  if( !calculateBlackKingCheckStatus( b ) ){
+      				// do Castling
+      				makeNewBoard( b, move );
+      				makeWhiteMove( move, IDX_BLACK_KING, C8_MASK, clearMap, blackPieces );
+      				makeWhiteMove( move, IDX_BLACK_ROOKS, D8_MASK, ~A8_MASK, blackPieces );
+      				move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+      				move[IDX_CASTLING] &= ~(MASK_CASTLING_BLACK_QUEEN_SIDE|MASK_CASTLING_BLACK_KING_SIDE);
+      				move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
+      				numMovesFound++;
+      				dig(move);
+    			  }
+    			}
+  		  }
+  		}
+  		b[IDX_BLACK_KING] = pieceMap;
 	  }
 	}
 
@@ -579,6 +574,7 @@ int moveWhitePawns( unsigned long b[] ){
 
   unsigned long pawns = b[IDX_WHITE_PAWNS];
   unsigned long originalPawns = pawns;
+  unsigned long blackPieces = b[IDX_BLACK_PIECES];
 
   // 1. Make moves for pawns that can move ONE forward
   // 2. Make moves for pawns that can move TWO forward and set EP index/map
@@ -595,115 +591,96 @@ int moveWhitePawns( unsigned long b[] ){
   int pieceIdx = 0;
 
   while( pawnsThatCanMoveOneForward ){
-	int shift = __builtin_ctzll(pawnsThatCanMoveOneForward);
-	pieceIdx += shift;
-	unsigned long pieceMap = 1l << pieceIdx;
-	unsigned long newPieceMap = pieceMap<<8;
-	unsigned long clearOldPieceMap = ~pieceMap;
-	makeNewBoard( b, move );
-	move[IDX_WHITE_PAWNS] &= clearOldPieceMap;
-	move[IDX_WHITE_PIECES] &= clearOldPieceMap;
-	move[IDX_WHITE_PAWNS] |= newPieceMap;
-	move[IDX_WHITE_PIECES] |= newPieceMap;
-	move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
+  	int shift = __builtin_ctzll(pawnsThatCanMoveOneForward);
+  	pieceIdx += shift;
+  	unsigned long pieceMap = 1l << pieceIdx;
+  	unsigned long moveToMap = pieceMap<<8;
+  	unsigned long clearMap = ~pieceMap;
+  	makeNewBoard( b, move );
+    makeWhiteMove( move, IDX_WHITE_PAWNS, moveToMap, clearMap, blackPieces );
 
-	if ( calculateWhiteKingCheckStatus(move) == 0) {
-	  if( newPieceMap & R8 ){
-		move[IDX_CASTLING] &= ~newPieceMap; // TODO: Ta med denne på alle R8/R1 moves
-		numPawnMoves += makeWhiteBitPromos( move, newPieceMap );
-	  }
-	  else {
-		move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
-		numPawnMoves++;
-		dig(move);
-	  }
-	}
-
-	pawnsThatCanMoveOneForward >>= (shift+1);
-	pieceIdx++;
-
+  	if ( calculateWhiteKingCheckStatus(move) == 0) {
+  	  if( moveToMap & R8 ){
+    		move[IDX_CASTLING] &= ~moveToMap; // TODO: Ta med denne på alle R8/R1 moves
+    		numPawnMoves += makeWhiteBitPromos( move, moveToMap );
+  	  }
+  	  else {
+    		move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
+    		numPawnMoves++;
+    		dig(move);
+  	  }
+  	}
+  	pawnsThatCanMoveOneForward >>= (shift+1);
+  	pieceIdx++;
   }
 
   pieceIdx = 0;
   while( pawnsThatCanMoveTwoForward ){
-	int shift = __builtin_ctzll(pawnsThatCanMoveTwoForward);
-	pieceIdx += shift;
-	unsigned long pieceMap = 1l << pieceIdx;
-	unsigned long newPieceMap = pieceMap<<16;
-	unsigned long clearOldPieceMap = ~pieceMap;
+  	int shift = __builtin_ctzll(pawnsThatCanMoveTwoForward);
+  	pieceIdx += shift;
+  	unsigned long pieceMap = 1l << pieceIdx;
+  	unsigned long moveToMap = pieceMap<<16;
+  	unsigned long clearMap = ~pieceMap;
 
-	makeNewBoard( b, move );
-	move[IDX_WHITE_PAWNS] &= clearOldPieceMap;
-	move[IDX_WHITE_PIECES] &= clearOldPieceMap;
-	move[IDX_WHITE_PAWNS] |= newPieceMap;
-	move[IDX_WHITE_PIECES] |= newPieceMap;
-	move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
-	move[IDX_EP_IDX] = pieceMap<<8;
+  	makeNewBoard( b, move );
+  	makeWhiteMove( move, IDX_WHITE_PAWNS, moveToMap, clearMap, blackPieces );
+  	move[IDX_EP_IDX] = pieceMap<<8;
 
-	if ( calculateWhiteKingCheckStatus(move) == 0) {
-		move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
-		numPawnMoves++;
-		dig(move);
-	}
+  	if ( calculateWhiteKingCheckStatus(move) == 0) {
+  		move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
+  		numPawnMoves++;
+  		dig(move);
+  	}
 
-	pawnsThatCanMoveTwoForward >>= (shift+1);
-	pieceIdx++;
+  	pawnsThatCanMoveTwoForward >>= (shift+1);
+  	pieceIdx++;
 
   }
 
-  // todo: if EP-index != 0, check if a pawn is on row 5 and their
-  // attack maps match the EP-index.
 
   pieceIdx = 0;
   while( pawns ){
-	int shift =  __builtin_ctzll( pawns );
-	pieceIdx += shift;
+  	int shift =  __builtin_ctzll( pawns );
+  	pieceIdx += shift;
 
-	unsigned long attackMap = WHITE_PAWN_ATTACK_MAPS[pieceIdx];
+  	unsigned long attackMap = WHITE_PAWN_ATTACK_MAPS[pieceIdx];
 
-	if( b[IDX_BLACK_PIECES] & attackMap ){
+  	if( blackPieces & attackMap ){
 
-	  unsigned long pieceMap = 1l << pieceIdx;
-	  unsigned long validAttacks = b[IDX_BLACK_PIECES] & attackMap;
-	  int attackIndex = 0;
+  	  unsigned long pieceMap = 1l << pieceIdx;
+  	  unsigned long validAttacks = blackPieces & attackMap;
+  	  int attackIndex = 0;
 
-	  while( validAttacks ){
-		int attackShift =  __builtin_ctzll( validAttacks );
-		attackIndex += attackShift;
+  	  while( validAttacks ){
+    		int attackShift =  __builtin_ctzll( validAttacks );
+    		attackIndex += attackShift;
 
-		unsigned long newPieceMap = 1L << attackShift;
-		unsigned long clearOldPieceMap = ~pieceMap;
+    		unsigned long moveToMap = 1L << attackShift;
+    		unsigned long clearMap = ~pieceMap;
 
-		makeNewBoard( b, move );
-		clearBlackPieceAtIndex( move, attackIndex );
-		move[IDX_WHITE_PAWNS] &= clearOldPieceMap;
-		move[IDX_WHITE_PIECES] &= clearOldPieceMap;
-		move[IDX_WHITE_PAWNS] |= newPieceMap;
-		move[IDX_WHITE_PIECES] |= newPieceMap;
-		move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
-		move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
+    		makeNewBoard( b, move );
+        makeWhiteMove( move, IDX_WHITE_PAWNS, moveToMap, clearMap, blackPieces );
 
-		if ( calculateWhiteKingCheckStatus(move) == 0) {
+    		if ( calculateWhiteKingCheckStatus(move) == 0 ) {
 
-		  if( newPieceMap & R8 ){
-			move[IDX_CASTLING] &= ~newPieceMap;
-			numPawnMoves += makeWhiteBitPromos( move, newPieceMap );
-		  }
-		  else {
-			move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
-			numPawnMoves++;
-			dig(move);
-		  }
+    		  if( moveToMap & R8 ){
+    			   move[IDX_CASTLING] &= ~moveToMap;
+  			     numPawnMoves += makeWhiteBitPromos( move, moveToMap );
+    		  }
+    		  else {
+    			   move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
+    			   numPawnMoves++;
+    			   dig(move);
+    		  }
 
-		}
+    		}
 
-		attackShift++;
-		validAttacks >>= attackShift;
-	  }
-	}
-	shift++;
-	pawns >>= shift;
-	pieceIdx++;
+    		attackShift++;
+    		validAttacks >>= attackShift;
+  	  }
+  	}
+  	pawns >>= (shift+1);
+  	pieceIdx++;
   }
 
   if( b[IDX_EP_IDX] != 0 ){
@@ -759,6 +736,7 @@ int moveBlackPawns( unsigned long b[] ){
 
   unsigned long pawns = b[IDX_BLACK_PAWNS];
   unsigned long originalPawns = pawns;
+  unsigned long whitePieces = b[IDX_WHITE_PIECES];
 
   // 1. Make moves for pawns that can move ONE forward
   // 2. Make moves for pawns that can move TWO forward and set EP index/map
@@ -775,59 +753,53 @@ int moveBlackPawns( unsigned long b[] ){
   int pieceIdx = 0;
 
   while( pawnsThatCanMoveOneForward ){
-	int shift = __builtin_ctzll(pawnsThatCanMoveOneForward);
-	pieceIdx += shift;
-	unsigned long pieceMap = 1l << pieceIdx;
-	unsigned long newPieceMap = pieceMap>>8;
-	unsigned long clearOldPieceMap = ~pieceMap;
-	makeNewBoard( b, move );
-	move[IDX_BLACK_PAWNS] &= clearOldPieceMap;
-	move[IDX_BLACK_PIECES] &= clearOldPieceMap;
-	move[IDX_BLACK_PAWNS] |= newPieceMap;
-	move[IDX_BLACK_PIECES] |= newPieceMap;
-	move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
+  	int shift = __builtin_ctzll(pawnsThatCanMoveOneForward);
+  	pieceIdx += shift;
+  	unsigned long pieceMap = 1l << pieceIdx;
+  	unsigned long moveToMap = pieceMap>>8;
+  	unsigned long clearMap = ~pieceMap;
+  	makeNewBoard( b, move );
+    makeBlackMove( move, IDX_BLACK_PAWNS, moveToMap, clearMap, whitePieces );
 
-	if ( calculateBlackKingCheckStatus(move) == 0) {
-		if( newPieceMap & R1 ){
-			move[IDX_CASTLING] &= ~newPieceMap; // TODO: Ta med denne på alle R8/R1 moves
-			numPawnMoves += makeBlackBitPromos( move, newPieceMap );
-		}
-	 	else {
-			move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-			numPawnMoves++;
-			dig(move);
-		}
-	}
+  	if ( calculateBlackKingCheckStatus(move) == 0) {
+  		if( moveToMap & R1 ){
+  			move[IDX_CASTLING] &= ~moveToMap; // TODO: Ta med denne på alle R8/R1 moves
+  			numPawnMoves += makeBlackBitPromos( move, moveToMap );
+  		}
+  	 	else {
+  			move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+  			numPawnMoves++;
+  			dig(move);
+  		}
+  	}
 
-	pawnsThatCanMoveOneForward >>= (shift+1);
-	pieceIdx++;
+  	pawnsThatCanMoveOneForward >>= (shift+1);
+  	pieceIdx++;
 
 	}
 
   pieceIdx = 0;
+
   while( pawnsThatCanMoveTwoForward ){
-	int shift = __builtin_ctzll(pawnsThatCanMoveTwoForward);
-	pieceIdx += shift;
-	unsigned long pieceMap = 1l << pieceIdx;
-	unsigned long newPieceMap = pieceMap>>16;
-	unsigned long clearOldPieceMap = ~pieceMap;
 
-	makeNewBoard( b, move );
-	move[IDX_BLACK_PAWNS] &= clearOldPieceMap;
-	move[IDX_BLACK_PIECES] &= clearOldPieceMap;
-	move[IDX_BLACK_PAWNS] |= newPieceMap;
-	move[IDX_BLACK_PIECES] |= newPieceMap;
-	move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
-	move[IDX_EP_IDX] = pieceMap>>8;
+  	int shift = __builtin_ctzll(pawnsThatCanMoveTwoForward);
+  	pieceIdx += shift;
+  	unsigned long pieceMap = 1l << pieceIdx;
+  	unsigned long moveToMap = pieceMap>>16;
+  	unsigned long clearMap = ~pieceMap;
 
-	if ( calculateBlackKingCheckStatus(move) == 0) {
-		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-		numPawnMoves++;
-		dig(move);
-	}
+  	makeNewBoard( b, move );
+    makeBlackMove( move, IDX_BLACK_PAWNS, moveToMap, clearMap, whitePieces );
+  	move[IDX_EP_IDX] = pieceMap>>8;
 
-	pawnsThatCanMoveTwoForward >>= (shift+1);
-	pieceIdx++;
+  	if ( calculateBlackKingCheckStatus(move) == 0) {
+  		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+  		numPawnMoves++;
+  		dig(move);
+  	}
+
+  	pawnsThatCanMoveTwoForward >>= (shift+1);
+  	pieceIdx++;
 
   }
 
@@ -841,45 +813,40 @@ int moveBlackPawns( unsigned long b[] ){
 
 			unsigned long attackMap = BLACK_PAWN_ATTACK_MAPS[pieceIdx];
 
-			if( b[IDX_WHITE_PIECES] & attackMap ){
+			if( whitePieces & attackMap ){
 
 				unsigned long pieceMap = 1l << pieceIdx;
 				unsigned long validAttacks = b[IDX_WHITE_PIECES] & attackMap;
+        unsigned long clearMap = ~pieceMap;
+
 				int attackIndex = 0;
 
 				while( validAttacks ){
-				int attackShift =  __builtin_ctzll( validAttacks );
-				attackIndex += attackShift;
+  				int attackShift =  __builtin_ctzll( validAttacks );
+  				attackIndex += attackShift;
 
-				unsigned long newPieceMap = 1L << attackShift;
-				unsigned long clearOldPieceMap = ~pieceMap;
+  				unsigned long moveToMap = 1L << attackShift;
 
-				makeNewBoard( b, move );
-				clearWhitePieceAtIndex( move, attackIndex );
-				move[IDX_BLACK_PAWNS] &= clearOldPieceMap;
-				move[IDX_BLACK_PIECES] &= clearOldPieceMap;
-				move[IDX_BLACK_PAWNS] |= newPieceMap;
-				move[IDX_BLACK_PIECES] |= newPieceMap;
-				move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
-				move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
+  				makeNewBoard( b, move );
+          makeBlackMove( move, IDX_BLACK_PAWNS, moveToMap, clearMap, whitePieces );
 
-				if ( calculateBlackKingCheckStatus(move) == 0) {
+  				if ( calculateBlackKingCheckStatus(move) == 0) {
 
-					if( newPieceMap & R1 ){
-						move[IDX_CASTLING] &= ~newPieceMap;
-						numPawnMoves += makeBlackBitPromos( move, newPieceMap );
-					}
-					else {
-						move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-						numPawnMoves++;
-						dig(move);
-					}
+  					if( moveToMap & R1 ){
+  						move[IDX_CASTLING] &= ~moveToMap;
+  						numPawnMoves += makeBlackBitPromos( move, moveToMap );
+  					}
+  					else {
+  						move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+  						numPawnMoves++;
+  						dig(move);
+  					}
 
-				}
+		      }
 
-				attackShift++;
-				validAttacks >>= attackShift;
-			}
+  				attackShift++;
+  				validAttacks >>= attackShift;
+			  }
 		}
 		shift++;
 		pawns >>= shift;
