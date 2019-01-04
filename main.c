@@ -259,7 +259,7 @@ unsigned long printStats(){
 
   static unsigned long total = 0;
 
-  for (int t = 0; t <= MAX_LEVEL+1; t++) {
+  for (int t = 0; t < MAX_LEVEL+1; t++) {
 	  printf("%3d",t);
 	  printf("\t%20lu",numMoves[t]);
 	  printf("\t%20lu",numCaptures[t]);
