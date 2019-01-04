@@ -78,7 +78,6 @@ unsigned long moveLinearInvocations = 0;
 
 char *workUnitId = NULL;
 
-
 int main( int argc, char **argv){
 
 
@@ -295,6 +294,13 @@ void dig(unsigned long board[]){
 		}
 	}
 	count(board);
+	/*if( board[IDX_PARENT_MOVE_ID] == 127727 ){
+		printBitBoard( board );
+		printLongAsBitBoard( board[IDX_WHITE_PIECES]);
+		printLongAsBitBoard( board[IDX_BLACK_PIECES]);
+
+	}*/
+
 	/*if( MAX_LEVEL <= 4 ){
 
 		printBitBoard( board );
@@ -653,13 +659,13 @@ int moveWhitePawns( unsigned long b[] ){
 
   	  while( validAttacks ){
     		int attackShift =  __builtin_ctzll( validAttacks );
-    		attackIndex += attackShift;
+    		attackIndex += attackIndex;
 
     		unsigned long moveToMap = 1L << attackShift;
     		unsigned long clearMap = ~pieceMap;
 
     		makeNewBoard( b, move );
-        makeWhiteMove( move, IDX_WHITE_PAWNS, moveToMap, clearMap, blackPieces );
+        	makeWhiteMove( move, IDX_WHITE_PAWNS, moveToMap, clearMap, blackPieces );
 
     		if ( calculateWhiteKingCheckStatus(move) == 0 ) {
 
@@ -677,7 +683,8 @@ int moveWhitePawns( unsigned long b[] ){
 
     		attackShift++;
     		validAttacks >>= attackShift;
-  	  }
+			attackIndex++;
+  	  	}
   	}
   	pawns >>= (shift+1);
   	pieceIdx++;
@@ -744,6 +751,8 @@ int moveBlackPawns( unsigned long b[] ){
   // 4. Make en passant captures for pawns with BLACK_PAWN_ATTACK_MAPS that matches EP Index/map
 
   unsigned long move[NUM_BYTES];
+
+
 
   unsigned long allPieces = b[IDX_ALL_PIECES];
   unsigned long pawnsThatCanMoveOneForward = pawns & ~(allPieces<<8);
@@ -817,7 +826,7 @@ int moveBlackPawns( unsigned long b[] ){
 
 				unsigned long pieceMap = 1l << pieceIdx;
 				unsigned long validAttacks = b[IDX_WHITE_PIECES] & attackMap;
-        unsigned long clearMap = ~pieceMap;
+        		unsigned long clearMap = ~pieceMap;
 
 				int attackIndex = 0;
 
@@ -825,10 +834,10 @@ int moveBlackPawns( unsigned long b[] ){
   				int attackShift =  __builtin_ctzll( validAttacks );
   				attackIndex += attackShift;
 
-  				unsigned long moveToMap = 1L << attackShift;
+  				unsigned long moveToMap = 1L << attackIndex;
 
   				makeNewBoard( b, move );
-          makeBlackMove( move, IDX_BLACK_PAWNS, moveToMap, clearMap, whitePieces );
+          		makeBlackMove( move, IDX_BLACK_PAWNS, moveToMap, clearMap, whitePieces );
 
   				if ( calculateBlackKingCheckStatus(move) == 0) {
 
@@ -846,6 +855,7 @@ int moveBlackPawns( unsigned long b[] ){
 
   				attackShift++;
   				validAttacks >>= attackShift;
+				attackIndex++;
 			  }
 		}
 		shift++;
@@ -890,6 +900,7 @@ int moveBlackPawns( unsigned long b[] ){
 				}
 				attackIndex++;
 				pawnsOnR4 >>= attackIndex;
+
 			}
 		}
 	}
@@ -2424,6 +2435,25 @@ void printBitBoard( unsigned long board[] ){
 	  ( board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE)  == MASK_CASTLING_BLACK_KING_SIDE  ? "k" : "",
 	  ( board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ? "q" : ""
 	)  ;
+
+	if( board[IDX_LAST_MOVE_WAS] ){
+		if( board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_PROMO){
+			printf("Last move was promotion\n");
+		}
+		if( board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE){
+			printf("Last move was capture\n");
+		}
+		if( board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_EP_STRIKE){
+			printf("Last move was en passant\n");
+		}
+		if( board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE){
+			printf("Last move was castling king side\n");
+		}
+		if( board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE){
+			printf("Last move was castling queen side\n");
+		}
+
+	}
 	printf("\n");
 
 	fflush(stdout);
