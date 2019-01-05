@@ -61,7 +61,7 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 2;
 unsigned long numMoves[]	  = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numEP[]		  = {0,0,0,0,0,0,0,0,0,0,0};
@@ -96,7 +96,7 @@ int main( int argc, char **argv){
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
 
-  char *initialBoard = "\
+	char *initialBoard = "\
 					   r n b q k b n r\
 					   p p p p p p p p\
 					   . . . . . . . .\
@@ -107,14 +107,14 @@ int main( int argc, char **argv){
 					   R N B Q K B N R";
 
    /*char *initialBoard = "\
+						r . . . . . . k\
 						. . . . . . . .\
 						. . . . . . . .\
 						. . . . . . . .\
-						. . . . K . . .\
 						. . . . . . . .\
-						. . . r b n . .\
-						. . . . P . . .\
-						. . . . . . . .";*/
+						. . . . . . . .\
+						. . . . . . . .\
+						. . . . . . . K";*/
 
 
 
@@ -155,6 +155,7 @@ int main( int argc, char **argv){
 	}
 
 	diagramToBitBoard( board, initialBoard);
+	board[IDX_CASTLING] =0;// MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE;
 /*
 	printBitBoard( board );
 	unsigned unsigned long allOtherPieces = board[IDX_ALL_PIECES] & ~board[IDX_WHITE_PAWNS];
@@ -183,7 +184,7 @@ int main( int argc, char **argv){
 	printLongAsBitBoard( pawnsThatCanMoveTwoForward );
 
 	return 0;*/
-	// board[IDX_CASTLING] =0;// MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE;
+
 
   //  printLongAsBitBoard( board[IDX_ALL_PIECES]  );
 
@@ -285,8 +286,10 @@ unsigned long printStats(){
 
 void dig( unsigned long board[] ){
 
+
+
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
-	   || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
+//	   || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
 	) {
 		int numMoves = findAllPossibleMoves2(board);
 		if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
@@ -295,13 +298,11 @@ void dig( unsigned long board[] ){
 	}
 	count(board);
 
-/*
-	if( board[IDX_MOVE_ID] == 4353869 ){
-	 	printBitBoard( board );
-	}
-	if( board[IDX_PARENT_MOVE_ID] == 4353869 ){
-	 	printBitBoard( board );
-	}*/
+	printBitBoard( board );
+
+	//if( board[IDX_MOVE_NUM] == MAX_LEVEL && !(board[IDX_MOVE_ID] % 10001) ){
+	// 	printBitBoard( board );
+//	}
 }
 
 int findAllPossibleMoves2( unsigned long originalBoard[]) {
@@ -774,7 +775,7 @@ int moveBlackPawns( unsigned long b[] ){
   	pawnsThatCanMoveOneForward >>= (shift+1);
   	pieceIdx++;
 
-	}
+  }
 
   pieceIdx = 0;
 
@@ -1389,13 +1390,12 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
   unsigned long blackPieces = b[IDX_BLACK_PIECES];
   unsigned long whitePieces = b[IDX_WHITE_PIECES];
 
-
-
   while( pieces ){
 	int shift =  __builtin_ctzll( pieces );
 	idx += shift;
-	unsigned long pieceMap = 1l << idx;
-
+	const unsigned long pieceMap = 1l << idx;
+	printf("Moving rook on %d\n", idx );
+	printLongAsBitBoard( pieceMap );
 	// for hver piece. flytt h&v til vi treffe noe
 	int file = idx & 7;
 	int rank = idx >> 3;
@@ -1413,6 +1413,12 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 
 	  makeNewBoard( b, move );
 	  makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+
+	  if( moveToMap == 0 ){
+		  printf(" %d %d\n", file, rank );
+		  printf("<<=8\n");
+		  exit(0);
+	  }
 
 	  if ( calculateBlackKingCheckStatus(move) == 0) {
 		#ifdef TEST_IF_ON_R1_R8
@@ -1437,6 +1443,12 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 
 	for( int m=0;m<7-file;m++){
 	  moveToMap <<= 1;
+
+	  if( moveToMap == 0 ){
+		  printf(" %d %d\n", file, rank );
+		  printf("<<=1\n");
+		  exit(0);
+	  }
 
 	  if( moveToMap & blackPieces ){
 		break;
@@ -1468,6 +1480,13 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 
 	for( int m=0;m<file;m++){
 	  moveToMap >>= 1;
+
+
+	  if( moveToMap == 0 ){
+		  printf(" %d %d\n", file, rank );
+		  printf(">>=1\n");
+		  exit(0);
+	  }
 
 	  if( moveToMap & blackPieces ){
 		break;
@@ -1505,6 +1524,17 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 	  makeNewBoard( b, move );
 	  makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
 
+	  if( moveToMap == 0 ){
+
+		  printBitBoard( b );
+		  printBitBoard( move );
+		  printLongAsBitBoard( pieceMap );
+		  printf("%d %d %d\n", idx, file, rank );
+		  printf(">>=8\n");
+		  exit(0);
+	  }
+
+
 	  if ( calculateBlackKingCheckStatus(move) == 0) {
 		#ifdef TEST_IF_ON_R1_R8
 		if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
@@ -1523,8 +1553,8 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 	}
 
 	//printLongAsBitBoard( testMap );
-
-	pieces >>= (shift+1);
+	pieces >>= shift;
+	pieces >>= 1;
 	idx++;
 
   }
@@ -1734,6 +1764,7 @@ int makeBlackBitPromos( unsigned long board[], unsigned long newPieceMap ){
   return numMoves;
 }
 
+boolean parentPrinted = FALSE;
 
 void makeNewBoard( unsigned long oldBoard[], unsigned long newBoard[]) {
 
@@ -1749,6 +1780,9 @@ void makeNewBoard( unsigned long oldBoard[], unsigned long newBoard[]) {
 	newBoard[IDX_TURN] = oldBoard[IDX_TURN] ^ 4095;
 	newBoard[IDX_CHECK_STATUS] = 0;
 
+	/*if( newBoard[IDX_PARENT_MOVE_ID] == 2158370){
+		printBitBoard( oldBoard );
+	}*/
 }
 
 
@@ -1765,6 +1799,9 @@ void makeWhiteMove( unsigned long move[], int pieceMapIndex, unsigned long moveT
 		clearBlackPiecesWithClearMap( move, ~moveToMap );
 	}
 
+	if( move[IDX_MOVE_ID] == 2158370){
+		printBitBoard( move );
+	}
 }
 
 void makeBlackMove( unsigned long move[], int pieceMapIndex, unsigned long moveToMap, unsigned long clearMap, unsigned long whitePieces ){
@@ -1777,6 +1814,11 @@ void makeBlackMove( unsigned long move[], int pieceMapIndex, unsigned long moveT
 	if( moveToMap & whitePieces ){
 		move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
 		clearWhitePiecesWithClearMap( move, ~moveToMap );
+	}
+
+	if( move[IDX_PARENT_MOVE_ID] == 2158370){
+		printBitBoard( move );
+		//exit(0);
 	}
 }
 
