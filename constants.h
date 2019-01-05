@@ -1,5 +1,4 @@
 
-const int Piece_e = 0;
 
 const int Piece_P = 1;
 const int Piece_R = 2;
@@ -15,25 +14,8 @@ const int Piece_b = 512;
 const int Piece_q = 1024;
 const int Piece_k = 2048;
 
-const int Pieces_Nn = 4 | 256;
-const int Pieces_PpKk = 1 | 64 | 32 | 2048;
-
-const int Pieces_qbpk = 1024 | 512 | 2048 | 64 ;
-const int Pieces_qbk  = 1024 | 512 | 2048;
-const int Pieces_qrk  = 1024 | 128 | 2048;
-const int Pieces_qb   = 1024 | 512;
-const int Pieces_qr   = 1024 | 128;
-
-
-const int Pieces_QBPK = 16 | 8 | 1 | 32;
-const int Pieces_QBK =  16 | 8 | 32;
-const int Pieces_QRK =  16 | 2 | 32;
-const int Pieces_QB =   16 | 8;
-const int Pieces_QR =   16 | 2;
-
 const int WHITE_MASK = 0b000000111111;
 const int BLACK_MASK = 0b111111000000;
-
 
 const int MASK_LAST_MOVE_WAS_CAPTURE = 1;
 const int MASK_LAST_MOVE_WAS_EP_STRIKE = 2;
@@ -136,39 +118,6 @@ const unsigned long MASK_CASTLING_WHITE_QUEEN_SIDE = A1_MASK|E1_MASK;
 const unsigned long MASK_CASTLING_WHITE_KING_SIDE  = H1_MASK|E1_MASK;
 const unsigned long MASK_CASTLING_BLACK_QUEEN_SIDE = A8_MASK|E8_MASK;
 const unsigned long MASK_CASTLING_BLACK_KING_SIDE =  H8_MASK|E8_MASK;
-
-
-
-const int a = Piece_q | Piece_b;
-const int b = Piece_q | Piece_b | Piece_k | Piece_p;
-const int c = Piece_q | Piece_b | Piece_k;
-const int d = Piece_q | Piece_r;
-const int e = Piece_q | Piece_r | Piece_k;
-
-const int A = Piece_Q | Piece_B;
-const int B = Piece_Q | Piece_B | Piece_K | Piece_P;
-const int C = Piece_Q | Piece_B | Piece_K;
-const int D = Piece_Q | Piece_R;
-const int E = Piece_Q | Piece_R | Piece_K;
-
-int allComparePieces[8*16] = {
-    0, C, A, A, A, A, A, A,
-    0, E, D, D, D, D, D, D,
-    0, C, A, A, A, A, A, A,
-    0, E, D, D, D, D, D, D,
-    0, E, D, D, D, D, D, D,
-    0, B, A, A, A, A, A, A,
-    0, E, D, D, D, D, D, D,
-    0, B, A, A, A, A, A, A,
-    0, b, a, a, a, a, a, a,
-    0, e, d, d, d, d, d, d,
-    0, b, a, a, a, a, a, a,
-    0, e, d, d, d, d, d, d,
-    0, e, d, d, d, d, d, d,
-    0, c, a, a, a, a, a, a,
-    0, e, d, d, d, d, d, d,
-    0, c, a, a, a, a, a, a,
-};
 
 // BITMAPS
 
