@@ -19,8 +19,8 @@ unsigned long printStats();
 // TODO: skriv om alt til unsigned unsigned long!!
 
 
-void dig(unsigned long board[]);
-void count(unsigned long board[]);
+void dig( unsigned long board[]);
+void count( unsigned long board[]);
 
 // bitboard functions, highly speed sensitive
 void makeNewBoard( unsigned long originalBoard[], unsigned long newBoard[] );
@@ -61,7 +61,7 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 6;
 unsigned long numMoves[]	  = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numEP[]		  = {0,0,0,0,0,0,0,0,0,0,0};
@@ -283,7 +283,7 @@ unsigned long printStats(){
  ************************************************************************************************************/
 
 
-void dig(unsigned long board[]){
+void dig( unsigned long board[] ){
 
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
 	   || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
@@ -295,9 +295,13 @@ void dig(unsigned long board[]){
 	}
 	count(board);
 
-	if( board[IDX_MOVE_NUM] == MAX_LEVEL ){
-	 //	printDiagram( board );
+/*
+	if( board[IDX_MOVE_ID] == 4353869 ){
+	 	printBitBoard( board );
 	}
+	if( board[IDX_PARENT_MOVE_ID] == 4353869 ){
+	 	printBitBoard( board );
+	}*/
 }
 
 int findAllPossibleMoves2( unsigned long originalBoard[]) {
@@ -647,12 +651,13 @@ int moveWhitePawns( unsigned long b[] ){
 
   	  while( validAttacks ){
     		int attackShift =  __builtin_ctzll( validAttacks );
-    		attackIndex += attackIndex;
+    		attackIndex += attackShift;
 
-    		unsigned long moveToMap = 1L << attackShift;
+    		unsigned long moveToMap = 1L << attackIndex;
     		unsigned long clearMap = ~pieceMap;
 
     		makeNewBoard( b, move );
+
         	makeWhiteMove( move, IDX_WHITE_PAWNS, moveToMap, clearMap, blackPieces );
 
     		if ( calculateWhiteKingCheckStatus(move) == 0 ) {
@@ -1759,6 +1764,7 @@ void makeWhiteMove( unsigned long move[], int pieceMapIndex, unsigned long moveT
 		move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
 		clearBlackPiecesWithClearMap( move, ~moveToMap );
 	}
+
 }
 
 void makeBlackMove( unsigned long move[], int pieceMapIndex, unsigned long moveToMap, unsigned long clearMap, unsigned long whitePieces ){
@@ -2248,7 +2254,9 @@ void printDiagram( unsigned long board[] ){
 	castling |= (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE)  == MASK_CASTLING_WHITE_KING_SIDE  ? old_MASK_CASTLING_WHITE_KING_SIDE  : 0 ;
 	castling |= (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ? old_MASK_CASTLING_WHITE_QUEEN_SIDE : 0 ;
 
-	printf( " %lu\n", castling );
+	printf( " %lu ", castling );
+
+	printf( " %lu %lu\n", board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID] );
 
 }
 
