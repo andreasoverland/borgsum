@@ -34,10 +34,6 @@ const int Pieces_QR =   16 | 2;
 const int WHITE_MASK = 0b000000111111;
 const int BLACK_MASK = 0b111111000000;
 
-const long MASK_CASTLING_WHITE_QUEEN_SIDE = (1l << 7) | (1l << 3);
-const long MASK_CASTLING_WHITE_KING_SIDE = 1 | (1l << 3);
-const long MASK_CASTLING_BLACK_QUEEN_SIDE = (1l << 56) | (1l << 59);
-const long MASK_CASTLING_BLACK_KING_SIDE = (1l << 63) | (1l << 59);
 
 const int MASK_LAST_MOVE_WAS_CAPTURE = 1;
 const int MASK_LAST_MOVE_WAS_EP_STRIKE = 2;
@@ -112,59 +108,36 @@ const int F8 = 58;
 const int G8 = 57;
 const int H8 = 56;
 
-const long A1_MASK = (1L << A1);
-const long B1_MASK = (1L << B1);
-const long C1_MASK = (1L << C1);
-const long D1_MASK = (1L << D1);
-const long E1_MASK = (1L << E1);
-const long F1_MASK = (1L << F1);
-const long G1_MASK = (1L << G1);
-const long H1_MASK = (1L << H1);
+const unsigned long A1_MASK = (1L << A1);
+const unsigned long B1_MASK = (1L << B1);
+const unsigned long C1_MASK = (1L << C1);
+const unsigned long D1_MASK = (1L << D1);
+const unsigned long E1_MASK = (1L << E1);
+const unsigned long F1_MASK = (1L << F1);
+const unsigned long G1_MASK = (1L << G1);
+const unsigned long H1_MASK = (1L << H1);
 
-const long A8_MASK = (1L << A8);
-const long B8_MASK = (1L << B8);
-const long C8_MASK = (1L << C8);
-const long D8_MASK = (1L << D8);
-const long E8_MASK = (1L << E8);
-const long F8_MASK = (1L << F8);
-const long G8_MASK = (1L << G8);
-const long H8_MASK = (1L << H8);
+const unsigned long A8_MASK = (1L << A8);
+const unsigned long B8_MASK = (1L << B8);
+const unsigned long C8_MASK = (1L << C8);
+const unsigned long D8_MASK = (1L << D8);
+const unsigned long E8_MASK = (1L << E8);
+const unsigned long F8_MASK = (1L << F8);
+const unsigned long G8_MASK = (1L << G8);
+const unsigned long H8_MASK = (1L << H8);
+
+const unsigned long B1_C1_D1_MASK = B1_MASK|C1_MASK|D1_MASK;
+const unsigned long F1_G1_MASK    = F1_MASK|G1_MASK;
+
+const unsigned long B8_C8_D8_MASK = B8_MASK|C8_MASK|D8_MASK;
+const unsigned long F8_G8_MASK    = F8_MASK|G8_MASK;
+
+const unsigned long MASK_CASTLING_WHITE_QUEEN_SIDE = A1_MASK|E1_MASK;
+const unsigned long MASK_CASTLING_WHITE_KING_SIDE  = H1_MASK|E1_MASK;
+const unsigned long MASK_CASTLING_BLACK_QUEEN_SIDE = A8_MASK|E8_MASK;
+const unsigned long MASK_CASTLING_BLACK_KING_SIDE =  H8_MASK|E8_MASK;
 
 
-const long B1_C1_D1_MASK = B1_MASK|C1_MASK|D1_MASK;
-const long F1_G1_MASK    = F1_MASK|G1_MASK;
-
-const long B8_C8_D8_MASK = B8_MASK|C8_MASK|D8_MASK;
-const long F8_G8_MASK    = F8_MASK|G8_MASK;
-
-
-const int MOVE_MATRIX_LENGTH = 16;
-const int MOVE_MATRIX[] = {
-    -1, -1, 0, -1, 1, -1,
-    -1,  0,        1,  0,
-    -1,  1, 0,  1, 1,  1
-};
-
-const int KNIGHT_MOVE_MATRIX_LENGTH = 16;
-const int KNIGHT_MOVE_MATRIX[] = {
-    -1, -2, -1, 2, -2, -1, -2, 1,
-     1, -2,  1, 2,  2, -1,  2, 1
-};
-const int KNIGHT_MOVE_MATRIX_2[] = {
-  -1, -2, -1, 2, 1, -2, 1, 2, -1
-};
-
-const int BISHOP_MOVE_MATRIX_LENGTH = 8;
-const int BISHOP_MOVE_MATRIX[] = {
-    -1, -1, 1, -1,
-    -1,  1, 1,  1
-};
-
-const int ROOK_MOVE_MATRIX_LENGTH = 8;
-const int ROOK_MOVE_MATRIX[] = {
-    -1, 0, 0, -1,
-     1, 0, 0,  1
-};
 
 const int a = Piece_q | Piece_b;
 const int b = Piece_q | Piece_b | Piece_k | Piece_p;
@@ -199,22 +172,22 @@ int allComparePieces[8*16] = {
 
 // BITMAPS
 
-const long R8 = 0xFF00000000000000;
-const long R7 = 0x00FF000000000000;
-const long R6 = 0x0000FF0000000000;
-const long R5 = 0x000000FF00000000;
-const long R4 = 0x00000000FF000000;
-const long R3 = 0x0000000000FF0000;
-const long R2 = 0x000000000000FF00;
-const long R1 = 0x00000000000000FF;
+const unsigned long R8 = 0xFF00000000000000;
+const unsigned long R7 = 0x00FF000000000000;
+const unsigned long R6 = 0x0000FF0000000000;
+const unsigned long R5 = 0x000000FF00000000;
+const unsigned long R4 = 0x00000000FF000000;
+const unsigned long R3 = 0x0000000000FF0000;
+const unsigned long R2 = 0x000000000000FF00;
+const unsigned long R1 = 0x00000000000000FF;
 
-const long R1_R8 = R8|R1;
+const unsigned long R1_R8 = R8|R1;
 
-const long FA = 0x8080808080808080;
-const long FB = 0x4040404040404040;
-const long FC = 0x2020202020202020;
-const long FD = 0x1010101010101010;
-const long FE = 0x0808080808080808;
-const long FF = 0x0404040404040404;
-const long FG = 0x0202020202020202;
-const long FH = 0x0101010101010101;
+const unsigned long FA = 0x8080808080808080;
+const unsigned long FB = 0x4040404040404040;
+const unsigned long FC = 0x2020202020202020;
+const unsigned long FD = 0x1010101010101010;
+const unsigned long FE = 0x0808080808080808;
+const unsigned long FF = 0x0404040404040404;
+const unsigned long FG = 0x0202020202020202;
+const unsigned long FH = 0x0101010101010101;
