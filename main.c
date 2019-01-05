@@ -42,7 +42,6 @@ int moveBlackKnights( unsigned long b[] );
 int moveBlackBishopsOrQueens( unsigned long b[], int pieceMapIndex );
 int moveBlackKing( unsigned long b[] );
 
-
 void makeWhiteMove( unsigned long move[], int pieceIndex, unsigned long moveToMap, unsigned long clearMap, unsigned long blackPieces );
 void makeBlackMove( unsigned long move[], int pieceIndex, unsigned long moveToMap, unsigned long clearMap, unsigned long blackPieces );
 
@@ -61,7 +60,7 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 
-int MAX_LEVEL = 3;
+int MAX_LEVEL = 4;
 unsigned long numMoves[]	  = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numEP[]		  = {0,0,0,0,0,0,0,0,0,0,0};
@@ -142,7 +141,6 @@ int main( int argc, char **argv){
 					  R . . . K . . R";
 
 
-
 	unsigned long board[NUM_BYTES];
 
 	if( argc > 1 ){
@@ -156,38 +154,8 @@ int main( int argc, char **argv){
 	}
 
 	diagramToBitBoard( board, initialBoard);
+	//board[IDX_TURN] = BLACK_MASK;
 	//board[IDX_CASTLING] =0;// MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE;
-/*
-	printBitBoard( board );
-	unsigned unsigned long allOtherPieces = board[IDX_ALL_PIECES] & ~board[IDX_WHITE_PAWNS];
-	unsigned unsigned long whitePawns = board[IDX_WHITE_PAWNS];
-
-	printLongAsBitBoard( board[IDX_ALL_PIECES] );
-
-	printf("White pawns bitmap:\n");
-	printLongAsBitBoard( whitePawns );
-
-	printf("All other pieces bitmap:\n");
-	printLongAsBitBoard( allOtherPieces );
-
-	printf("All other pieces moved 8 bits to the right:\n");
-	printLongAsBitBoard( allOtherPieces >> 8 );
-
-	printf("All other pieces moved 16 bits to the right:\n");
-	printLongAsBitBoard( allOtherPieces >> 16 );
-
-	unsigned unsigned long pawnsThatCanMoveOneForward =  whitePawns & ~(allOtherPieces >> 8);
-	printf("White pawns that to not crash with the other pieces that were moved 8 bits to the right:\n");
-	printLongAsBitBoard( pawnsThatCanMoveOneForward );
-
-	printf("White pawns that to not crash with the other pieces that were moved 16 bits to the right:\n");
-	unsigned unsigned long pawnsThatCanMoveTwoForward =  (pawnsThatCanMoveOneForward & R2) & ~(allOtherPieces >> 16);
-	printLongAsBitBoard( pawnsThatCanMoveTwoForward );
-
-	return 0;*/
-
-
-  //  printLongAsBitBoard( board[IDX_ALL_PIECES]  );
 
 	if( argc > 2 ){
 	  if( strcmp(argv[2], "b" ) == 0 ){
@@ -287,8 +255,11 @@ unsigned long printStats(){
 
 void dig( unsigned long board[] ){
 
+
+
+
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
-//	   || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
+	   || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
 	) {
 		int numMoves = findAllPossibleMoves2(board);
 		if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
@@ -297,9 +268,10 @@ void dig( unsigned long board[] ){
 	}
 	count(board);
 
-	if( board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE ){
-		printDiagram( board );
-	}
+	/*if( board[IDX_MOVE_NUM] == 3 && board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED){
+		printBitBoard( board );
+	}*/
+
 
 }
 
@@ -528,6 +500,7 @@ int moveBlackKing( unsigned long b[] ){
 				b[IDX_BLACK_KING] = pieceMap;
 				if( !calculateBlackKingCheckStatus( b ) ){
 					// do Castling
+					makeNewBoard( b, move );
 					makeBlackMove( move, IDX_BLACK_KING, G8_MASK, clearMap, whitePieces );
 					makeBlackMove( move, IDX_BLACK_ROOKS, F8_MASK, ~H8_MASK, whitePieces );
 					move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
@@ -889,11 +862,6 @@ int moveWhiteBishopsOrQueens( unsigned long b[], int pieceMapIndex ){
   while( pieces ){
 	int shift =  __builtin_ctzll( pieces );
 	idx += shift;
-	if( idx > 63){
-		printf("idx > 63, moveWhiteBishopsOrQueens\n");
-		printBitBoard(b);
-		exit(0);
-	}
 	unsigned long pieceMap = 1l << idx;
 
 	unsigned long moveToMap = pieceMap;
@@ -1060,11 +1028,6 @@ int moveBlackBishopsOrQueens( unsigned long b[], int pieceMapIndex ){
   while( pieces ){
 	int shift =  __builtin_ctzll( pieces );
 	idx += shift;
-	if( idx > 63){
-		printf("idx > 63, moveBlackBishopsOrQueens\n");
-		printBitBoard(b);
-		exit(0);
-	}
 	unsigned long pieceMap = 1l << idx;
 
 	unsigned long moveToMap = pieceMap;
@@ -1233,12 +1196,6 @@ int moveWhiteRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 	int shift =  __builtin_ctzll( pieces );
 	idx += shift;
 
-	if( idx > 63){
-		printf("idx > 63, moveWhiteRooksOrQueens\n");
-		printBitBoard(b);
-		exit(0);
-	}
-
 	unsigned long pieceMap = 1l << idx;
 	// for hver piece. flytt h&v til vi treffe noe
 	int file = idx & 7;
@@ -1395,13 +1352,10 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
   while( pieces ){
 	int shift =  __builtin_ctzll( pieces );
 	idx += shift;
-	if( idx > 63){
-		printf("idx > 63, moveBlackRooksOrQueens\n");
-		printBitBoard(b);
-		exit(0);
-	}
+
 	const unsigned long pieceMap = 1l << idx;
 	// for hver piece. flytt h&v til vi treffe noe
+
 	int file = idx & 7;
 	int rank = idx >> 3;
 
@@ -1418,12 +1372,6 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 
 	  makeNewBoard( b, move );
 	  makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
-
-	  if( moveToMap == 0 ){
-		  printf(" %d %d\n", file, rank );
-		  printf("<<=8\n");
-		  exit(0);
-	  }
 
 	  if ( calculateBlackKingCheckStatus(move) == 0) {
 		#ifdef TEST_IF_ON_R1_R8
@@ -1448,12 +1396,6 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 
 	for( int m=0;m<7-file;m++){
 	  moveToMap <<= 1;
-
-	  if( moveToMap == 0 ){
-		  printf(" %d %d\n", file, rank );
-		  printf("<<=1\n");
-		  exit(0);
-	  }
 
 	  if( moveToMap & blackPieces ){
 		break;
@@ -1486,13 +1428,6 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 	for( int m=0;m<file;m++){
 	  moveToMap >>= 1;
 
-
-	  if( moveToMap == 0 ){
-		  printf(" %d %d\n", file, rank );
-		  printf(">>=1\n");
-		  exit(0);
-	  }
-
 	  if( moveToMap & blackPieces ){
 		break;
 	  }
@@ -1506,6 +1441,7 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 		#endif
 			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
 
+		numMovesFound++;
 		dig(move);
 
 	  }
@@ -1528,17 +1464,6 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
 
 	  makeNewBoard( b, move );
 	  makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
-
-	  if( moveToMap == 0 ){
-
-		  printBitBoard( b );
-		  printBitBoard( move );
-		  printLongAsBitBoard( pieceMap );
-		  printf("%d %d %d\n", idx, file, rank );
-		  printf(">>=8\n");
-		  exit(0);
-	  }
-
 
 	  if ( calculateBlackKingCheckStatus(move) == 0) {
 		#ifdef TEST_IF_ON_R1_R8
@@ -1711,6 +1636,7 @@ int makeWhiteBitPromos( unsigned long board[], unsigned long newPieceMap ){
 
   int numMoves = 0;
   unsigned long clearPiece = ~newPieceMap;
+  board[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
 
   board[IDX_WHITE_PAWNS] &= clearPiece;
   board[IDX_WHITE_ROOKS] |= newPieceMap;
@@ -1743,6 +1669,7 @@ int makeBlackBitPromos( unsigned long board[], unsigned long newPieceMap ){
 
   int numMoves = 0;
   unsigned long clearPiece = ~newPieceMap;
+  board[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
 
   board[IDX_BLACK_PAWNS] &= clearPiece;
   board[IDX_BLACK_ROOKS] |= newPieceMap;
@@ -2002,11 +1929,6 @@ int calculateBlackKingCheckStatus( unsigned long board[] ){
 	unsigned long king = board[IDX_BLACK_KING];
     unsigned long idx = __builtin_ctzll( king );
 
-	if( king == 0){
-		printf("KING IS GONE\n");
-		printBitBoard( board );
-		exit(0);
-	}
 
     if( KNIGHT_ATTACK_MAPS[idx] & board[IDX_WHITE_KNIGHTS] ){
   		return MASK_BLACK_KING_CHECKED;
@@ -2100,6 +2022,14 @@ int calculateBlackKingCheckStatus( unsigned long board[] ){
     }
     // now for the vector threats. a piece may be on the map, but can be blocked
     if( QR_ATTACK_MAPS[idx] & (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS])){
+
+		if( board[IDX_MOVE_ID] == 1133240 ){
+		  printf("testing for check by white queen or rook:\n");
+		  printBitBoard( board );
+		  printLongAsBitBoard( QR_ATTACK_MAPS[idx] );
+		  printLongAsBitBoard( board[IDX_WHITE_QUEENS] );
+		  printLongAsBitBoard( board[IDX_WHITE_ROOKS] );
+		}
 
 	  	// need to check each direction for a block
 	  	unsigned long qr = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS]);
