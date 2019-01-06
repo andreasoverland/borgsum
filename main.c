@@ -11,6 +11,15 @@ typedef enum { FALSE, TRUE } boolean;
 
 #define TEST_IF_ON_R1_R8
 
+// Authors
+// Andreas Øverland
+// Eva Solfrid  Øverland
+// Fredrik Christian Øverland.
+// Sara Franses Gläser
+//Ines Christiane Øverland
+//Andreas Ehfihgithiuhurhfrhdjfurhtghrghtughrjkhg Øverland
+//Oma Ingri Gisnos Øverland
+//Opa Bjørnar Øverland
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
 void printNumBoard( unsigned long board[] );
@@ -48,8 +57,8 @@ void makeBlackMove( unsigned long move[], int pieceIndex, unsigned long moveToMa
 void clearBlackPiecesWithClearMap( unsigned long board[], unsigned long clear );
 void clearWhitePiecesWithClearMap( unsigned long board[], unsigned long clear );
 
-int makeWhiteBitPromos( unsigned long board[], unsigned long map );
-int makeBlackBitPromos( unsigned long board[], unsigned long map );
+void makeWhiteBitPromos( unsigned long board[], unsigned long map );
+void makeBlackBitPromos( unsigned long board[], unsigned long map );
 
 // util for board printing and conversion. not speed sensitive
 void setBitsToChar( char *str, unsigned long bits, char c);
@@ -57,7 +66,7 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 
-int MAX_LEVEL = 3;
+int MAX_LEVEL = 4;
 unsigned long numMoves[]	  = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numEP[]		  = {0,0,0,0,0,0,0,0,0,0,0};
@@ -114,18 +123,16 @@ int main( int argc, char **argv){
 						. . . . . . . K";*/
 
 
+/*	char *initialBoard = "\
+					   r . . . k . . r\
+					   . p p p p p p .\
+					   . . . . . . . .\
+					   . . . . . . . .\
+					   . . . . . . . .\
+					   . . . . . . . .\
+					   . P P P P P P .\
+					   R . . . K . . R";*/
 
-/*
-	char *initialBoard = "\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . k . . . . .\
-					   . . . . . K . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .";
-*/
 
     char *initialBoard = "\
 					  r . . . k . . r\
@@ -152,7 +159,8 @@ int main( int argc, char **argv){
 
 	diagramToBitBoard( board, initialBoard);
 	//board[IDX_TURN] = BLACK_MASK;
-	//board[IDX_CASTLING] =0;// MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE;
+	// board[IDX_CASTLING] =0;
+	// MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE;
 
 	if( argc > 2 ){
 	  if( strcmp(argv[2], "b" ) == 0 ){
@@ -274,9 +282,13 @@ void dig( unsigned long board[] ){
 	}
 	count(board);
 
-	if( board[IDX_MOVE_NUM] == MAX_LEVEL){
+	/*if( board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0  ){
 		printDiagram( board );
-	}
+	}*/
+
+	//if( board[IDX_MOVE_NUM] == MAX_LEVEL){
+	//	printDiagram( board );
+	//}
 
 
 }
@@ -343,13 +355,9 @@ int moveWhiteKing( unsigned long b[] ){
 
 		makeNewBoard( b, move );
 		makeWhiteMove( move, IDX_WHITE_KING, moveToMap, clearMap, blackPieces );
+		move[IDX_CASTLING] &= ~(MASK_CASTLING_WHITE_KING_SIDE|MASK_CASTLING_WHITE_QUEEN_SIDE); // TODO: Ta med denne på alle R8/R1 moves
 
 		if ( calculateWhiteKingCheckStatus(move) == 0) {
-			#ifdef TEST_IF_ON_R1_R8
-			if( moveToMap & R1_R8 ) // TODO: test om det er kjappere å ikke teste på dette.
-			#endif
-				move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
-
 			move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
 			numMovesFound++;
 			dig(move);
@@ -453,12 +461,7 @@ int moveBlackKing( unsigned long b[] ){
 		makeBlackMove( move, IDX_BLACK_KING, moveToMap, clearMap, whitePieces );
 
 		if ( calculateBlackKingCheckStatus(move) == 0) {
-
-			#ifdef TEST_IF_ON_R1_R8
-			if( moveToMap & R1_R8 ) // TODO: test om det er kjappere å ikke teste på dette.
-			#endif
-			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
-
+			move[IDX_CASTLING] &= ~(MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE); // TODO: Ta med denne på alle R8/R1 moves
 			move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
 			numMovesFound++;
 			dig(move);
@@ -481,8 +484,8 @@ int moveBlackKing( unsigned long b[] ){
     			  if( !calculateBlackKingCheckStatus( b ) ){
       				// do Castling
       				makeNewBoard( b, move );
-      				makeWhiteMove( move, IDX_BLACK_KING, C8_MASK, clearMap, blackPieces );
-      				makeWhiteMove( move, IDX_BLACK_ROOKS, D8_MASK, ~A8_MASK, blackPieces );
+      				makeBlackMove( move, IDX_BLACK_KING, C8_MASK, clearMap, whitePieces );
+      				makeBlackMove( move, IDX_BLACK_ROOKS, D8_MASK, ~A8_MASK, whitePieces );
       				move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
       				move[IDX_CASTLING] &= ~(MASK_CASTLING_BLACK_QUEEN_SIDE|MASK_CASTLING_BLACK_KING_SIDE);
       				move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
@@ -497,11 +500,11 @@ int moveBlackKing( unsigned long b[] ){
 
 	if( (b[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) == MASK_CASTLING_BLACK_KING_SIDE ){
 	  if( !(F8_G8_MASK & allPieces) ){
-		  b[IDX_BLACK_KING] = F8_MASK;
+		  b[IDX_BLACK_KING] = F8_MASK; // king is moving passed this spot
 		  if( !calculateBlackKingCheckStatus( b ) ){
-			b[IDX_BLACK_KING] = G8_MASK;
+			b[IDX_BLACK_KING] = G8_MASK; // king is landing on this spot
 			if( !calculateBlackKingCheckStatus( b ) ){
-				b[IDX_BLACK_KING] = pieceMap;
+				b[IDX_BLACK_KING] = pieceMap; // king is moving from this spot
 				if( !calculateBlackKingCheckStatus( b ) ){
 					// do Castling
 					makeNewBoard( b, move );
@@ -541,12 +544,25 @@ int moveWhitePawns( unsigned long b[] ){
 
   unsigned long move[NUM_BYTES];
 
+  if(b[IDX_MOVE_ID] == 5075116 ){
+	  printf( "*** Yehaw ***\n");
+	  printBitBoard(b);
+  }
+
   unsigned long allPieces = b[IDX_ALL_PIECES];
   unsigned long pawnsThatCanMoveOneForward = pawns & ~(allPieces>>8);
   unsigned long pawnsThatCanMoveTwoForward = pawnsThatCanMoveOneForward  & R2;
   pawnsThatCanMoveTwoForward &= ~(allPieces>>16);
 
   int pieceIdx = 0;
+
+  if(b[IDX_MOVE_ID] == 5075116 ){
+	printf( "Panws that can move one forward:\n");
+	printLongAsBitBoard( pawnsThatCanMoveOneForward );
+	printLongAsBitBoard( blackPieces );
+	printLongAsBitBoard( allPieces & ~blackPieces );
+  }
+
 
   while( pawnsThatCanMoveOneForward ){
   	int shift = __builtin_ctzll(pawnsThatCanMoveOneForward);
@@ -559,16 +575,20 @@ int moveWhitePawns( unsigned long b[] ){
 
   	if ( calculateWhiteKingCheckStatus(move) == 0) {
   	  if( moveToMap & R8 ){
-    		move[IDX_CASTLING] &= ~moveToMap; // TODO: Ta med denne på alle R8/R1 moves
-    		numPawnMoves += makeWhiteBitPromos( move, moveToMap );
+    		move[IDX_CASTLING] &= ~moveToMap;
+			move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
+    		numPawnMoves += 4;
+			makeWhiteBitPromos( move, moveToMap );
   	  }
   	  else {
     		move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
+
     		numPawnMoves++;
     		dig(move);
   	  }
   	}
-  	pawnsThatCanMoveOneForward >>= (shift+1);
+  	pawnsThatCanMoveOneForward >>= shift;
+	pawnsThatCanMoveOneForward >>= 1;
   	pieceIdx++;
   }
 
@@ -590,7 +610,8 @@ int moveWhitePawns( unsigned long b[] ){
   		dig(move);
   	}
 
-  	pawnsThatCanMoveTwoForward >>= (shift+1);
+  	pawnsThatCanMoveTwoForward >>= shift;
+	pawnsThatCanMoveTwoForward >>= 1;
   	pieceIdx++;
 
   }
@@ -624,7 +645,9 @@ int moveWhitePawns( unsigned long b[] ){
 
     		  if( moveToMap & R8 ){
     			   move[IDX_CASTLING] &= ~moveToMap;
-  			     numPawnMoves += makeWhiteBitPromos( move, moveToMap );
+				   move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO | MASK_LAST_MOVE_WAS_CAPTURE;
+				   numPawnMoves += 4;
+  			       makeWhiteBitPromos( move, moveToMap );
     		  }
     		  else {
     			   move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
@@ -639,7 +662,8 @@ int moveWhitePawns( unsigned long b[] ){
 			attackIndex++;
   	  	}
   	}
-  	pawns >>= (shift+1);
+  	pawns >>= shift;
+	pawns >>=1;
   	pieceIdx++;
   }
 
@@ -675,7 +699,8 @@ int moveWhitePawns( unsigned long b[] ){
 				  }
 			  }
 			  attackIndex++;
-			  pawnsOnR5 >>= attackShift+1;
+			  pawnsOnR5 >>= attackShift;
+			  pawnsOnR5 >>= 1;
 		  }
 	  }
   }
@@ -722,7 +747,9 @@ int moveBlackPawns( unsigned long b[] ){
   	if ( calculateBlackKingCheckStatus(move) == 0) {
   		if( moveToMap & R1 ){
   			move[IDX_CASTLING] &= ~moveToMap; // TODO: Ta med denne på alle R8/R1 moves
-  			numPawnMoves += makeBlackBitPromos( move, moveToMap );
+  			numPawnMoves += 4;
+			move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
+			makeBlackBitPromos( move, moveToMap );
   		}
   	 	else {
   			move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
@@ -731,7 +758,8 @@ int moveBlackPawns( unsigned long b[] ){
   		}
   	}
 
-  	pawnsThatCanMoveOneForward >>= (shift+1);
+  	pawnsThatCanMoveOneForward >>= shift;
+	pawnsThatCanMoveOneForward >>= 1;
   	pieceIdx++;
 
   }
@@ -756,7 +784,8 @@ int moveBlackPawns( unsigned long b[] ){
   		dig(move);
   	}
 
-  	pawnsThatCanMoveTwoForward >>= (shift+1);
+  	pawnsThatCanMoveTwoForward >>= shift;
+	pawnsThatCanMoveTwoForward >>= 1;
   	pieceIdx++;
 
   }
@@ -790,7 +819,9 @@ int moveBlackPawns( unsigned long b[] ){
 
   					if( moveToMap & R1 ){
   						move[IDX_CASTLING] &= ~moveToMap;
-  						numPawnMoves += makeBlackBitPromos( move, moveToMap );
+						move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO | MASK_LAST_MOVE_WAS_CAPTURE;
+  						numPawnMoves += 4;
+						makeBlackBitPromos( move, moveToMap );
   					}
   					else {
   						move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
@@ -840,7 +871,8 @@ int moveBlackPawns( unsigned long b[] ){
 					}
 				}
 				attackIndex++;
-				pawnsOnR4 >>= attackShift+1;
+				pawnsOnR4 >>= attackShift;
+				pawnsOnR4 >>= 1;
 
 			}
 		}
@@ -1353,6 +1385,8 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex  ){
   unsigned long blackPieces = b[IDX_BLACK_PIECES];
   unsigned long whitePieces = b[IDX_WHITE_PIECES];
 
+
+
   while( pieces ){
 	int shift =  __builtin_ctzll( pieces );
 	idx += shift;
@@ -1640,70 +1674,56 @@ int moveBlackKnights( unsigned long b[] ){
 }
 
 //////////////////////////////// ----------- white bit promos ---------
-int makeWhiteBitPromos( unsigned long board[], unsigned long newPieceMap ){
+void makeWhiteBitPromos( unsigned long board[], unsigned long newPieceMap ){
 
-  int numMoves = 0;
   unsigned long clearPiece = ~newPieceMap;
-  board[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
 
   board[IDX_WHITE_PAWNS] &= clearPiece;
   board[IDX_WHITE_ROOKS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
   board[IDX_WHITE_ROOKS] &= clearPiece;
   board[IDX_WHITE_QUEENS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
   board[IDX_WHITE_QUEENS] &= clearPiece;
   board[IDX_WHITE_BISHOPS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
   board[IDX_WHITE_BISHOPS] &= clearPiece;
   board[IDX_WHITE_KNIGHTS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
-  return numMoves;
 }
 
-int makeBlackBitPromos( unsigned long board[], unsigned long newPieceMap ){
+void makeBlackBitPromos( unsigned long board[], unsigned long newPieceMap ){
 
-  int numMoves = 0;
   unsigned long clearPiece = ~newPieceMap;
-  board[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
 
   board[IDX_BLACK_PAWNS] &= clearPiece;
   board[IDX_BLACK_ROOKS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
   board[IDX_BLACK_ROOKS] &= clearPiece;
   board[IDX_BLACK_QUEENS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
   board[IDX_BLACK_QUEENS] &= clearPiece;
   board[IDX_BLACK_BISHOPS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
   board[IDX_BLACK_BISHOPS] &= clearPiece;
   board[IDX_BLACK_KNIGHTS] |= newPieceMap;
   board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board);
-  numMoves++;
   dig( board );
 
-  return numMoves;
 }
 
 boolean parentPrinted = FALSE;
@@ -2191,20 +2211,16 @@ void printDiagram( unsigned long board[] ){
 
 	printf("\"%s\"", res );
 
-	const int old_MASK_CASTLING_WHITE_QUEEN_SIDE = 1;
-	const int old_MASK_CASTLING_WHITE_KING_SIDE = 2;
-	const int old_MASK_CASTLING_BLACK_QUEEN_SIDE = 4;
-	const int old_MASK_CASTLING_BLACK_KING_SIDE = 8;
 
 	printf( " %s", board[IDX_TURN] == WHITE_MASK ? "w" : "b" );
-	long castling = 0;
+	char castling[] = "     \0";
 
-	castling  = (board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE)  == MASK_CASTLING_BLACK_KING_SIDE  ? old_MASK_CASTLING_BLACK_KING_SIDE  : 0 ;
-	castling |= (board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ? old_MASK_CASTLING_BLACK_QUEEN_SIDE : 0 ;
-	castling |= (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE)  == MASK_CASTLING_WHITE_KING_SIDE  ? old_MASK_CASTLING_WHITE_KING_SIDE  : 0 ;
-	castling |= (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ? old_MASK_CASTLING_WHITE_QUEEN_SIDE : 0 ;
+	castling[2] = (board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE)  == MASK_CASTLING_BLACK_KING_SIDE  ? 'k':' ';
+	castling[3] = (board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ? 'q':' ';
+	castling[0] = (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE)  == MASK_CASTLING_WHITE_KING_SIDE  ? 'K':' ';
+	castling[1] = (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ? 'Q':' ';
 
-	printf( " %lu ", castling );
+	printf( " %s ", castling );
 
 	printf( " %lu %lu\n", board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID] );
 
