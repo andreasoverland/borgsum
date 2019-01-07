@@ -67,7 +67,7 @@ const int IDX_LAST_MOVE_WAS = 23;
 const int IDX_EP_IDX = 24;
 
 const int NUM_BYTES_TO_COPY = 22;
-const int NUM_BYTES = 25;
+const int NUM_BYTES = 25; // REALLY NUM LONGS 
 
 const int A1 = 7;
 const int B1 = 6;
@@ -114,7 +114,7 @@ const unsigned long F8_G8_MASK    = F8_MASK|G8_MASK;
 const unsigned long MASK_CASTLING_WHITE_QUEEN_SIDE = A1_MASK|E1_MASK;
 const unsigned long MASK_CASTLING_WHITE_KING_SIDE  = H1_MASK|E1_MASK;
 const unsigned long MASK_CASTLING_BLACK_QUEEN_SIDE = A8_MASK|E8_MASK;
-const unsigned long MASK_CASTLING_BLACK_KING_SIDE =  H8_MASK|E8_MASK;
+const unsigned long MASK_CASTLING_BLACK_KING_SIDE  = H8_MASK|E8_MASK;
 
 // BITMAPS
 
