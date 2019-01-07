@@ -17,11 +17,11 @@ const int Piece_k = 2048;
 const int WHITE_MASK = 0b000000111111;
 const int BLACK_MASK = 0b111111000000;
 
-const int MASK_LAST_MOVE_WAS_CAPTURE = 1;
-const int MASK_LAST_MOVE_WAS_EP_STRIKE = 2;
-const int MASK_LAST_MOVE_WAS_PROMO = 4;
-const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE = 8;
-const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE = 16;
+const int MASK_LAST_MOVE_WAS_CAPTURE             = 0b00001;
+const int MASK_LAST_MOVE_WAS_EP_STRIKE           = 0b00010;
+const int MASK_LAST_MOVE_WAS_PROMO               = 0b00100;
+const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE = 0b01000;
+const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE  = 0b10000;
 
 const int MASK_EMPTY = 0;
 
@@ -30,47 +30,44 @@ const int MASK_BLACK_KING_CHECKED = 0b0111111000000;
 const int MASK_KING_IS_MATED      = 0b1000000000000;
 
 // everything below 30 is zero..
+// TODO: shift stuff down to 0
 
-const int IDX_MOVE_ID = 30;
-const int IDX_PARENT_MOVE_ID = 31;
-// bitboard spesific indexes
+const int IDX_MOVE_ID 	     =  0;
+const int IDX_PARENT_MOVE_ID =  1;
+const int IDX_WHITE_PIECES   =  2;
+const int IDX_BLACK_PIECES   =  3;
+const int IDX_ALL_PIECES     =  4;
 
-const int IDX_WHITE_PIECES = 32;
-const int IDX_BLACK_PIECES = 33;
-const int IDX_ALL_PIECES = 34;
+const int IDX_WHITE_PAWNS    =  5;
+const int IDX_WHITE_ROOKS    =  6;
+const int IDX_WHITE_KNIGHTS  =  7;
+const int IDX_WHITE_BISHOPS  =  8;
+const int IDX_WHITE_QUEENS   =  9;
+const int IDX_WHITE_KING     = 10;
 
-const int IDX_WHITE_PAWNS = 35;
-const int IDX_WHITE_ROOKS = 36;
-const int IDX_WHITE_KNIGHTS = 37;
-const int IDX_WHITE_BISHOPS = 38;
-const int IDX_WHITE_QUEENS = 39;
-const int IDX_WHITE_KING = 40;
-
-const int IDX_BLACK_PAWNS = 41;
-const int IDX_BLACK_ROOKS = 42;
-const int IDX_BLACK_KNIGHTS = 43;
-const int IDX_BLACK_BISHOPS = 44;
-const int IDX_BLACK_QUEENS = 45;
-const int IDX_BLACK_KING = 46;
+const int IDX_BLACK_PAWNS    = 11;
+const int IDX_BLACK_ROOKS    = 12;
+const int IDX_BLACK_KNIGHTS  = 13;
+const int IDX_BLACK_BISHOPS  = 14;
+const int IDX_BLACK_QUEENS   = 15;
+const int IDX_BLACK_KING     = 16;
 
 // indexes 47..54 are free
 
 // back to regular indexes
 
-const int IDX_CASTLING = 65;
-const int IDX_MOVE_NUM = 66;
-const int IDX_TURN = 68;
-const int IDX_WHITE_KING_INDEX = 69;
-const int IDX_BLACK_KING_INDEX = 70;
+const int IDX_CASTLING = 17;
+const int IDX_MOVE_NUM = 18;
+const int IDX_TURN = 19;
+const int IDX_WHITE_KING_INDEX = 20;
+const int IDX_BLACK_KING_INDEX = 21;
 
-const int IDX_CHECK_STATUS = 71;
-const int IDX_LAST_MOVE_WAS = 72;
-const int IDX_EP_IDX = 73;
+const int IDX_CHECK_STATUS = 22;
+const int IDX_LAST_MOVE_WAS = 23;
+const int IDX_EP_IDX = 24;
 
-const int IDX_START_INFLUENCE_MAP = 74;
-
-const int NUM_BYTES_TO_COPY = 71;
-const int NUM_BYTES = 91;
+const int NUM_BYTES_TO_COPY = 22;
+const int NUM_BYTES = 25;
 
 const int A1 = 7;
 const int B1 = 6;

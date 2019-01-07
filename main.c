@@ -68,7 +68,7 @@ void printLongAsBitBoard( unsigned long bitstream );
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 5;
 
 
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
@@ -193,7 +193,7 @@ int main( int argc, char **argv){
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
 
-	dig(board);
+	dig(board); // do everything
 
 	clock_gettime(CLOCK_REALTIME, &ts2);
 	if (ts2.tv_nsec < ts1.tv_nsec) {
@@ -272,12 +272,12 @@ void dig( unsigned long board[] ){
 		exit(1);
 	}
 
-	int numMoves = 0;
+
 
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
 		 || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
 	) {
-		numMoves = findAllPossibleMoves2(board);
+		int numMoves = findAllPossibleMoves2(board);
 		if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
 			board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
 		}
@@ -1532,7 +1532,6 @@ int moveWhiteKnights( unsigned long b[] ){
 	int numMovesFound = 0;
 
 	unsigned long pieces = b[IDX_WHITE_KNIGHTS];
-	unsigned long originalPieces = pieces;
 
 	int idx = 0;
 
@@ -1542,59 +1541,59 @@ int moveWhiteKnights( unsigned long b[] ){
 	unsigned long whitePieces = b[IDX_WHITE_PIECES];
 
 	while( pieces ){
-	int shift =	__builtin_ctzll( pieces );
-	idx += shift;
-	unsigned long pieceMap = 1l << idx;
-	unsigned long clearMap = ~pieceMap;
+		int shift =	__builtin_ctzll( pieces );
+		idx += shift;
+		unsigned long pieceMap = 1l << idx;
+		unsigned long clearMap = ~pieceMap;
 
-	unsigned long moveToMaps = KNIGHT_ATTACK_MAPS[idx];
-	moveToMaps &= ~whitePieces;
+		unsigned long moveToMaps = KNIGHT_ATTACK_MAPS[idx];
+		moveToMaps &= ~whitePieces;
 
-	int moveToIdx = 0;
+		int moveToIdx = 0;
 
-	while( moveToMaps ){
+		while( moveToMaps ){
 
-		int moveToShift = __builtin_ctzll( moveToMaps );
-		moveToIdx += moveToShift;
+			int moveToShift = __builtin_ctzll( moveToMaps );
+			moveToIdx += moveToShift;
 
-		unsigned long moveToMap = 1l<<moveToIdx;
-		if( !(moveToMap & whitePieces) ){
+			unsigned long moveToMap = 1l<<moveToIdx;
+			if( !(moveToMap & whitePieces) ){
 
-		makeNewBoard( b, move );
-		if( moveToMap & blackPieces ){
-			move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
-			clearBlackPiecesWithClearMap( move, ~moveToMap );
+			makeNewBoard( b, move );
+			if( moveToMap & blackPieces ){
+				move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CAPTURE;
+				clearBlackPiecesWithClearMap( move, ~moveToMap );
+			}
+
+			move[IDX_WHITE_KNIGHTS] &= clearMap;
+			move[IDX_WHITE_KNIGHTS] |= moveToMap;
+			move[IDX_WHITE_PIECES] &= clearMap;
+			move[IDX_WHITE_PIECES] |= moveToMap;
+
+			move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
+			if ( calculateWhiteKingCheckStatus(move) == 0) {
+
+				#ifdef TEST_IF_ON_R1_R8
+				if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+				#endif
+					move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+					move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
+					numMovesFound++;
+					dig(move);
+
+				}
+			}
+
+			moveToMaps >>= moveToShift;
+			moveToMaps >>= 1;
+			moveToIdx++;
+
 		}
 
-		move[IDX_WHITE_KNIGHTS] &= clearMap;
-		move[IDX_WHITE_KNIGHTS] |= moveToMap;
-		move[IDX_WHITE_PIECES] &= clearMap;
-		move[IDX_WHITE_PIECES] |= moveToMap;
-
-		move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|move[IDX_BLACK_PIECES];
-		if ( calculateWhiteKingCheckStatus(move) == 0) {
-
-		#ifdef TEST_IF_ON_R1_R8
-		if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
-		#endif
-			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
-
-			move[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(move);
-			numMovesFound++;
-			dig(move);
-
-		}
-		}
-
-		moveToMaps >>= moveToShift;
-		moveToMaps >>= 1;
-		moveToIdx++;
-
-	}
-
-	pieces >>= shift;
-	pieces >>= 1;
-	idx++;
+		pieces >>= shift;
+		pieces >>= 1;
+		idx++;
 
 	}
 
