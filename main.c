@@ -66,7 +66,13 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 
+/*** LEVEL ***/
+/*** LEVEL ***/
+/*** LEVEL ***/
+
 int MAX_LEVEL = 6;
+
+
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]	 	= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numEP[]			= {0,0,0,0,0,0,0,0,0,0,0};
@@ -134,7 +140,7 @@ int main( int argc, char **argv){
 						 R . . . K . . R";*/
 
 
-		char *initialBoard = "\
+	char *initialBoard = "\
 						r . . . k . . r\
 						p . p p q p b .\
 						b n . . p n p .\
@@ -283,8 +289,6 @@ void dig( unsigned long board[] ){
 			board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
 		}
 
-
-
 	}
 	count(board);
 
@@ -296,15 +300,21 @@ void dig( unsigned long board[] ){
 	//	printDiagram( board );
 	//}
 
-	// TODO: 1. finne siste brett som fungerer.
+	// TODO: 1. finne siste brett som fungerer : 11442416848
 	// TODO: 2. neste brett, er et brett som motoren ikke håndterer. blir stuck i loop.
-	
-	if( board[IDX_MOVE_ID] >= 11442416840  ){
-		printDiagram( board );
-		unsigned long total = printStats();
-		printf("\nTotal valid moves found so far : %lu \n" ,total);
+	/*if( board[IDX_MOVE_ID] == 11442416842 ){
+		printBitBoard(board);
 	}
-
+						   //  5672721049
+	if( board[IDX_MOVE_ID] == 11442416848  ){
+		printDiagram( board );
+	}*/
+/*
+	if( board[IDX_MOVE_ID] & 0x7FFFFFF ){
+		printStats();
+		printDiagram(board);
+	}
+*/
 }
 
 int findAllPossibleMoves2( unsigned long originalBoard[]) {
@@ -607,7 +617,6 @@ int moveWhitePawns( unsigned long b[] ){
 
 	}
 
-
 	pieceIdx = 0;
 	while( pawns ){
 		int shift =	__builtin_ctzll( pawns );
@@ -646,9 +655,8 @@ int moveWhitePawns( unsigned long b[] ){
 					}
 
 				}
-
-				attackShift++;
 				validAttacks >>= attackShift;
+				validAttacks >>= 1;
 				attackIndex++;
 			}
 		}
@@ -671,7 +679,6 @@ int moveWhitePawns( unsigned long b[] ){
 				attackIndex += attackShift;
 				unsigned long attackingPawn = 1l << attackIndex;
 
-
 				if( (WHITE_PAWN_ATTACK_MAPS[attackIndex] & epMap) == epMap ){
 					makeNewBoard( b, move );
 					clearBlackPiecesWithClearMap( move, ~(epMap >> 8) );
@@ -688,9 +695,10 @@ int moveWhitePawns( unsigned long b[] ){
 						dig(move);
 					}
 				}
-				attackIndex++;
+
 				pawnsOnR5 >>= attackShift;
 				pawnsOnR5 >>= 1;
+				attackIndex++;
 			}
 		}
 	}
@@ -749,7 +757,7 @@ int moveBlackPawns( unsigned long b[] ){
 		}
 
 		pawnsThatCanMoveOneForward >>= shift;
-	pawnsThatCanMoveOneForward >>= 1;
+		pawnsThatCanMoveOneForward >>= 1;
 		pieceIdx++;
 
 	}
@@ -775,7 +783,7 @@ int moveBlackPawns( unsigned long b[] ){
 		}
 
 		pawnsThatCanMoveTwoForward >>= shift;
-	pawnsThatCanMoveTwoForward >>= 1;
+		pawnsThatCanMoveTwoForward >>= 1;
 		pieceIdx++;
 
 	}
@@ -819,15 +827,17 @@ int moveBlackPawns( unsigned long b[] ){
 							dig(move);
 						}
 
-				}
+					}
 
-					attackShift++;
+
 					validAttacks >>= attackShift;
-				attackIndex++;
+					validAttacks >>= 1;
+					attackIndex++;
 			}
 		}
-		shift++;
+
 		pawns >>= shift;
+		pawns >>= 1;
 		pieceIdx++;
 	}
 
@@ -860,9 +870,10 @@ int moveBlackPawns( unsigned long b[] ){
 						dig(move);
 					}
 				}
-				attackIndex++;
+
 				pawnsOnR4 >>= attackShift;
 				pawnsOnR4 >>= 1;
+				attackIndex++;
 
 			}
 		}
