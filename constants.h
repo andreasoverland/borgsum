@@ -34,23 +34,25 @@ const int MASK_KING_IS_MATED      = 0b1000000000000;
 
 const int IDX_MOVE_ID 	     =  0;
 const int IDX_PARENT_MOVE_ID =  1;
-const int IDX_WHITE_PIECES   =  2;
-const int IDX_BLACK_PIECES   =  3;
-const int IDX_ALL_PIECES     =  4;
 
-const int IDX_WHITE_PAWNS    =  5;
-const int IDX_WHITE_ROOKS    =  6;
-const int IDX_WHITE_KNIGHTS  =  7;
-const int IDX_WHITE_BISHOPS  =  8;
-const int IDX_WHITE_QUEENS   =  9;
-const int IDX_WHITE_KING     = 10;
+const int IDX_WHITE_PAWNS    =  2;
+const int IDX_WHITE_ROOKS    =  3;
+const int IDX_WHITE_KNIGHTS  =  4;
+const int IDX_WHITE_BISHOPS  =  5;
+const int IDX_WHITE_QUEENS   =  6;
+const int IDX_WHITE_KING     =  7;
+const int IDX_WHITE_PIECES   =  8;
 
-const int IDX_BLACK_PAWNS    = 11;
-const int IDX_BLACK_ROOKS    = 12;
-const int IDX_BLACK_KNIGHTS  = 13;
-const int IDX_BLACK_BISHOPS  = 14;
-const int IDX_BLACK_QUEENS   = 15;
-const int IDX_BLACK_KING     = 16;
+const int IDX_BLACK_PAWNS    =  9;
+const int IDX_BLACK_ROOKS    = 10;
+const int IDX_BLACK_KNIGHTS  = 11;
+const int IDX_BLACK_BISHOPS  = 12;
+const int IDX_BLACK_QUEENS   = 13;
+const int IDX_BLACK_KING     = 14;
+const int IDX_BLACK_PIECES   = 15;
+
+const int IDX_ALL_PIECES     = 16;
+
 
 // indexes 47..54 are free
 
@@ -67,7 +69,7 @@ const int IDX_LAST_MOVE_WAS = 23;
 const int IDX_EP_IDX = 24;
 
 const int NUM_BYTES_TO_COPY = 22;
-const int NUM_BYTES = 25; // REALLY NUM LONGS 
+const int NUM_BYTES = 25; // REALLY NUM LONGS
 
 const int A1 = 7;
 const int B1 = 6;

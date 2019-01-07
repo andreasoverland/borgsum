@@ -68,7 +68,7 @@ void printLongAsBitBoard( unsigned long bitstream );
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 6;
 
 
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
@@ -285,9 +285,11 @@ void dig( unsigned long board[] ){
 	}
 	count(board);
 
-	/*if( board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0	){
-		printDiagram( board );
-	}*/
+
+
+	//if( board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0 ){
+		// printDiagram( board );
+	//}
 
 	//if( board[IDX_MOVE_NUM] == MAX_LEVEL){
 	//	printDiagram( board );
@@ -314,6 +316,8 @@ void dig( unsigned long board[] ){
 int findAllPossibleMoves2( unsigned long originalBoard[]) {
 
 	int numMovesFound = 0;
+
+
 
 	if (originalBoard[IDX_TURN] == WHITE_MASK) { // turn == white
 
@@ -1380,145 +1384,144 @@ int moveBlackRooksOrQueens( unsigned long b[], int pieceMapIndex	){
 	unsigned long blackPieces = b[IDX_BLACK_PIECES];
 	unsigned long whitePieces = b[IDX_WHITE_PIECES];
 
-
-
 	while( pieces ){
-	int shift =	__builtin_ctzll( pieces );
-	idx += shift;
+		int shift =	__builtin_ctzll( pieces );
+		idx += shift;
 
-	const unsigned long pieceMap = 1l << idx;
-	// for hver piece. flytt h&v til vi treffe noe
+		const unsigned long pieceMap = 1l << idx;
+		// for hver piece. flytt h&v til vi treffe noe
 
-	int file = idx & 7;
-	int rank = idx >> 3;
+		int file = idx & 7;
+		int rank = idx >> 3;
 
-	unsigned long moveToMap = pieceMap;
-	unsigned long clearMap = ~pieceMap;
+		unsigned long moveToMap = pieceMap;
+		unsigned long clearMap = ~pieceMap;
 
-	// up
-	for( int m=0;m<7-rank;m++){
-		moveToMap <<= 8;
+		// up
+		for( int m=0;m<7-rank;m++){
+			moveToMap <<= 8;
 
-		if( moveToMap & blackPieces ){
-		break;
-		}
+			if( moveToMap & blackPieces ){
+			break;
+			}
 
-		makeNewBoard( b, move );
-		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+			makeNewBoard( b, move );
+			makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
 
-		if ( calculateBlackKingCheckStatus(move) == 0) {
-		#ifdef TEST_IF_ON_R1_R8
-		if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
-		#endif
-			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+			if ( calculateBlackKingCheckStatus(move) == 0) {
+			#ifdef TEST_IF_ON_R1_R8
+			if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+			#endif
+				move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
 
-		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-		numMovesFound++;
-		dig(move);
+			move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+			numMovesFound++;
+			dig(move);
 
-		}
+			}
 
-		if( moveToMap & whitePieces ){
-		break;
-		}
-
-	}
-
-	// left
-	moveToMap = pieceMap;
-
-	for( int m=0;m<7-file;m++){
-		moveToMap <<= 1;
-
-		if( moveToMap & blackPieces ){
-		break;
-		}
-
-		makeNewBoard( b, move );
-		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
-
-		if ( calculateBlackKingCheckStatus(move) == 0) {
-		#ifdef TEST_IF_ON_R1_R8
-		if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
-		#endif
-			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
-
-		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-		numMovesFound++;
-		dig(move);
+			if( moveToMap & whitePieces ){
+			break;
+			}
 
 		}
 
-		if( moveToMap & whitePieces ){
-		break;
-		}
+		// left
+		moveToMap = pieceMap;
 
-	}
+		for( int m=0;m<7-file;m++){
+			moveToMap <<= 1;
 
-	// right
-	moveToMap = pieceMap;
+			if( moveToMap & blackPieces ){
+				break;
+			}
 
-	for( int m=0;m<file;m++){
-		moveToMap >>= 1;
+			makeNewBoard( b, move );
+			makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
 
-		if( moveToMap & blackPieces ){
-		break;
-		}
+			if ( calculateBlackKingCheckStatus(move) == 0) {
+			#ifdef TEST_IF_ON_R1_R8
+			if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+			#endif
+				move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
 
-		makeNewBoard( b, move );
-		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+			move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+			numMovesFound++;
+			dig(move);
 
-		if ( calculateBlackKingCheckStatus(move) == 0) {
-		#ifdef TEST_IF_ON_R1_R8
-		if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
-		#endif
-			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+			}
 
-		numMovesFound++;
-		dig(move);
-
-		}
-
-		if( moveToMap & whitePieces ){
-		break;
-		}
-
-	}
-
-	// down
-	moveToMap = pieceMap;
-
-	for( int m=0;m<rank;m++){
-		moveToMap >>= 8;
-
-		if( moveToMap & blackPieces ){
-		break;
-		}
-
-		makeNewBoard( b, move );
-		makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
-
-		if ( calculateBlackKingCheckStatus(move) == 0) {
-		#ifdef TEST_IF_ON_R1_R8
-		if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
-		#endif
-			move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
-
-		move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
-		numMovesFound++;
-		dig(move);
+			if( moveToMap & whitePieces ){
+			break;
+			}
 
 		}
 
-		if( moveToMap & whitePieces ){
-		break;
-		}
-	}
+		// right
+		moveToMap = pieceMap;
 
-	//printLongAsBitBoard( testMap );
-	pieces >>= shift;
-	pieces >>= 1;
-	idx++;
+		for( int m=0;m<file;m++){
+			moveToMap >>= 1;
+
+			if( moveToMap & blackPieces ){
+				break;
+			}
+
+			makeNewBoard( b, move );
+			makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+
+			if ( calculateBlackKingCheckStatus(move) == 0) {
+				#ifdef TEST_IF_ON_R1_R8
+				if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+				#endif
+					move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+				move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+				numMovesFound++;
+				dig(move);
+
+			}
+
+			if( moveToMap & whitePieces ){
+				break;
+			}
+
+		}
+
+		// down
+		moveToMap = pieceMap;
+
+		for( int m=0;m<rank;m++){
+			moveToMap >>= 8;
+
+			if( moveToMap & blackPieces ){
+			break;
+			}
+
+			makeNewBoard( b, move );
+			makeBlackMove( move, pieceMapIndex, moveToMap, clearMap, whitePieces );
+
+			if ( calculateBlackKingCheckStatus(move) == 0) {
+			#ifdef TEST_IF_ON_R1_R8
+			if( (pieceMap | moveToMap) & (R1_R8) ) // TODO: test om det er kjappere å ikke teste på dette.
+			#endif
+				move[IDX_CASTLING] &= ~(pieceMap | moveToMap); // TODO: Ta med denne på alle R8/R1 moves
+
+			move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
+			numMovesFound++;
+			dig(move);
+
+			}
+
+			if( moveToMap & whitePieces ){
+			break;
+			}
+		}
+
+		//printLongAsBitBoard( testMap );
+		pieces >>= shift;
+		pieces >>= 1;
+		idx++;
 
 	}
 
@@ -1770,6 +1773,8 @@ int calculateWhiteKingCheckStatus( unsigned long board[] ){
 
 	unsigned long king = board[IDX_WHITE_KING];
 	unsigned long idx = __builtin_ctzll( king );
+
+
 
 	if( KNIGHT_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS] ){
 		return MASK_WHITE_KING_CHECKED;
@@ -2113,17 +2118,15 @@ int calculateBlackKingCheckStatus( unsigned long board[] ){
 
 
 void clearBlackPiecesWithClearMap( unsigned long board[], unsigned long clear ){
-	for( int t=IDX_BLACK_PAWNS;t<=IDX_BLACK_KING;t++){ // no need to clear the king, ever. hopefully. but test forst. todo:test
+	for( int t=IDX_BLACK_PAWNS;t<=IDX_BLACK_PIECES;t++){ // no need to clear the king, ever. hopefully. but test forst. todo:test
 		board[t] &= clear;
 	}
-	board[IDX_BLACK_PIECES] &= clear;
 }
 
 void clearWhitePiecesWithClearMap( unsigned long board[], unsigned long clear ){
-	for( int t=IDX_WHITE_PAWNS;t<=IDX_WHITE_KING;t++){ // no need to clear the king, ever. hopefully. but test forst. todo:test
+	for( int t=IDX_WHITE_PAWNS;t<=IDX_WHITE_PIECES;t++){ // no need to clear the king, ever. hopefully. but test forst. todo:test
 		board[t] &= clear;
 	}
-	board[IDX_WHITE_PIECES] &= clear;
 }
 
 
@@ -2175,19 +2178,19 @@ void printDiagram( unsigned long board[] ){
 
 	char str[] = "................................................................\0";
 
-	setBitsToChar( str, board[IDX_WHITE_PAWNS],	 'P' );
-	setBitsToChar( str, board[IDX_WHITE_ROOKS],	 'R' );
+	setBitsToChar( str, board[IDX_WHITE_PAWNS],	  'P' );
+	setBitsToChar( str, board[IDX_WHITE_ROOKS],	  'R' );
 	setBitsToChar( str, board[IDX_WHITE_BISHOPS], 'B' );
 	setBitsToChar( str, board[IDX_WHITE_KNIGHTS], 'N' );
-	setBitsToChar( str, board[IDX_WHITE_QUEENS],	'Q' );
-	setBitsToChar( str, board[IDX_WHITE_KING],		'K' );
+	setBitsToChar( str, board[IDX_WHITE_QUEENS],  'Q' );
+	setBitsToChar( str, board[IDX_WHITE_KING],	  'K' );
 
-	setBitsToChar( str, board[IDX_BLACK_PAWNS],	 'p' );
-	setBitsToChar( str, board[IDX_BLACK_ROOKS],	 'r' );
+	setBitsToChar( str, board[IDX_BLACK_PAWNS],	  'p' );
+	setBitsToChar( str, board[IDX_BLACK_ROOKS],	  'r' );
 	setBitsToChar( str, board[IDX_BLACK_BISHOPS], 'b' );
 	setBitsToChar( str, board[IDX_BLACK_KNIGHTS], 'n' );
-	setBitsToChar( str, board[IDX_BLACK_QUEENS],	'q' );
-	setBitsToChar( str, board[IDX_BLACK_KING],		'k' );
+	setBitsToChar( str, board[IDX_BLACK_QUEENS],  'q' );
+	setBitsToChar( str, board[IDX_BLACK_KING],	  'k' );
 
 	char res[] = "                                                                       \0";
 
@@ -2334,6 +2337,7 @@ void printBitBoard( unsigned long board[] ){
 void diagramToBitBoard( unsigned long board[], char diagram[] ){
 
 	//
+	//		A B C D E F G H
 	// 8	0,0,0,0,0,0,0,0,
 	// 7	0,0,0,0,0,0,0,0,
 	// 6	0,0,0,0,0,0,0,0,
@@ -2342,14 +2346,14 @@ void diagramToBitBoard( unsigned long board[], char diagram[] ){
 	// 3	0,0,0,0,0,0,0,0,
 	// 2	0,0,0,0,0,0,0,0,
 	// 1	0,0,0,0,0,0,0,0,
-	//		A B C D E F G H
-		//		7 6 5 4 3 2 1 0
+
 	int len = strlen( diagram );
 
-	memset(board, 0,	sizeof(unsigned long)*NUM_BYTES);
+	memset(board, 0, sizeof(unsigned long)*NUM_BYTES);
+
 	board[IDX_CASTLING] =
 		MASK_CASTLING_WHITE_QUEEN_SIDE |
-		MASK_CASTLING_WHITE_KING_SIDE |
+		MASK_CASTLING_WHITE_KING_SIDE  |
 		MASK_CASTLING_BLACK_QUEEN_SIDE |
 		MASK_CASTLING_BLACK_KING_SIDE;
 
@@ -2418,21 +2422,21 @@ void diagramToBitBoard( unsigned long board[], char diagram[] ){
 	} // 0..len
 
 	board[IDX_WHITE_PIECES] = board[IDX_WHITE_PAWNS]|
-								board[IDX_WHITE_ROOKS]|
-								board[IDX_WHITE_KNIGHTS]|
-								board[IDX_WHITE_BISHOPS]|
-								board[IDX_WHITE_QUEENS]|
-								board[IDX_WHITE_KING];
+							  board[IDX_WHITE_ROOKS]|
+							  board[IDX_WHITE_KNIGHTS]|
+							  board[IDX_WHITE_BISHOPS]|
+							  board[IDX_WHITE_QUEENS]|
+							  board[IDX_WHITE_KING];
 
 	board[IDX_BLACK_PIECES] = board[IDX_BLACK_PAWNS]|
-								board[IDX_BLACK_ROOKS]|
-								board[IDX_BLACK_KNIGHTS]|
-								board[IDX_BLACK_BISHOPS]|
-								board[IDX_BLACK_QUEENS]|
-								board[IDX_BLACK_KING];
+							  board[IDX_BLACK_ROOKS]|
+							  board[IDX_BLACK_KNIGHTS]|
+							  board[IDX_BLACK_BISHOPS]|
+							  board[IDX_BLACK_QUEENS]|
+							  board[IDX_BLACK_KING];
 
 	board[IDX_ALL_PIECES]	 = board[IDX_WHITE_PIECES]|
-								board[IDX_BLACK_PIECES];
+							   board[IDX_BLACK_PIECES];
 
 
 
