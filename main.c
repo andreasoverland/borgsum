@@ -66,7 +66,7 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 6;
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]	 	= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numEP[]			= {0,0,0,0,0,0,0,0,0,0,0};
@@ -79,6 +79,7 @@ unsigned long makeNewBoardInvocations = 0;
 unsigned long isSquaresThreatenedByColorInvocations = 0;
 unsigned long influenceMapForSquareInvocations = 0;
 unsigned long moveLinearInvocations = 0;
+int maxNumMoves = 0;
 
 char *workUnitId = NULL;
 
@@ -256,6 +257,8 @@ unsigned long printStats(){
  **																										**
  ************************************************************************************************************/
 
+unsigned long lastCountedMoveNum = 0;
+unsigned long lastCountedMoveNumCounted = 0;
 
 void dig( unsigned long board[] ){
 
@@ -270,14 +273,18 @@ void dig( unsigned long board[] ){
 		exit(1);
 	}
 
+	int numMoves = 0;
 
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
 		 || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
 	) {
-		int numMoves = findAllPossibleMoves2(board);
+		numMoves = findAllPossibleMoves2(board);
 		if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
 			board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
 		}
+
+
+
 	}
 	count(board);
 
@@ -289,9 +296,14 @@ void dig( unsigned long board[] ){
 	//	printDiagram( board );
 	//}
 
-/*	if( board[IDX_MOVE_ID] % 10000000l == 0){
-		printBitBoard( board );
-	}*/
+	// TODO: 1. finne siste brett som fungerer.
+	// TODO: 2. neste brett, er et brett som motoren ikke håndterer. blir stuck i loop.
+	
+	if( board[IDX_MOVE_ID] >= 11442416840  ){
+		printDiagram( board );
+		unsigned long total = printStats();
+		printf("\nTotal valid moves found so far : %lu \n" ,total);
+	}
 
 }
 
@@ -1655,7 +1667,6 @@ int moveBlackKnights( unsigned long b[] ){
 void makeWhiteBitPromos( unsigned long board[], unsigned long newPieceMap ){
 
 	unsigned long clearPiece = ~newPieceMap;
-
 	board[IDX_WHITE_PAWNS] &= clearPiece;
 	board[IDX_WHITE_ROOKS] |= newPieceMap;
 	board[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(board);
@@ -2174,7 +2185,7 @@ void printDiagram( unsigned long board[] ){
 	setBitsToChar( str, board[IDX_BLACK_QUEENS],	'q' );
 	setBitsToChar( str, board[IDX_BLACK_KING],		'k' );
 
-	char res[] = "																																			 \0";
+	char res[] = "                                                                       \0";
 
 	for( int t=0;t<64;t++){
 		res[t+(t>>3)] = str[t];
