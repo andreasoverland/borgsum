@@ -13,20 +13,18 @@ typedef enum { FALSE, TRUE } boolean;
 
 // Authors
 // Andreas Øverland
-// Eva Solfrid	Øverland
+// Eva Solfrid Øverland
 // Fredrik Christian Øverland.
 // Sara Franses Gläser
-//Ines Christiane Øverland
-//Andreas Ehfihgithiuhurhfrhdjfurhtghrghtughrjkhg Øverland
-//Oma Ingri Gisnos Øverland
-//Opa Bjørnar Øverland
+// Ines Christiane Øverland
+// Andreas Ehfihgithiuhurhfrhdjfurhtghrghtughrjkhg Øverland
+// Oma Ingri Gisnås Øverland
+// Opa Bjørnar Øverland
+
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
 void printNumBoard( unsigned long board[] );
 unsigned long printStats();
-
-// TODO: skriv om alt til unsigned unsigned long!!
-
 
 void dig( unsigned long board[]);
 void count( unsigned long board[]);
@@ -215,11 +213,6 @@ int main( int argc, char **argv){
 	printf( "%lu isSquaresThreatenedByColorInvocations\n", isSquaresThreatenedByColorInvocations );
 	printf( "%lu influenceMapForSquareInvocations\n", influenceMapForSquareInvocations );
 	printf( "%lu moveLinearInvocations\n", moveLinearInvocations );
-
-	/*printLongAsBitBoard( MASK_CASTLING_BLACK_KING_SIDE );
-	printLongAsBitBoard( MASK_CASTLING_BLACK_QUEEN_SIDE );
-	printLongAsBitBoard( MASK_CASTLING_WHITE_KING_SIDE );
-	printLongAsBitBoard( MASK_CASTLING_WHITE_QUEEN_SIDE );*/
 
 	return 0;
 } // end main
