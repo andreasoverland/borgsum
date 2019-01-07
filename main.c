@@ -309,12 +309,12 @@ void dig( unsigned long board[] ){
 	if( board[IDX_MOVE_ID] == 11442416848  ){
 		printDiagram( board );
 	}*/
-/*
+
 	if( board[IDX_MOVE_ID] & 0x7FFFFFF ){
 		printStats();
 		printDiagram(board);
 	}
-*/
+
 }
 
 int findAllPossibleMoves2( unsigned long originalBoard[]) {
