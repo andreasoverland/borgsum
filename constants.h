@@ -1,21 +1,7 @@
 
-
-const int Piece_P = 1;
-const int Piece_R = 2;
-const int Piece_N = 4;
-const int Piece_B = 8;
-const int Piece_Q = 16;
-const int Piece_K = 32;
-
-const int Piece_p = 64;
-const int Piece_r = 128;
-const int Piece_n = 256;
-const int Piece_b = 512;
-const int Piece_q = 1024;
-const int Piece_k = 2048;
-
-const int WHITE_MASK = 0b000000111111;
-const int BLACK_MASK = 0b111111000000;
+const int WHITE_MASK 	= 0b000000111111;
+const int BLACK_MASK 	= 0b111111000000;
+const int TURN_INVERTER = 0b111111000000;
 
 const int MASK_LAST_MOVE_WAS_CAPTURE             = 0b00001;
 const int MASK_LAST_MOVE_WAS_EP_STRIKE           = 0b00010;
@@ -23,14 +9,9 @@ const int MASK_LAST_MOVE_WAS_PROMO               = 0b00100;
 const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE = 0b01000;
 const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE  = 0b10000;
 
-const int MASK_EMPTY = 0;
-
-const int MASK_WHITE_KING_CHECKED = 0b0000000111111;
-const int MASK_BLACK_KING_CHECKED = 0b0111111000000;
-const int MASK_KING_IS_MATED      = 0b1000000000000;
-
-// everything below 30 is zero..
-// TODO: shift stuff down to 0
+const int MASK_WHITE_KING_CHECKED 		 = 0b0000000100000;
+const int MASK_BLACK_KING_CHECKED 		 = 0b0000001000000;
+const int MASK_KING_IS_MATED             = 0b0000010000000;
 
 const int IDX_MOVE_ID 	     =  0;
 const int IDX_PARENT_MOVE_ID =  1;
@@ -53,23 +34,16 @@ const int IDX_BLACK_PIECES   = 15;
 
 const int IDX_ALL_PIECES     = 16;
 
+const int IDX_CASTLING 		 = 17;
+const int IDX_MOVE_NUM 		 = 18;
+const int IDX_TURN 			 = 19;
 
-// indexes 47..54 are free
+const int IDX_CHECK_STATUS   = 22;
+const int IDX_LAST_MOVE_WAS  = 23;
+const int IDX_EP_IDX         = 24;
 
-// back to regular indexes
-
-const int IDX_CASTLING = 17;
-const int IDX_MOVE_NUM = 18;
-const int IDX_TURN = 19;
-const int IDX_WHITE_KING_INDEX = 20;
-const int IDX_BLACK_KING_INDEX = 21;
-
-const int IDX_CHECK_STATUS = 22;
-const int IDX_LAST_MOVE_WAS = 23;
-const int IDX_EP_IDX = 24;
-
-const int NUM_BYTES_TO_COPY = 22;
-const int NUM_BYTES = 25; // REALLY NUM LONGS
+const int NUM_BYTES_TO_COPY  = 19;
+const int NUM_BYTES          = 25; // REALLY NUM LONGS
 
 const int A1 = 7;
 const int B1 = 6;
