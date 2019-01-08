@@ -23,6 +23,8 @@ typedef enum { FALSE, TRUE } boolean;
 
 // TODO:
 // 1. Log discovery checks, double checks and stalemate
+// 2. Implement ^ for moving, instead of &~ and then |. Do it in makeBlack/WhiteMove
+// 3. 
 
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
@@ -182,6 +184,17 @@ int main( int argc, char **argv){
 
 	printBitBoard( board );
 
+	// TODO: implementer dette som flyttemekanisme
+	/*
+	printLongAsBitBoard( board[IDX_WHITE_ROOKS] );
+	board[IDX_WHITE_ROOKS] ^= A1_MASK|B1_MASK;
+	board[IDX_WHITE_PIECES] ^= A1_MASK|B1_MASK;
+	board[IDX_ALL_PIECES] ^= A1_MASK|B1_MASK;
+	printLongAsBitBoard( board[IDX_WHITE_ROOKS] );
+	printBitBoard( board );
+
+	return 0;
+	*/
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
 
@@ -774,25 +787,22 @@ int moveBlackPawns( unsigned long b[] ){
 					unsigned long moveToMap = 1L << attackIndex;
 
 					makeNewBoard( b, move );
-							makeBlackMove( move, IDX_BLACK_PAWNS, moveToMap, clearMap, whitePieces );
+					makeBlackMove( move, IDX_BLACK_PAWNS, moveToMap, clearMap, whitePieces );
 
 					if ( calculateBlackKingCheckStatus(move) == 0) {
 
 						if( moveToMap & R1 ){
 							move[IDX_CASTLING] &= ~moveToMap;
-						move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO | MASK_LAST_MOVE_WAS_CAPTURE;
+							move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO | MASK_LAST_MOVE_WAS_CAPTURE;
 							numPawnMoves += 4;
-						makeBlackBitPromos( move, moveToMap );
+							makeBlackBitPromos( move, moveToMap );
 						}
 						else {
 							move[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(move);
 							numPawnMoves++;
 							dig(move);
 						}
-
 					}
-
-
 					validAttacks >>= attackShift;
 					validAttacks >>= 1;
 					attackIndex++;

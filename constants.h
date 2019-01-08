@@ -1,17 +1,19 @@
 
-const int WHITE_MASK 	= 0b000000111111;
-const int BLACK_MASK 	= 0b111111000000;
-const int TURN_INVERTER = 0b111111000000;
 
-const int MASK_LAST_MOVE_WAS_CAPTURE             = 0b00001;
-const int MASK_LAST_MOVE_WAS_EP_STRIKE           = 0b00010;
-const int MASK_LAST_MOVE_WAS_PROMO               = 0b00100;
-const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE = 0b01000;
-const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE  = 0b10000;
+const int WHITE_MASK 								= 0b00001;
+const int BLACK_MASK 								= 0b00010;
+const int TURN_INVERTER 							= 0b00011;
 
-const int MASK_WHITE_KING_CHECKED 		 = 0b0000000100000;
-const int MASK_BLACK_KING_CHECKED 		 = 0b0000001000000;
-const int MASK_KING_IS_MATED             = 0b0000010000000;
+const int MASK_LAST_MOVE_WAS_CAPTURE             	= 0b00001;
+const int MASK_LAST_MOVE_WAS_EP_STRIKE           	= 0b00010;
+const int MASK_LAST_MOVE_WAS_PROMO               	= 0b00100;
+const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE 	= 0b01000;
+const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE  	= 0b10000;
+
+const int MASK_WHITE_KING_CHECKED 		 			= 0b00001;
+const int MASK_BLACK_KING_CHECKED 		 			= 0b00010;
+const int MASK_KING_IS_MATED             			= 0b00100;
+const int MASK_KING_IS_STALEMATED        			= 0b01000;
 
 const int IDX_MOVE_ID 	     =  0;
 const int IDX_PARENT_MOVE_ID =  1;
@@ -34,16 +36,17 @@ const int IDX_BLACK_PIECES   = 15;
 
 const int IDX_ALL_PIECES     = 16;
 
-const int IDX_CASTLING 		 = 17;
+const int IDX_CASTLING 		 = 17; // not to be confused with castling as last move
 const int IDX_MOVE_NUM 		 = 18;
 const int IDX_TURN 			 = 19;
 
-const int IDX_CHECK_STATUS   = 22;
-const int IDX_LAST_MOVE_WAS  = 23;
-const int IDX_EP_IDX         = 24;
-
 const int NUM_BYTES_TO_COPY  = 19;
-const int NUM_BYTES          = 25; // REALLY NUM LONGS
+
+const int IDX_CHECK_STATUS   = 20;
+const int IDX_LAST_MOVE_WAS  = 21; // 5 bits, status for last move,
+const int IDX_EP_IDX         = 22; // 0..63, 6 bits
+
+const int NUM_BYTES          = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
 const int A1 = 7;
 const int B1 = 6;
