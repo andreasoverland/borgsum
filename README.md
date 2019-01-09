@@ -12,4 +12,4 @@ Super Simple Chess Engine
 
 
 
-cat testbatch.txt|xargs -n 4 sh -c './chessengine "\"$1\"" $2 $3 4'  
+cat testbatch.txt|xargs -n 4 sh -c './chessengine "\"$1\"" $2 $3 2 `md5 -qs "$1"` > res/`md5 -qs "$1"`_$0.txt'  
