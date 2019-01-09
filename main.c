@@ -24,7 +24,7 @@ typedef enum { FALSE, TRUE } boolean;
 // TODO:
 // 1. Log discovery checks, double checks and stalemate
 // 2. Implement ^ for moving, instead of &~ and then |. Do it in makeBlack/WhiteMove
-// 3. 
+// 3.
 
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
@@ -285,6 +285,9 @@ void dig( unsigned long board[] ){
 		int numMoves = findAllPossibleMoves2(board);
 		if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
 			board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
+		}
+		else if( numMoves == 0){
+			board[IDX_CHECK_STATUS] |= MASK_KING_IS_STALEMATED;
 		}
 
 	}
@@ -1640,10 +1643,10 @@ void makeNewBoard( unsigned long oldBoard[], unsigned long newBoard[]) {
 
 
 void makeWhiteMove( unsigned long move[], int pieceMapIndex, unsigned long moveToMap, unsigned long clearMap, unsigned long blackPieces ){
-	move[pieceMapIndex] &= clearMap;
-	move[pieceMapIndex] |= moveToMap;
-	move[IDX_WHITE_PIECES] &= clearMap;
-	move[IDX_WHITE_PIECES] |= moveToMap;
+	unsigned long xorMap = ~clearMap|moveToMap;
+	move[pieceMapIndex] ^= xorMap;
+	move[IDX_WHITE_PIECES] ^= xorMap;
+
 	move[IDX_ALL_PIECES] = move[IDX_WHITE_PIECES]|blackPieces;
 
 	if( moveToMap & blackPieces ){
