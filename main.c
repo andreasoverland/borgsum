@@ -24,8 +24,9 @@ typedef enum { FALSE, TRUE } boolean;
 // TODO:
 // 1. Log discovery checks, double checks and stalemate
 // 2. Implement ^ for moving, instead of &~ and then |. Do it in makeBlack/WhiteMove
-// 3. Improve argv parsing prefix args with -
-// 4. add -f for file input
+// 3. DONE always exopects a file input
+// 4. on check on last level only check until the first valid move is found
+// 5. check stalemate counting for with and black maybe bugging for black
 
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
@@ -70,14 +71,14 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 void printCompactBoard( unsigned long board[] );
-void parseArguments( int, char** argv, char *initialBoard );
+
 
 
 /*** LEVEL ***/
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 8;
 
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]	 	= {0,0,0,0,0,0,0,0,0,0,0};
@@ -115,7 +116,6 @@ int main( int argc, char **argv){
 
  	fclose(fp);
 
-	return 0;
 
 	/*char *initialBoard = "\
 						 r n b q k b n r\
@@ -162,53 +162,25 @@ int main( int argc, char **argv){
 */
 
 
-	parseArguments( argc, argv, initialBoard );
+	char *initialBoard = "\
+					. . . . k . . r\
+					. . . . . . . .\
+					. . . . . . . .\
+					. . . . . . . .\
+					. . . . . . . .\
+					. . . . . . . .\
+					. . . . . . . .\
+					R . . . K . . .";
+
+
 
 
 	unsigned long board[NUM_BYTES];
 
-
-
-	//board[IDX_TURN] = BLACK_MASK;
-	// board[IDX_CASTLING] =0;
-	// MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE;
-
-	if( argc > 2 ){
-		if( strcmp(argv[2], "b" ) == 0 ){
-			board[IDX_TURN] = BLACK_MASK;
-		}
-		else {
-			board[IDX_TURN] = WHITE_MASK;
-		}
-	}
-
-	if( argc > 3 ){
-		board[IDX_CASTLING] = atoi(argv[3]);
-	}
-
-	if( argc > 4 ){
-		MAX_LEVEL = atoi(argv[4]);
-	}
-
-	if( argc > 5 ){
-		workUnitId = argv[5];
-		printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
-	}
-
 	diagramToBitBoard( board, initialBoard);
-	printBitBoard( board );
 
-	// TODO: implementer dette som flyttemekanisme
-	/*
-	printLongAsBitBoard( board[IDX_WHITE_ROOKS] );
-	board[IDX_WHITE_ROOKS] ^= A1_MASK|B1_MASK;
-	board[IDX_WHITE_PIECES] ^= A1_MASK|B1_MASK;
-	board[IDX_ALL_PIECES] ^= A1_MASK|B1_MASK;
-	printLongAsBitBoard( board[IDX_WHITE_ROOKS] );
-	printBitBoard( board );
+	board[IDX_CASTLING] = 0;
 
-	return 0;
-	*/
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
 
@@ -224,21 +196,16 @@ int main( int argc, char **argv){
 
 	unsigned long total = printStats();
 
-	printf("\nTotal valid moves found : %lu \n" ,total);
+	printf("\nTotal valid moves: %lu \n" ,total);
+	printf("Time: %ld.%09ld \n", (unsigned long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
 
-	printf("Time spent: %ld.%09ld \n", (unsigned long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
-
-	printf( "%lu makeNewBoardInvocations\n", makeNewBoardInvocations );
-	printf( "%lu isSquaresThreatenedByColorInvocations\n", isSquaresThreatenedByColorInvocations );
-	printf( "%lu influenceMapForSquareInvocations\n", influenceMapForSquareInvocations );
-	printf( "%lu moveLinearInvocations\n", moveLinearInvocations );
 
 	return 0;
 } // end main
 
 unsigned long printStats(){
 
-	printf( "%5s\t%20s\t%15s\t%10s\t%10s\t%10s\t%15s\t%10s\t%10s\n",
+	printf( "%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
 			"Depth",
 			"Nodes",
 			"Caps",
@@ -253,46 +220,35 @@ unsigned long printStats(){
 	static unsigned long total = 0;
 
 	for (int t = 0; t < MAX_LEVEL+1; t++) {
-		printf("%5d",t);
-		printf("\t%20lu",numMoves[t]);
-		printf("\t%15lu",numCaptures[t]);
-		printf("\t%10lu",numEP[t]);
-		printf("\t%10lu",numCastles[t]);
-		printf("\t%10lu",numPromos[t]);
-		printf("\t%15lu",numChecks[t]);
-		printf("\t%10lu",numCheckmates[t]);
-		printf("\t%10lu\n",numStalemates[t]);
+		printf("%d",t);
+		printf(",%lu",numMoves[t]);
+		printf(",%lu",numCaptures[t]);
+		printf(",%lu",numEP[t]);
+		printf(",%lu",numCastles[t]);
+		printf(",%lu",numPromos[t]);
+		printf(",%lu",numChecks[t]);
+		printf(",%lu",numCheckmates[t]);
+		printf(",%lu\n",numStalemates[t]);
 		total += numMoves[t];
 	}
+
 	printf("\n");
 	fflush(stdout);
 	return total;
 
 }
 
-
 /************************************************************************************************************
- **																										**
- **												 ENGINE												 **
- **																										**
+ **																										   **
+ **												 ENGINE												       **
+ **																										   **
  ************************************************************************************************************/
 
 unsigned long lastCountedMoveNum = 0;
 unsigned long lastCountedMoveNumCounted = 0;
 
 void dig( unsigned long board[] ){
-/*
-	if(	__builtin_popcountll( board[IDX_WHITE_KING] ) != 1){
-		printf("NOT ONE WHITE KING\n");
-		printBitBoard( board );
-		exit(1);
-	}
-	if(	__builtin_popcountll( board[IDX_BLACK_KING] ) != 1){
-		printf("NOT ONE BLACK KING\n");
-		printBitBoard( board );
-		exit(1);
-	}
-*/
+
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
 		 || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
 	) {
@@ -311,8 +267,6 @@ void dig( unsigned long board[] ){
 int findAllPossibleMoves2( unsigned long originalBoard[]) {
 
 	int numMovesFound = 0;
-
-
 
 	if (originalBoard[IDX_TURN] == WHITE_MASK) { // turn == white
 
@@ -336,9 +290,7 @@ int findAllPossibleMoves2( unsigned long originalBoard[]) {
 		numMovesFound += moveBlackKing( originalBoard );
 
 	}
-
 	return numMovesFound;
-
 }
 
 
@@ -386,10 +338,6 @@ int moveWhiteKing( unsigned long b[] ){
 
 	}
 
-	//   4249398904
-	//  -3320034397
-	//  = 929364507
-
 	if( (b[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ){
 		if( !(B1_C1_D1_MASK & allPieces) ){
 			b[IDX_WHITE_KING] = C1_MASK; // King will end up on this square
@@ -434,11 +382,9 @@ int moveWhiteKing( unsigned long b[] ){
 			}
 			b[IDX_WHITE_KING] = pieceMap;
 		}
-
 	}
 
 	return numMovesFound;
-
 
 }
 
