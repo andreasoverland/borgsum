@@ -10,4 +10,4 @@ Super Simple Chess Engine
 - How to run : ./chessengine
 
 to make diagrams for input
-cat testbatch.txt|xargs -n 5  sh -c 'echo $0 $1 $2 $4'  
+cat testbatch.txt|xargs -n 5  sh -c 'echo \"$1\" $2 $3 $4 $0'  
