@@ -1,0 +1,14 @@
+2 "rn..kbnr pppqpppp ........ ...p.... ....P.b. ...P.... PPP..PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. ..N..... PPPP.PPP R.B.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. ..N..... PPPP.PPP RNBQKB.R" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. ..P..... PP.P.PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. ..Q..... PPPP.PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. .B...... PPPP.PPP RNBQK.NR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. .P...... P.PP.PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. .Q...... PPPP.PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. N....... PPPP.PPP R.B.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. P....... .PPP.PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.b. Q....... PPPP.PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.bP ........ PPPP.PP. RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....P.bQ ........ PPPP.PPP RNB.KBNR" w KQkq 4
+1 "rn..kbnr pppqpppp ........ ...p.... ....PPb. ........ PPPP..PP RNB.KBNR" w KQkq 4

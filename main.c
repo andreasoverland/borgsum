@@ -24,7 +24,8 @@ typedef enum { FALSE, TRUE } boolean;
 // TODO:
 // 1. Log discovery checks, double checks and stalemate
 // 2. Implement ^ for moving, instead of &~ and then |. Do it in makeBlack/WhiteMove
-// 3.
+// 3. Improve argv parsing prefix args with -
+// 4. add -f for file input
 
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
@@ -69,7 +70,7 @@ void printBitBoard( unsigned long board[] );
 void diagramToBitBoard( unsigned long board[], char diagram[] );
 void printLongAsBitBoard( unsigned long bitstream );
 void printCompactBoard( unsigned long board[] );
-
+void parseArguments( int, char** argv, char *initialBoard );
 
 
 /*** LEVEL ***/
@@ -96,6 +97,24 @@ char *workUnitId = NULL;
 
 int main( int argc, char **argv){
 
+
+	FILE *fp;
+   	char buff[255];
+
+	char *filename = "chessengine.txt";
+
+	if( argc == 2 ){
+		filename = argv[1];
+	}
+
+   	fp = fopen( filename , "r");
+	while( fgets(buff, 255, (FILE*)fp) != NULL ){
+    	printf("%s", buff );
+	}
+
+ 	fclose(fp);
+
+	return 0;
 
 	/*char *initialBoard = "\
 						 r n b q k b n r\
@@ -141,21 +160,13 @@ int main( int argc, char **argv){
 						R . . . K . . R";
 
 
+	parseArguments( argc, argv, initialBoard );
 
 
 	unsigned long board[NUM_BYTES];
 
-	if( argc > 1 ){
-		if( strcmp(argv[1],"SLEEP") ==0 ){
-        	printf("SLEEPING");
-			fflush(stdout);
-			sleep(60);
-			return 0;
-		}
-		initialBoard = argv[1];
-	}
 
-	diagramToBitBoard( board, initialBoard);
+
 	//board[IDX_TURN] = BLACK_MASK;
 	// board[IDX_CASTLING] =0;
 	// MASK_CASTLING_BLACK_KING_SIDE|MASK_CASTLING_BLACK_QUEEN_SIDE;
@@ -182,6 +193,7 @@ int main( int argc, char **argv){
 		printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
 	}
 
+	diagramToBitBoard( board, initialBoard);
 	printBitBoard( board );
 
 	// TODO: implementer dette som flyttemekanisme
@@ -1673,9 +1685,11 @@ void makeBlackMove( unsigned long move[], int pieceMapIndex, unsigned long moveT
 
 int calculateWhiteKingCheckStatus( unsigned long board[] ){
 
+	// TODO: i følge stats, er det den brykke som ble flytta sist som utgjorde trusselen
+
+
 	unsigned long king = board[IDX_WHITE_KING];
 	unsigned long idx = __builtin_ctzll( king );
-
 
 
 	if( KNIGHT_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS] ){
@@ -1767,9 +1781,10 @@ int calculateWhiteKingCheckStatus( unsigned long board[] ){
 				break;
 			}
 		}
-		}
-		// now for the vector threats. a piece may be on the map, but can be blocked
-		if( QR_ATTACK_MAPS[idx] & (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS])){
+	}
+
+	// now for the vector threats. a piece may be on the map, but can be blocked
+	if( QR_ATTACK_MAPS[idx] & (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS])){
 
 		// need to check each direction for a block
 		unsigned long qr = (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS]);
@@ -1781,7 +1796,6 @@ int calculateWhiteKingCheckStatus( unsigned long board[] ){
 		if( __builtin_popcountll (test ) == 1){
 			return MASK_WHITE_KING_CHECKED;
 		}
-
 
 		int rank = idx >> 3;
 		int file = idx & 7;
