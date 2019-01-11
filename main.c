@@ -77,7 +77,7 @@ void parseArguments( int, char** argv, char *initialBoard );
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-int MAX_LEVEL = 5;
+int MAX_LEVEL = 6;
 
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]	 	= {0,0,0,0,0,0,0,0,0,0,0};
@@ -86,6 +86,7 @@ unsigned long numCastles[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numPromos[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numChecks[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCheckmates[] 	= {0,0,0,0,0,0,0,0,0,0,0};
+unsigned long numStalemates[] 	= {0,0,0,0,0,0,0,0,0,0,0};
 
 unsigned long makeNewBoardInvocations = 0;
 unsigned long isSquaresThreatenedByColorInvocations = 0;
@@ -125,7 +126,7 @@ int main( int argc, char **argv){
 						 . . . . . . . .\
 						 P P P P P P P P\
 						 R N B Q K B N R";
-*/
+//*/
 
 	 /*char *initialBoard = "\
 						r . . . . . . k\
@@ -148,7 +149,7 @@ int main( int argc, char **argv){
 						 . P P P P P P .\
 						 R . . . K . . R";*/
 
-
+/*
 	char *initialBoard = "\
 						r . . . k . . r\
 						p . p p q p b .\
@@ -158,6 +159,7 @@ int main( int argc, char **argv){
 						. . N . . Q . p\
 						P P P B B P P P\
 						R . . . K . . R";
+*/
 
 
 	parseArguments( argc, argv, initialBoard );
@@ -218,7 +220,7 @@ int main( int argc, char **argv){
 		ts2.tv_sec--;
 	}
 
-	int l = 14;
+
 
 	unsigned long total = printStats();
 
@@ -236,7 +238,7 @@ int main( int argc, char **argv){
 
 unsigned long printStats(){
 
-	printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
+	printf( "%5s\t%20s\t%15s\t%10s\t%10s\t%10s\t%15s\t%10s\t%10s\n",
 			"Depth",
 			"Nodes",
 			"Caps",
@@ -244,20 +246,22 @@ unsigned long printStats(){
 			"Castles",
 			"Promos",
 			"Checks",
-			"Mates"
+			"Mates",
+			"Stalemates"
 	);
 
 	static unsigned long total = 0;
 
 	for (int t = 0; t < MAX_LEVEL+1; t++) {
-		printf("%3d",t);
+		printf("%5d",t);
 		printf("\t%20lu",numMoves[t]);
-		printf("\t%20lu",numCaptures[t]);
+		printf("\t%15lu",numCaptures[t]);
 		printf("\t%10lu",numEP[t]);
 		printf("\t%10lu",numCastles[t]);
 		printf("\t%10lu",numPromos[t]);
-		printf("\t%20lu",numChecks[t]);
-		printf("\t%20lu\n",numCheckmates[t]);
+		printf("\t%15lu",numChecks[t]);
+		printf("\t%10lu",numCheckmates[t]);
+		printf("\t%10lu\n",numStalemates[t]);
 		total += numMoves[t];
 	}
 	printf("\n");
@@ -277,7 +281,7 @@ unsigned long lastCountedMoveNum = 0;
 unsigned long lastCountedMoveNumCounted = 0;
 
 void dig( unsigned long board[] ){
-
+/*
 	if(	__builtin_popcountll( board[IDX_WHITE_KING] ) != 1){
 		printf("NOT ONE WHITE KING\n");
 		printBitBoard( board );
@@ -288,9 +292,7 @@ void dig( unsigned long board[] ){
 		printBitBoard( board );
 		exit(1);
 	}
-
-
-
+*/
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
 		 || (board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] != 0) // Include to test for mates on the last level
 	) {
@@ -298,10 +300,9 @@ void dig( unsigned long board[] ){
 		if (numMoves == 0 && board[IDX_CHECK_STATUS] != 0 ) {
 			board[IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
 		}
-		else if( numMoves == 0){
-			board[IDX_CHECK_STATUS] |= MASK_KING_IS_STALEMATED;
+		if( numMoves == 0 && board[IDX_CHECK_STATUS] == 0){
+			board[IDX_CHECK_STATUS] = MASK_KING_IS_STALEMATED;
 		}
-
 	}
 	count(board);
 
@@ -385,6 +386,9 @@ int moveWhiteKing( unsigned long b[] ){
 
 	}
 
+	//   4249398904
+	//  -3320034397
+	//  = 929364507
 
 	if( (b[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ){
 		if( !(B1_C1_D1_MASK & allPieces) ){
@@ -1641,8 +1645,11 @@ void makeBlackBitPromos( unsigned long board[], unsigned long newPieceMap ){
 void makeNewBoard( unsigned long oldBoard[], unsigned long newBoard[]) {
 
 	makeNewBoardInvocations++;
-	memset(newBoard+NUM_BYTES_TO_COPY, 0, sizeof(unsigned long)*(NUM_BYTES-NUM_BYTES_TO_COPY));
+
 	memcpy(newBoard, oldBoard,	sizeof(unsigned long)*NUM_BYTES_TO_COPY);
+	newBoard[IDX_CHECK_STATUS] = 0;
+	newBoard[IDX_LAST_MOVE_WAS] = 0;
+	newBoard[IDX_EP_IDX] = 0;
 
 	newBoard[IDX_MOVE_ID] = makeNewBoardInvocations;
 	newBoard[IDX_PARENT_MOVE_ID] = oldBoard[IDX_MOVE_ID];
@@ -1714,7 +1721,6 @@ int calculateWhiteKingCheckStatus( unsigned long board[] ){
 		// if the only pieces intersecting the attackmap is a Q or B, then white
 		// is in check
 		unsigned long test = allPieces & QB_ATTACK_MAPS[idx];
-
 
 		if( __builtin_popcountll (test ) == 1){
 			return MASK_WHITE_KING_CHECKED;
@@ -2063,6 +2069,9 @@ void count(unsigned long b[]) {
 	}
 	if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_MATED) ) {
 		numCheckmates[level]++;
+	}
+	if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_STALEMATED) ) {
+		numStalemates[level]++;
 	}
 
 }

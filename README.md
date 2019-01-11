@@ -2,7 +2,6 @@
 ### by Andreas Øverland - andreasoverland@gmail.com
 
 
-
 Super Simple Chess Engine
 
 - Status : Working on finding moves as fast as possible. No evaluation yet. Single thread for simplicity.
@@ -12,4 +11,4 @@ Super Simple Chess Engine
 
 
 
-cat testbatch.txt|xargs -n 4 sh -c './chessengine "\"$1\"" $2 $3 4'  
+cat testbatch.txt|xargs -n 4 sh -c './chessengine "\"$1\"" $2 $3 2 `md5 -qs "$1"` > res/`md5 -qs "$1"`_$0.txt'  
