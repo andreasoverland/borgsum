@@ -10,6 +10,16 @@
 typedef enum { FALSE, TRUE } boolean;
 
 
+// Logic for testing threats in quadrants
+/*
+
+if( board[IDX_WHITE_KING] > board[IDX_BLACK_QUEENS] ){
+	if( (QB_ATTACK_MAPS[kingIndex] & board[IDX_BLACK_QUEENS]) > (QB_ATTACK_MAPS[kingIndex] & board[IDX_ALL_PIECES] & ~board[IDX_BLACK_QUEENS] )) {
+		printf( "White king is in check, bit test 1.\n");
+	}
+}
+
+*/
 
 // Authors
 // Andreas Øverland
