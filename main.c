@@ -37,6 +37,7 @@ if( board[IDX_WHITE_KING] > board[IDX_BLACK_QUEENS] ){
 // 3. DONE always exopects a file input
 // 4. on check on last level only check until the first valid move is found
 // 5. check stalemate counting for with and black maybe bugging for black
+// 6. Generate quadrant attack maps (64*8) for faster check testing
 
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
@@ -88,7 +89,7 @@ void printCompactBoard( unsigned long board[] );
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-int MAX_LEVEL = 8;
+int MAX_LEVEL = 5;
 
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]	 	= {0,0,0,0,0,0,0,0,0,0,0};
@@ -159,7 +160,7 @@ int main( int argc, char **argv){
 						 . P P P P P P .\
 						 R . . . K . . R";*/
 
-/*
+
 	char *initialBoard = "\
 						r . . . k . . r\
 						p . p p q p b .\
@@ -169,10 +170,10 @@ int main( int argc, char **argv){
 						. . N . . Q . p\
 						P P P B B P P P\
 						R . . . K . . R";
-*/
 
 
-	char *initialBoard = "\
+
+	/*char *initialBoard = "\
 					. . . . k . . r\
 					. . . . . . . .\
 					. . . . . . . .\
@@ -182,14 +183,14 @@ int main( int argc, char **argv){
 					. . . . . . . .\
 					R . . . K . . .";
 
-
+*/
 
 
 	unsigned long board[NUM_BYTES];
 
 	diagramToBitBoard( board, initialBoard);
 
-	board[IDX_CASTLING] = 0;
+//	board[IDX_CASTLING] = 0;
 
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
