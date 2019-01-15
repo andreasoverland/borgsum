@@ -10,6 +10,7 @@
 typedef enum { FALSE, TRUE } boolean;
 
 
+<<<<<<< HEAD
 // Logic for testing threats in quadrants
 /*
 
@@ -21,6 +22,8 @@ if( board[IDX_WHITE_KING] > board[IDX_BLACK_QUEENS] ){
 
 */
 
+=======
+>>>>>>> less spaceous data output
 // Authors
 // Andreas Øverland
 // Eva Solfrid Øverland
@@ -37,7 +40,11 @@ if( board[IDX_WHITE_KING] > board[IDX_BLACK_QUEENS] ){
 // 3. DONE always exopects a file input
 // 4. on check on last level only check until the first valid move is found
 // 5. check stalemate counting for with and black maybe bugging for black
+<<<<<<< HEAD
 // 6. Generate quadrant attack maps (64*8) for faster check testing
+=======
+// 6. rewrite diagram, create new for level 6, include multiplier
+>>>>>>> less spaceous data output
 
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
@@ -84,12 +91,15 @@ void printLongAsBitBoard( unsigned long bitstream );
 void printCompactBoard( unsigned long board[] );
 
 
-
 /*** LEVEL ***/
 /*** LEVEL ***/
 /*** LEVEL ***/
 
+<<<<<<< HEAD
 int MAX_LEVEL = 5;
+=======
+int MAX_LEVEL = 6;
+>>>>>>> less spaceous data output
 
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]	 	= {0,0,0,0,0,0,0,0,0,0,0};
@@ -110,25 +120,7 @@ char *workUnitId = NULL;
 
 int main( int argc, char **argv){
 
-
-	FILE *fp;
-   	char buff[255];
-
-	char *filename = "chessengine.txt";
-
-	if( argc == 2 ){
-		filename = argv[1];
-	}
-
-   	fp = fopen( filename , "r");
-	while( fgets(buff, 255, (FILE*)fp) != NULL ){
-    	printf("%s", buff );
-	}
-
- 	fclose(fp);
-
-
-	/*char *initialBoard = "\
+	char *initialBoard = "\
 						 r n b q k b n r\
 						 p p p p p p p p\
 						 . . . . . . . .\
@@ -137,6 +129,27 @@ int main( int argc, char **argv){
 						 . . . . . . . .\
 						 P P P P P P P P\
 						 R N B Q K B N R";
+						 // w KQkq 4";
+
+/*
+	FILE *fp;
+   	char buff[255];
+
+	char *filename = "chessengine.txt";
+
+	char initialBoard[255];
+
+
+   	fp = fopen( filename , "r");
+	while( fgets(buff, 255, (FILE*)fp) != NULL ){
+    	printf("%s", buff );
+		sprintf(initialBoard,"%s",buff);
+	}
+
+ 	fclose(fp);
+*/
+
+
 //*/
 
 	 /*char *initialBoard = "\
@@ -173,6 +186,7 @@ int main( int argc, char **argv){
 
 
 
+<<<<<<< HEAD
 	/*char *initialBoard = "\
 					. . . . k . . r\
 					. . . . . . . .\
@@ -184,13 +198,21 @@ int main( int argc, char **argv){
 					R . . . K . . .";
 
 */
+=======
+>>>>>>> less spaceous data output
 
 
 	unsigned long board[NUM_BYTES];
 
-	diagramToBitBoard( board, initialBoard);
+	printf("initial board : %s\n",initialBoard);
 
+	diagramToBitBoard( board, initialBoard);
+	printBitBoard( board);
+
+<<<<<<< HEAD
 //	board[IDX_CASTLING] = 0;
+=======
+>>>>>>> less spaceous data output
 
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
@@ -203,13 +225,10 @@ int main( int argc, char **argv){
 		ts2.tv_sec--;
 	}
 
-
-
 	unsigned long total = printStats();
 
 	printf("\nTotal valid moves: %lu \n" ,total);
 	printf("Time: %ld.%09ld \n", (unsigned long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
-
 
 	return 0;
 } // end main
@@ -2211,6 +2230,13 @@ void printBitBoard( unsigned long board[] ){
 
 }
 
+/*
+0..63 = board
+65 = Turn
+67..71 castling
+73 calculate to depth
+rn..kbnrpppqpppp...........p........P.bP........PPPP.PP.RNB.KBNR w KQkq 4 1
+*/
 
 void diagramToBitBoard( unsigned long board[], char diagram[] ){
 

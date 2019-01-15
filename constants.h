@@ -36,15 +36,15 @@ const int IDX_BLACK_PIECES   = 15;
 
 const int IDX_ALL_PIECES     = 16;
 
-const int IDX_CASTLING 		 = 17; // not to be confused with castling as last move
+const int IDX_CASTLING 		 = 17; // castling rights. not to be confused with castling as last move
 const int IDX_MOVE_NUM 		 = 18;
 const int IDX_TURN 			 = 19;
 
-const int NUM_BYTES_TO_COPY  = 19;
+const int NUM_BYTES_TO_COPY  = 20; // keep divisable by 2 or 4 ?
 
-const int IDX_CHECK_STATUS   = 20;
-const int IDX_LAST_MOVE_WAS  = 21; // 5 bits, status for last move,
-const int IDX_EP_IDX         = 22; // 0..63, 6 bits
+const int IDX_CHECK_STATUS   = 21;
+const int IDX_LAST_MOVE_WAS  = 22; // 5 bits, status for last move,
+const int IDX_EP_IDX         = 23; // 0..63, 6 bits
 
 const int NUM_BYTES          = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
