@@ -10,7 +10,6 @@
 typedef enum { FALSE, TRUE } boolean;
 
 
-<<<<<<< HEAD
 // Logic for testing threats in quadrants
 /*
 
@@ -22,8 +21,6 @@ if( board[IDX_WHITE_KING] > board[IDX_BLACK_QUEENS] ){
 
 */
 
-=======
->>>>>>> less spaceous data output
 // Authors
 // Andreas Øverland
 // Eva Solfrid Øverland
@@ -40,11 +37,7 @@ if( board[IDX_WHITE_KING] > board[IDX_BLACK_QUEENS] ){
 // 3. DONE always exopects a file input
 // 4. on check on last level only check until the first valid move is found
 // 5. check stalemate counting for with and black maybe bugging for black
-<<<<<<< HEAD
-// 6. Generate quadrant attack maps (64*8) for faster check testing
-=======
 // 6. rewrite diagram, create new for level 6, include multiplier
->>>>>>> less spaceous data output
 
 void diagramToByteBoard( unsigned long board[], char diagram[] );
 void printDiagram( unsigned long board[] );
@@ -95,11 +88,7 @@ void printCompactBoard( unsigned long board[] );
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-<<<<<<< HEAD
 int MAX_LEVEL = 5;
-=======
-int MAX_LEVEL = 6;
->>>>>>> less spaceous data output
 
 unsigned long numMoves[]		= {0,0,0,0,0,0,0,0,0,0,0};
 unsigned long numCaptures[]	 	= {0,0,0,0,0,0,0,0,0,0,0};
@@ -173,7 +162,7 @@ int main( int argc, char **argv){
 						 . P P P P P P .\
 						 R . . . K . . R";*/
 
-
+/*
 	char *initialBoard = "\
 						r . . . k . . r\
 						p . p p q p b .\
@@ -184,22 +173,8 @@ int main( int argc, char **argv){
 						P P P B B P P P\
 						R . . . K . . R";
 
-
-
-<<<<<<< HEAD
-	/*char *initialBoard = "\
-					. . . . k . . r\
-					. . . . . . . .\
-					. . . . . . . .\
-					. . . . . . . .\
-					. . . . . . . .\
-					. . . . . . . .\
-					. . . . . . . .\
-					R . . . K . . .";
-
 */
-=======
->>>>>>> less spaceous data output
+
 
 
 	unsigned long board[NUM_BYTES];
@@ -209,10 +184,6 @@ int main( int argc, char **argv){
 	diagramToBitBoard( board, initialBoard);
 	printBitBoard( board);
 
-<<<<<<< HEAD
-//	board[IDX_CASTLING] = 0;
-=======
->>>>>>> less spaceous data output
 
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
@@ -244,7 +215,7 @@ unsigned long printStats(){
 			"Promos",
 			"Checks",
 			"Mates",
-			"Stalemates"
+			"S.mates"
 	);
 
 	static unsigned long total = 0;
@@ -1630,7 +1601,7 @@ void makeNewBoard( unsigned long oldBoard[], unsigned long newBoard[]) {
 	newBoard[IDX_MOVE_ID] = makeNewBoardInvocations;
 	newBoard[IDX_PARENT_MOVE_ID] = oldBoard[IDX_MOVE_ID];
  	newBoard[IDX_MOVE_NUM]++;
-	newBoard[IDX_TURN] = oldBoard[IDX_TURN] ^ TURN_INVERTER;
+	newBoard[IDX_TURN] ^= TURN_INVERTER;
 	newBoard[IDX_CHECK_STATUS] = 0;
 
 }
