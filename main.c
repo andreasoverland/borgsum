@@ -1712,7 +1712,7 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 		}
 
 
-		if( QB_ATTACK_MAPS_2[idx] && (qb & QB_ATTACK_MAPS_2[idx])){
+		if( qb & QB_ATTACK_MAPS_2[idx] ){
 			if (king < (qb & QB_ATTACK_MAPS_2[idx])) {
 				if ( __builtin_ctzll(qb & QB_ATTACK_MAPS_2[idx]) <= __builtin_ctzll(QB_ATTACK_MAPS_2[idx] & allPieces) ) {
 					return MASK_WHITE_KING_CHECKED;
@@ -1733,6 +1733,7 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 				return MASK_WHITE_KING_CHECKED;
 			}
 		}
+
 		/*
 		int rank = idx >> 3;
 		int file = idx & 7;
@@ -1819,7 +1820,7 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 		// QR_ATTACK_MAPS_3[] = up
 		// QR_ATTACK_MAPS_4[] = left
 
-		/*
+
 		unsigned long allPiecesExceptQR = allPieces & ~qr;
 
 		if (king > (qr & (QR_ATTACK_MAPS_1[idx] | QR_ATTACK_MAPS_2[idx]))) {
@@ -1834,23 +1835,24 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 
 
 		if (king < (qr & QR_ATTACK_MAPS_3[idx])) {
-			if ((qr & QR_ATTACK_MAPS_3[idx]) < ((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR))) {
+			if (  __builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]) < __builtin_ctzll((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR))) {
 				return MASK_WHITE_KING_CHECKED;
 			}
 			if ((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR) == 0) {
 				return MASK_WHITE_KING_CHECKED;
 			}
 		}
+
 		if (king < (qr & QR_ATTACK_MAPS_4[idx])) {
-			if ((qr & QR_ATTACK_MAPS_4[idx]) < ((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR))) {
+			if ( __builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]) < __builtin_ctzll((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR))) {
 				return MASK_WHITE_KING_CHECKED;
 			}
 			if ((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR) == 0) {
 				return MASK_WHITE_KING_CHECKED;
 			}
 		}
-*/
 
+/*
 		int rank = idx >> 3;
 		int file = idx & 7;
 
@@ -1905,7 +1907,7 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 			if (testMap & allPieces) {
 				break;
 			}
-		}
+		}*/
 	}
 
 	return 0;
