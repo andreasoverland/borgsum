@@ -1699,9 +1699,6 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 		// QB_ATTACK_MAPS_3 up right
 		// QB_ATTACK_MAPS_4 down left
 
-
-
-
 		unsigned long allPiecesExceptQB = allPieces & ~qb;
 
 		if (king > (qb & (QB_ATTACK_MAPS_1[idx] | QB_ATTACK_MAPS_4[idx]))) {
@@ -1716,6 +1713,7 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 
 
 		if (king < (qb & QB_ATTACK_MAPS_2[idx])) {
+			// bug her :
 			/*if ((qb & QB_ATTACK_MAPS_2[idx]) < ((QB_ATTACK_MAPS_2[idx] & allPiecesExceptQB))) {
 				return MASK_WHITE_KING_CHECKED;
 			}*/
@@ -1723,7 +1721,10 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 				return MASK_WHITE_KING_CHECKED;
 			}
 		}
+
+
 		if (king < (qb & QB_ATTACK_MAPS_3[idx])) {
+			// bug her :
 			/*if ((qb & QB_ATTACK_MAPS_3[idx]) < ((QB_ATTACK_MAPS_3[idx] & allPiecesExceptQB))) {
 				return MASK_WHITE_KING_CHECKED;
 			}
