@@ -42,10 +42,10 @@ const int IDX_ALL_PIECES     = 16;
 const int IDX_CASTLING 		 = 17; // castling rights. not to be confused with castling as last move
 const int IDX_MOVE_NUM 		 = 18;
 const int IDX_TURN 			 = 19;
-const int IDX_KING_THREATS 	 = 20;
-
 const int NUM_BYTES_TO_COPY  = 20; // keep divisable by 2 or 4 ?
 
+// positions below will not be copied into next moves
+const int IDX_KING_THREATS 	 = 20;
 const int IDX_CHECK_STATUS   = 21;
 const int IDX_LAST_MOVE_WAS  = 22; // 5 bits, status for last move,
 const int IDX_EP_IDX         = 23; // 0..63, 6 bits
