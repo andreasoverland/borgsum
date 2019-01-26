@@ -35,7 +35,9 @@ if( board[IDX_WHITE_KING] > (board[IDX_BLACK_QUEENS] & qbAttackMap ) ){
 // Opa Bjørnar Øverland
 
 // TODO:
-// 1. Log discovery checks, double checks and stalemate
+// 1. Log discovery checks, double checks
+//    - make extra function to check for how the move affected the other king, which includes moved piece
+// DONE: log stalemate
 // 2. Implement ^ for moving, instead of &~ and then |. Do it in makeBlack/WhiteMove
 // 3. DONE always exopects a file input
 // 4. on check on last level only check until the first valid move is found
@@ -58,8 +60,10 @@ void count(unsigned long board[]);
 void makeNewBoard(unsigned long originalBoard[], unsigned long newBoard[]);
 
 int calculateWhiteKingCheckStatus(unsigned long board[]);
+int calculateWhiteKingCheckStatus2(unsigned long board[], unsigned long lastMoveMap );
 
 int calculateBlackKingCheckStatus(unsigned long board[]);
+unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned long lastMoveMap );
 
 int findAllPossibleMoves2(unsigned long originalBoard[]);
 
@@ -167,18 +171,17 @@ int main(int argc, char **argv) {
 //*/
 
 
+	char *initialBoard = "\
+						 . B . . Q . . B\
+						 . . B . Q . Q .\
+						 . . N . . . . .\
+						 R Q . . k . R Q\
+						 . . . . . P . .\
+						 . . . . . N . .\
+						 . B . . R . . Q\
+						 Q . . . R K . .";
 
-/*	char *initialBoard = "\
-						 r . . . k . . r\
-						 . p p p p p p .\
-						 . . . . . . . .\
-						 . . . . . . . .\
-						 . . . . . . . .\
-						 . . . . . . . .\
-						 . P P P P P P .\
-						 R . . . K . . R";*/
-
-
+/*
 	char *initialBoard = "\
 						r . . . k . . r\
 						p . p p q p b .\
@@ -188,7 +191,7 @@ int main(int argc, char **argv) {
 						. . N . . Q . p\
 						P P P B B P P P\
 						R . . . K . . R";
-
+*/
 
 /*
 
@@ -208,6 +211,8 @@ int main(int argc, char **argv) {
 
 	diagramToBitBoard(board, initialBoard);
 	printBitBoard(board);
+	printLongAsBitBoard( calculateBlackKingCheckStatus2( board, A1 ) );
+	return 0;
 
 
 	struct timespec ts1, ts2;
@@ -1733,69 +1738,6 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 			}
 		}
 
-		/*
-		int rank = idx >> 3;
-		int file = idx & 7;
-
-		unsigned long testMap = king;
-
-		int maxM = 7-rank;
-		maxM = 7-file < maxM ? 7-file : maxM;
-		for( int m=0;m<maxM;m++){
-			testMap <<= 9;
-
-			if( testMap & qb ){
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if( testMap & allPieces){
-				break;
-			}
-		}
-
-		maxM = 7-rank;
-		maxM = file < maxM ? file : maxM;
-		testMap = king;
-		for( int m=0;m<maxM;m++){
-
-			testMap <<= 7;
-
-			if( testMap & qb ){
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if( testMap & allPieces){
-				break;
-			}
-		}
-
-
-		maxM = rank;
-		maxM = maxM > (7-file) ? (7-file) : maxM;
-		testMap = king;
-		for( int m=0;m<maxM;m++){
-			testMap >>= 7;
-
-			if( testMap & qb ){
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if( testMap & allPieces){
-				break;
-			}
-		}
-
-		maxM = rank;
-		maxM = maxM > file ? file : maxM;
-		testMap = king;
-		for( int m=0;m<maxM;m++){
-			testMap >>= 9;
-
-			if( testMap & qb ){
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if( testMap & allPieces){
-				break;
-			}
-		}*/
-
 	}
 
 	// now for the vector threats. a piece may be on the map, but can be blocked
@@ -1818,7 +1760,6 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 		// QR_ATTACK_MAPS_2[] = down
 		// QR_ATTACK_MAPS_3[] = up
 		// QR_ATTACK_MAPS_4[] = left
-
 
 		unsigned long allPiecesExceptQR = allPieces & ~qr;
 
@@ -1851,62 +1792,6 @@ int calculateWhiteKingCheckStatus(unsigned long board[]) {
 			}
 		}
 
-/*
-		int rank = idx >> 3;
-		int file = idx & 7;
-
-		int maxM = file;
-		unsigned long testMap = king;
-
-		for (int m = 0; m < maxM; m++) {
-			testMap >>= 1;
-			if (testMap & qr) {
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = 7 - file;
-		testMap = king;
-		for (int m = 0; m < maxM; m++) {
-			testMap <<= 1;
-			if (testMap & qr) {
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = rank;
-		testMap = king;
-
-		for (int m = 0; m < maxM; m++) {
-			testMap >>= 8;
-			if (testMap & qr) {
-				//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = 7 - rank;
-		testMap = king;
-
-		for (int m = 0; m < maxM; m++) {
-			testMap <<= 8;
-			if (testMap & qr) {
-				//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
-				return MASK_WHITE_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}*/
 	}
 
 	return 0;
@@ -1962,10 +1847,13 @@ int calculateBlackKingCheckStatus(unsigned long board[]) {
 
 		if( qb & QB_ATTACK_MAPS_2[idx] ){
 			if (king < (qb & QB_ATTACK_MAPS_2[idx])) {
+
 				if ( __builtin_ctzll(qb & QB_ATTACK_MAPS_2[idx]) <= __builtin_ctzll(QB_ATTACK_MAPS_2[idx] & allPieces) ) {
 					return MASK_BLACK_KING_CHECKED;
 				}
+
 				if ((QB_ATTACK_MAPS_2[idx] & allPiecesExceptQB) == 0) {
+					printBitBoard( board );
 					return MASK_BLACK_KING_CHECKED;
 				}
 			}
@@ -1981,68 +1869,6 @@ int calculateBlackKingCheckStatus(unsigned long board[]) {
 			}
 		}
 
-		/*/ // keep for comparison, for now.
-
-		int rank = idx >> 3;
-		int file = idx & 7;
-
-		unsigned long testMap = king;
-
-		int maxM = 7 - rank;
-		maxM = 7 - file < maxM ? 7 - file : maxM;
-		for (int m = 0; m < maxM; m++) {
-			testMap <<= 9;
-
-			if (testMap & qb) {
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = 7 - rank;
-		maxM = file < maxM ? file : maxM;
-		testMap = king;
-		for (int m = 0; m < maxM; m++) {
-			testMap <<= 7;
-
-			if (testMap & qb) {
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-
-		maxM = rank;
-		maxM = maxM > (7 - file) ? (7 - file) : maxM;
-		testMap = king;
-		for (int m = 0; m < maxM; m++) {
-			testMap >>= 7;
-
-			if (testMap & qb) {
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = rank;
-		maxM = maxM > file ? file : maxM;
-		testMap = king;
-		for (int m = 0; m < maxM; m++) {
-			testMap >>= 9;
-
-			if (testMap & qb) {
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}//*/
 	}
 
 	// now for the vector threats. a piece may be on the map, but can be blocked
@@ -2095,68 +1921,142 @@ int calculateBlackKingCheckStatus(unsigned long board[]) {
 				return MASK_BLACK_KING_CHECKED;
 			}
 		}
-
-		/*
-
-		int rank = idx >> 3;
-		int file = idx & 7;
-
-		int maxM = file;
-		unsigned long testMap = king;
-
-		for (int m = 0; m < maxM; m++) {
-			testMap >>= 1;
-			if (testMap & qr) {
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = 7 - file;
-		testMap = king;
-		for (int m = 0; m < maxM; m++) {
-			testMap <<= 1;
-			if (testMap & qr) {
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = rank;
-		testMap = king;
-
-		for (int m = 0; m < maxM; m++) {
-			testMap >>= 8;
-			if (testMap & qr) {
-				//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-
-		maxM = 7 - rank;
-		testMap = king;
-
-		for (int m = 0; m < maxM; m++) {
-			testMap <<= 8;
-			if (testMap & qr) {
-				//printf( "KING IS THREATENED BY QR ATTACK MAP by >> 8\n");
-				return MASK_BLACK_KING_CHECKED;
-			}
-			if (testMap & allPieces) {
-				break;
-			}
-		}
-//*/
 	}
 
 	return 0;
+}
+
+// this is used to check for discovered and double checks
+unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned long lastMoveMap ) {
+
+	unsigned long king = board[IDX_BLACK_KING];
+	unsigned long idx = __builtin_ctzll(king);
+
+	unsigned long threat = 0;
+
+	threat = KNIGHT_ATTACK_MAPS[idx] & board[IDX_WHITE_KNIGHTS];
+	threat |=  BLACK_PAWN_ATTACK_MAPS[idx] & board[IDX_WHITE_PAWNS];
+
+
+	// now for the vector threats. a piece may be on the map, but can be blocked
+	if (QB_ATTACK_MAPS[idx] & (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS])) {
+
+		// need to check each direction for a block
+		unsigned long qb = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS]);
+		unsigned long allPieces = board[IDX_ALL_PIECES];
+
+		// if the only pieces intersecting the attackmap is a Q or B, then white
+		// is in check
+		unsigned long test = allPieces & QB_ATTACK_MAPS[idx];
+
+		if (__builtin_popcountll(test) == 1) {
+			threat |= allPieces & QB_ATTACK_MAPS[idx];
+		}
+		else {
+
+			unsigned long allPiecesExceptQB = allPieces & ~qb;
+
+			if (king > (qb & (QB_ATTACK_MAPS_1[idx] | QB_ATTACK_MAPS_4[idx]))) {
+
+				if ((qb & QB_ATTACK_MAPS_4[idx]) > ((QB_ATTACK_MAPS_4[idx] & allPiecesExceptQB))) {
+					threat |=  1l << ( 63 - __builtin_clzll( qb & QB_ATTACK_MAPS_4[idx] ) );
+				}
+				if ((qb & QB_ATTACK_MAPS_1[idx]) > ((QB_ATTACK_MAPS_1[idx] & allPiecesExceptQB))) {
+					threat |=  1l << ( 63 - __builtin_clzll( qb & QB_ATTACK_MAPS_1[idx] ) );
+				}
+			}
+
+
+			if( qb & QB_ATTACK_MAPS_2[idx] ){
+
+				if (king < (qb & QB_ATTACK_MAPS_2[idx])) {
+
+					if( __builtin_popcountll(qb & QB_ATTACK_MAPS_2[idx]) == 1 ){
+						threat |= qb & QB_ATTACK_MAPS_2[idx];
+					}
+					else {
+						unsigned long testThreat = __builtin_ctzll(qb & QB_ATTACK_MAPS_2[idx]);
+
+						if ( testThreat <= __builtin_ctzll(QB_ATTACK_MAPS_2[idx] & allPieces) ) {
+							threat |= (1L << testThreat);
+						}
+					}
+				}
+			}
+
+
+			if (king < (qb & QB_ATTACK_MAPS_3[idx])) {
+				if( __builtin_popcountll(qb & QB_ATTACK_MAPS_3[idx]) == 1 ){
+					threat |= qb & QB_ATTACK_MAPS_3[idx];
+				}
+				else {
+					unsigned long testThreat = __builtin_ctzll(qb & QB_ATTACK_MAPS_3[idx]);
+					if ( testThreat <= __builtin_ctzll((QB_ATTACK_MAPS_3[idx]  & allPieces))) {
+						threat |= (1L << testThreat);
+					}
+				}
+			}
+		}
+	}
+
+	// now for the vector threats. a piece may be on the map, but can be blocked
+	if (QR_ATTACK_MAPS[idx] & (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS])) {
+
+		// need to check each direction for a block
+		unsigned long qr = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS]);
+		unsigned long allPieces = board[IDX_ALL_PIECES];
+
+		// if the only pieces intersecting the attackmap is a Q or B, then white
+		// is in check
+		unsigned long test = allPieces & QR_ATTACK_MAPS[idx];
+		if (__builtin_popcountll(test) == 1) {
+			threat |= test;
+		}
+
+		// quadrant testing
+		// QR_ATTACK_MAPS_1[] = right
+		// QR_ATTACK_MAPS_2[] = down
+		// QR_ATTACK_MAPS_3[] = up
+		// QR_ATTACK_MAPS_4[] = left
+		unsigned long allPiecesExceptQR = allPieces & ~qr;
+
+		if (king > (qr & (QR_ATTACK_MAPS_1[idx] | QR_ATTACK_MAPS_2[idx]))) {
+
+			if( __builtin_popcountll(qr & QR_ATTACK_MAPS_1[idx] ) == 1){
+				threat |= qr & QR_ATTACK_MAPS_1[idx];
+			}
+			else if( __builtin_popcountll(qr & QR_ATTACK_MAPS_2[idx] )== 1){
+				threat |= qr & QR_ATTACK_MAPS_2[idx];
+			}
+			else {
+				if ((qr & QR_ATTACK_MAPS_2[idx]) > ((QR_ATTACK_MAPS_2[idx] & allPiecesExceptQR))) {
+					long testThreat = 1L << (63 - __builtin_clzll( (qr & QR_ATTACK_MAPS_2[idx] ) ));
+					threat |= testThreat;
+				}
+				if ((qr & QR_ATTACK_MAPS_1[idx]) > ((QR_ATTACK_MAPS_1[idx] & allPiecesExceptQR))) {
+					long testThreat = 1L << (63 - __builtin_clzll( (qr & QR_ATTACK_MAPS_1[idx] ) ));
+					threat |= testThreat;
+				}
+			}
+		}
+
+
+		if (king < (qr & QR_ATTACK_MAPS_3[idx])) {
+			if (  __builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]) < __builtin_ctzll((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR))) {
+
+				threat |= 1L << __builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]);
+				//return MASK_BLACK_KING_CHECKED;
+			}
+		}
+
+		if (king < (qr & QR_ATTACK_MAPS_4[idx])) {
+			if ( __builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]) < __builtin_ctzll((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR))) {
+				threat |= 1L << __builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]);
+			}
+		}
+	}
+
+	return threat;
 }
 
 
