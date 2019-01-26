@@ -1,19 +1,22 @@
 
 
-const int WHITE_MASK 								= 0b00001;
-const int BLACK_MASK 								= 0b00010;
-const int TURN_INVERTER 							= 0b00011;
+const int WHITE_MASK 								= 0b00000001;
+const int BLACK_MASK 								= 0b00000010;
+const int TURN_INVERTER 							= 0b00000011;
 
-const int MASK_LAST_MOVE_WAS_CAPTURE             	= 0b00001;
-const int MASK_LAST_MOVE_WAS_EP_STRIKE           	= 0b00010;
-const int MASK_LAST_MOVE_WAS_PROMO               	= 0b00100;
-const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE 	= 0b01000;
-const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE  	= 0b10000;
+const int MASK_LAST_MOVE_WAS_CAPTURE             	= 0b00000001;
+const int MASK_LAST_MOVE_WAS_EP_STRIKE           	= 0b00000010;
+const int MASK_LAST_MOVE_WAS_PROMO               	= 0b00000100;
+const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE 	= 0b00001000;
+const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE  	= 0b00010000;
 
-const int MASK_WHITE_KING_CHECKED 		 			= 0b00001;
-const int MASK_BLACK_KING_CHECKED 		 			= 0b00010;
-const int MASK_KING_IS_MATED             			= 0b00100;
-const int MASK_KING_IS_STALEMATED        			= 0b01000;
+const int MASK_WHITE_KING_CHECKED 		 			= 0b00000001;
+const int MASK_BLACK_KING_CHECKED 		 			= 0b00000010;
+const int MASK_KING_IS_MATED             			= 0b00000100;
+const int MASK_KING_IS_STALEMATED        			= 0b00001000;
+
+const int MASK_CHECK_TYPE_DOUBLE					= 0b00010000;
+const int MASK_CHECK_TYPE_DISCOVERED				= 0b00100000;
 
 const int IDX_MOVE_ID 	     =  0;
 const int IDX_PARENT_MOVE_ID =  1;
@@ -46,7 +49,6 @@ const int NUM_BYTES_TO_COPY  = 20; // keep divisable by 2 or 4 ?
 const int IDX_CHECK_STATUS   = 21;
 const int IDX_LAST_MOVE_WAS  = 22; // 5 bits, status for last move,
 const int IDX_EP_IDX         = 23; // 0..63, 6 bits
-
 
 const int NUM_BYTES          = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
