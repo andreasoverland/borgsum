@@ -139,7 +139,7 @@ int maxNumMoves = 0;
 char *workUnitId = NULL;
 
 int main(int argc, char **argv) {
-
+/*
 	char *initialBoard = "\
 						 r n b q k b n r\
 						 p p p p p p p p\
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 						 P P P P P P P P\
 						 R N B Q K B N R";
 						 // w KQkq 4";
-
+*/
 /*
 	FILE *fp;
    	char buff[255];
@@ -174,15 +174,27 @@ int main(int argc, char **argv) {
 
 
 	// for testing multiple checks on black king
-	/*char *initialBoard = "\
+	/*
+	char *initialBoard = "\
 						 . B . . Q . . B\
 						 . . B . Q . Q .\
 						 . . N . . . . .\
 						 R Q . . k . R Q\
 						 . . . . . P . .\
-						 . . . . . N . .\
+						 . . . . . N P .\
 						 . B . . R . . Q\
 						 Q . . . R K . .";*/
+
+	char *initialBoard = "\
+						 . . . . . . . q\
+						 q . . . . . B .\
+						 . B . . . . . .\
+						 . . . . . . . .\
+						 . . . k . . . .\
+						 . . . . . . . .\
+						 . Q . . . B . .\
+						 r . . . . . r .";
+
 
 	// for testing multiple checks on white king
 	/*char *initialBoard = "\
@@ -256,6 +268,12 @@ int main(int argc, char **argv) {
 
 	diagramToBitBoard(board, initialBoard);
 	printBitBoard(board);
+
+	unsigned long threat = calculateBlackKingCheckStatus2( board, A1 );
+	printf("Final threat:\n");
+	printLongAsBitBoard( threat );
+	printBitBoard( board );
+	return 0;
 
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
@@ -1992,8 +2010,6 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 	// now for the vector threats. a piece may be on the map, but can be blocked
 	if (QB_ATTACK_MAPS[idx] & (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS])) {
 
-
-
 		// need to check each direction for a block
 		unsigned long qb = (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS]);
 		unsigned long allPieces = board[IDX_ALL_PIECES];
@@ -2014,85 +2030,92 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 			// QB_ATTACK_MAPS_3 up right
 			// QB_ATTACK_MAPS_4 down left
 
+			// up left
+			if( qb & QB_ATTACK_MAPS_2[idx] ){
+				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
+				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_2[idx] ) == 1 ){
+					threat |= allPieces & QB_ATTACK_MAPS_2[idx];
+				}
+				else {
+					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+					int test = __builtin_ctzll( qb & QB_ATTACK_MAPS_2[idx] );
+					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
+					if( (allPieces & QB_ATTACK_MAPS_2[idx] ) == (qb & QB_ATTACK_MAPS_2[idx]) ){
+						threat |= 1L << test;
+					}
+					else {
+						int apnq = __builtin_ctzll( allPiecesExceptQB & QB_ATTACK_MAPS_2[idx] );
+						if( test < apnq ){
+							threat |= 1L << test;
+						}
+					}
 
+				}
+			}
+
+			// up right
+			if( qb & QB_ATTACK_MAPS_3[idx] ){
+				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
+				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_3[idx] ) == 1 ){
+					threat |= allPieces & QB_ATTACK_MAPS_3[idx];
+				}
+				else {
+					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+					int test = __builtin_ctzll( qb & QB_ATTACK_MAPS_3[idx] );
+					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
+					if( (allPieces & QB_ATTACK_MAPS_3[idx] ) == (qb & QB_ATTACK_MAPS_3[idx]) ){
+						threat |= 1L << test;
+					}
+					else {
+						int apnq = __builtin_ctzll( allPiecesExceptQB & QB_ATTACK_MAPS_3[idx] );
+						if( test < apnq ){
+							threat |= 1L << test;
+						}
+					}
+
+				}
+			}
+
+
+			// down right
 			if( qb & QB_ATTACK_MAPS_1[idx] ){
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_1[idx] ) == 1 ){
-					threat |= allPieces & QB_ATTACK_MAPS_1[idx];
+					threat |= qb & QB_ATTACK_MAPS_1[idx];
 				}
 				else {
-					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste er en Q eller B
+					int test = __builtin_clzll( qb & QB_ATTACK_MAPS_1[idx] );
 
-				}
-			}
-			/*
-			if (king > (qb & (QB_ATTACK_MAPS_1[idx] | QB_ATTACK_MAPS_4[idx]))) {
-
-				if ((qb & QB_ATTACK_MAPS_4[idx]) > ((QB_ATTACK_MAPS_4[idx] & allPiecesExceptQB))) {
-					threat |=  1l << ( 63 - __builtin_clzll( qb & QB_ATTACK_MAPS_4[idx] ) );
-					if( board[IDX_MOVE_ID] == 1261 ){
-						printf("DEBUG 2.1\n");
-						printLongAsBitBoard( threat );
-					}
-				}
-				if ((qb & QB_ATTACK_MAPS_1[idx]) > ((QB_ATTACK_MAPS_1[idx] & allPiecesExceptQB))) {
-					threat |=  1l << ( 63 - __builtin_clzll( qb & QB_ATTACK_MAPS_1[idx] ) );
-					if( board[IDX_MOVE_ID] == 1261 ){
-						printf("DEBUG 2.2\n");
-						printLongAsBitBoard( threat );
-					}
-				}
-			}*/
-
-
-			if( qb & QB_ATTACK_MAPS_2[idx] ){
-
-				if (king < (qb & QB_ATTACK_MAPS_2[idx])) {
-
-					if( __builtin_popcountll((qb|allPieces) & QB_ATTACK_MAPS_2[idx]) == 1 ){
-						threat |= qb & QB_ATTACK_MAPS_2[idx];
-						if( board[IDX_MOVE_ID] == 1261 ){
-							printf("DEBUG 3.1\n");
-							printLongAsBitBoard( threat );
-						}
-
+					if( (allPieces & QB_ATTACK_MAPS_1[idx] ) == (qb & QB_ATTACK_MAPS_1[idx]) ){
+						threat |= 1L << ( 63-test);
 					}
 					else {
-						unsigned long testThreat = __builtin_ctzll(qb & QB_ATTACK_MAPS_2[idx]);
-						if ( testThreat <= __builtin_ctzll(QB_ATTACK_MAPS_2[idx] & allPieces) ) {
-							threat |= (1L << testThreat);
-							if( board[IDX_MOVE_ID] == 1261 ){
-								printf("DEBUG 3.1\n");
-								printLongAsBitBoard( threat );
-							}
-
+						// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+						int apnq = __builtin_clzll( allPiecesExceptQB & QB_ATTACK_MAPS_1[idx] );
+						if( test < apnq ){
+							threat |= 1L << ( 63 - test );
 						}
 					}
 				}
-
-
 			}
-
-
-			if (king < (qb & QB_ATTACK_MAPS_3[idx])) {
-				if( __builtin_popcountll(qb & QB_ATTACK_MAPS_3[idx]) == 1 ){
-					threat |= qb & QB_ATTACK_MAPS_3[idx];
-					if( board[IDX_MOVE_ID] == 1261 ){
-						printf("DEBUG 5.1\n");
-						printLongAsBitBoard( threat );
-					}
+			// down left
+			if( qb & QB_ATTACK_MAPS_4[idx] ){
+				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
+				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_4[idx] ) == 1 ){
+					threat |= allPieces & QB_ATTACK_MAPS_4[idx];
 				}
 				else {
-					unsigned long testThreat = __builtin_ctzll(qb & QB_ATTACK_MAPS_3[idx]);
-					if ( testThreat <= __builtin_ctzll((QB_ATTACK_MAPS_3[idx]  & allPieces))) {
-						threat |= (1L << testThreat);
-						if( board[IDX_MOVE_ID] == 1261 ){
-							printf("DEBUG 6.1\n");
-							printLongAsBitBoard( threat );
-						}
+					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+					int apnq = __builtin_clzll( allPiecesExceptQB & QB_ATTACK_MAPS_4[idx] );
+					int test = __builtin_clzll( qb & QB_ATTACK_MAPS_4[idx] );
+					printLongAsBitBoard( 1L << ( 63 - apnq ) );
+					printLongAsBitBoard( 1L << ( 63 - test ) );
+					if( test < apnq ){
+						threat |= 1L << ( 63 - test );
 					}
 				}
 			}
+
 		}
 	}
 
