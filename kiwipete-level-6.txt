@@ -1,0 +1,27 @@
+A B C D E F G H
+8 r . . . k . . r
+7 p . p p q p b .
+6 b n . . p n p .
+5 . . . P N . . .
+4 . p . . P . . .
+3 . . N . . Q . p
+2 P P P B B P P P
+1 R . . . K . . R
+Move num: 0
+Move ID: 0
+Parent ID: 0
+Turn : White
+Castling: KQkq
+
+
+0, N: 1, Caps: 0, EP: 0, Cast: 0, Prom: 0, Checks: 0, Disc: 0, Disc(p): 0, Disc(c): 0, Disc(ep): 0, Dbl: 0, Dbl(p) : 0, Dbl(c) : 0, Dbl(ep) : 0, Mates: 0, S.Mates: 0
+1, N: 48, Caps: 8, EP: 0, Cast: 2, Prom: 0, Checks: 0, Disc: 0, Disc(p): 0, Disc(c): 0, Disc(ep): 0, Dbl: 0, Dbl(p) : 0, Dbl(c) : 0, Dbl(ep) : 0, Mates: 0, S.Mates: 0
+2, N: 2039, Caps: 351, EP: 1, Cast: 91, Prom: 0, Checks: 3, Disc: 0, Disc(p): 0, Disc(c): 0, Disc(ep): 0, Dbl: 0, Dbl(p) : 0, Dbl(c) : 0, Dbl(ep) : 0, Mates: 0, S.Mates: 0
+3, N: 97862, Caps: 17102, EP: 45, Cast: 3162, Prom: 0, Checks: 993, Disc: 0, Disc(p): 0, Disc(c): 0, Disc(ep): 0, Dbl: 0, Dbl(p) : 0, Dbl(c) : 0, Dbl(ep) : 0, Mates: 1, S.Mates: 0
+4, N: 4085603, Caps: 757163, EP: 1929, Cast: 128013, Prom: 15172, Checks: 25523, Disc: 48, Disc(p): 0, Disc(c): 18, Disc(ep): 0, Dbl: 6, Dbl(p) : 0, Dbl(c) : 3, Dbl(ep) : 0, Mates: 43, S.Mates: 0
+5, N: 193690690, Caps: 35043416, EP: 73365, Cast: 4993637, Prom: 8392, Checks: 3309887, Disc: 22540, Disc(p): 12, Disc(c): 6355, Disc(ep): 1, Dbl: 2645, Dbl(p) : 6, Dbl(c) : 1756, Dbl(ep) : 1, Mates: 30171, S.Mates: 0
+6, N: 8031647685, Caps: 1558445089, EP: 3577504, Cast: 184513607, Prom: 56627920, Checks: 92238050, Disc: 624730, Disc(p): 104, Disc(c): 288992, Disc(ep): 20, Dbl: 55014, Dbl(p) : 39, Dbl(c) : 27182, Dbl(ep) : 0, Mates: 360003, S.Mates: 0
+
+
+Total valid moves: 8229523928
+Time: 334.832367000

@@ -128,7 +128,13 @@ unsigned long numChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numCheckmates[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numStalemates[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numDiscoveryChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long numDiscoveryPromoChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long numDiscoveryCaptureChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long numDiscoveryEPChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numDoubleChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long numDoublePromoChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long numDoubleCaptureChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long numDoubleEPChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 unsigned long makeNewBoardInvocations = 0;
 unsigned long isSquaresThreatenedByColorInvocations = 0;
@@ -184,7 +190,7 @@ int main(int argc, char **argv) {
 						 . . . . . N P .\
 						 . B . . R . . Q\
 						 Q . . . R K . .";*/
-
+/*
 	char *initialBoard = "\
 						 . . . . . . . q\
 						 q . . . . . B .\
@@ -194,19 +200,20 @@ int main(int argc, char **argv) {
 						 . . . . . . . .\
 						 . Q . . . B . .\
 						 r . . . . . r .";
-
+*/
 
 	// for testing multiple checks on white king
-	/*char *initialBoard = "\
-						 . b . . q . . b\
-						 . . b . q . q .\
-						 . . n . . p . .\
-						 r q . . K . r q\
+	/*
+	char *initialBoard = "\
 						 . . . . . . . .\
-						 . . . . . n . .\
-						 . b . . r . . q\
-						 q . . . r k . .";*/
-
+						 . . . . . . . .\
+						 k . . . . . . .\
+						 . . . . R p . .\
+						 . . . . K R . .\
+						 . . . . R . . .\
+						 . . . . R . . .\
+						 . . . . . . . .";
+*/
 	// for testing discovered and double check against black king
 	// last move : bishop from D2 to E1
 /*	char *initialBoard = "\
@@ -235,8 +242,7 @@ int main(int argc, char **argv) {
 	*/
 
 
-
-/*
+	// kiwi pete
 	char *initialBoard = "\
 						r . . . k . . r\
 						p . p p q p b .\
@@ -246,34 +252,32 @@ int main(int argc, char **argv) {
 						. . N . . Q . p\
 						P P P B B P P P\
 						R . . . K . . R";
+
+
+
+/*	char *initialBoard = "\
+					   q . . . . . . .\
+					   . . . . . . . .\
+					   . . . . . . . .\
+					   K . . . . . . .\
+					   . . . . . . . .\
+					   . . . . . . . .\
+					   R . . . . . . .\
+					   . . . . . . k .";
 */
-
-/*
-
-	char *initialBoard = "\
-					   k q . . . . . q\
-					   . . b . . . b .\
-					   . . . R . r . .\
-					   . . . . K . . .\
-					   . . . . . r . .\
-					   . . R . . . b .\
-					   . b . . . . . q\
-					   P . . . . . . .";
-*/
-
-
-
 
 	unsigned long board[NUM_BYTES];
 
 	diagramToBitBoard(board, initialBoard);
 	printBitBoard(board);
 
-	unsigned long threat = calculateBlackKingCheckStatus2( board, A1 );
+/*
+	unsigned long threat = calculateWhiteKingCheckStatus2( board, A1 );
 	printf("Final threat:\n");
 	printLongAsBitBoard( threat );
 	printBitBoard( board );
 	return 0;
+*/
 
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
@@ -296,7 +300,7 @@ int main(int argc, char **argv) {
 
 unsigned long printStats() {
 
-	printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+	/*printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
 		   "Depth",
 		   "Nodes",
 		   "Caps",
@@ -308,7 +312,7 @@ unsigned long printStats() {
 		   "Dbl.Chk"
 		   "Mates",
 		   "S.mates"
-	);
+	);*/
 
 	static unsigned long total = 0;
 
@@ -321,9 +325,16 @@ unsigned long printStats() {
 		printf(", Prom: %lu", numPromos[t]);
 		printf(", Checks: %lu", numChecks[t]);
 		printf(", Disc: %lu", numDiscoveryChecks[t]);
-		printf(", Dlb: %lu", numDoubleChecks[t]);
+		printf(", Disc(p): %lu", numDiscoveryPromoChecks[t]);
+		printf(", Disc(c): %lu", numDiscoveryCaptureChecks[t]);
+		printf(", Disc(ep): %lu", numDiscoveryEPChecks[t]);
+		printf(", Dbl: %lu", numDoubleChecks[t]);
+		printf(", Dbl(p) : %lu", numDoublePromoChecks[t] );
+		printf(", Dbl(c) : %lu", numDoubleCaptureChecks[t] );
+		printf(", Dbl(ep) : %lu", numDoubleEPChecks[t] );
 		printf(", Mates: %lu", numCheckmates[t]);
 		printf(", S.Mates: %lu\n", numStalemates[t]);
+
 		total += numMoves[t];
 	}
 
@@ -357,8 +368,6 @@ void dig(unsigned long board[]) {
 			board[IDX_CHECK_STATUS] = MASK_KING_IS_STALEMATED;
 		}
 	}
-
-
 
 	count(board);
 
@@ -1999,13 +2008,14 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 	//board[IDX_CHECK_STATUS] = calculateBlackKingCheckStatus(board);
 	//return 0;
 
+
 	unsigned long king = board[IDX_BLACK_KING];
 	unsigned long idx = __builtin_ctzll(king);
 
 	unsigned long threat = 0;
 
 	threat = KNIGHT_ATTACK_MAPS[idx] & board[IDX_WHITE_KNIGHTS];
-	threat |=  WHITE_PAWN_ATTACK_MAPS[idx] & board[IDX_WHITE_PAWNS];
+	threat |=  BLACK_PAWN_ATTACK_MAPS[idx] & board[IDX_WHITE_PAWNS];
 
 	// now for the vector threats. a piece may be on the map, but can be blocked
 	if (QB_ATTACK_MAPS[idx] & (board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS])) {
@@ -2108,8 +2118,6 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 					int apnq = __builtin_clzll( allPiecesExceptQB & QB_ATTACK_MAPS_4[idx] );
 					int test = __builtin_clzll( qb & QB_ATTACK_MAPS_4[idx] );
-					printLongAsBitBoard( 1L << ( 63 - apnq ) );
-					printLongAsBitBoard( 1L << ( 63 - test ) );
 					if( test < apnq ){
 						threat |= 1L << ( 63 - test );
 					}
@@ -2130,10 +2138,6 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 		// is in check
 		unsigned long test = allPieces & QR_ATTACK_MAPS[idx];
 		if (__builtin_popcountll(test) == 1) {
-			if( board[IDX_MOVE_ID] == 1261 ){
-				printf("DEBUG 7.1\n");
-				printLongAsBitBoard( threat );
-			}
 			threat |= test;
 		}
 		else {
@@ -2146,60 +2150,39 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 
 			if (king > (qr & (QR_ATTACK_MAPS_1[idx] | QR_ATTACK_MAPS_2[idx]))) {
 
-				if (__builtin_popcountll( (qr|allPieces) & QR_ATTACK_MAPS_1[idx]) == 1) {
+				if (__builtin_popcountll( qr & QR_ATTACK_MAPS_1[idx]) == 1 && __builtin_popcountll( allPieces & QR_ATTACK_MAPS_1[idx]) == 1) {
 					threat |= qr & QR_ATTACK_MAPS_1[idx];
-					if( board[IDX_MOVE_ID] == 1261 ){
-						printf("DEBUG 8.1\n");
-						printLongAsBitBoard( threat );
-					}
-				} else if (__builtin_popcountll((qr|allPieces) & QR_ATTACK_MAPS_2[idx]) == 1) {
+				} else if (__builtin_popcountll( qr & QR_ATTACK_MAPS_2[idx]) == 1 && __builtin_popcountll( allPieces & QR_ATTACK_MAPS_2[idx]) == 1  ) {
 					threat |= qr & QR_ATTACK_MAPS_2[idx];
-					if( board[IDX_MOVE_ID] == 1261 ){
-						printf("DEBUG 8.2\n");
-						printLongAsBitBoard( threat );
-					}
 				} else {
+
 					if ((qr & QR_ATTACK_MAPS_2[idx]) > ((QR_ATTACK_MAPS_2[idx] & allPiecesExceptQR))) {
 						long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_2[idx])));
 						threat |= testThreat;
-						if( board[IDX_MOVE_ID] == 1261 ){
-							printf("DEBUG 8.3\n");
-							printLongAsBitBoard( threat );
-						}
 
 					}
 					if ((qr & QR_ATTACK_MAPS_1[idx]) > ((QR_ATTACK_MAPS_1[idx] & allPiecesExceptQR))) {
 						long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_1[idx])));
 						threat |= testThreat;
-						if( board[IDX_MOVE_ID] == 1261 ){
-							printf("DEBUG 8.4\n");
-							printLongAsBitBoard( threat );
-						}
 					}
 				}
 			}
 
 
 			if (king < (qr & QR_ATTACK_MAPS_3[idx])) {
-				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]) >
-					__builtin_ctzll((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR))) {
-
+				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]) <
+					__builtin_ctzll((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR))
+					|| (QR_ATTACK_MAPS_3[idx]&allPiecesExceptQR) == 0) {
 					threat |= 1L << __builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]);
-					if( board[IDX_MOVE_ID] == 1261 ){
-						printf("DEBUG 9.1\n");
-						printLongAsBitBoard( threat );
-					}
 				}
 			}
 
 			if (king < (qr & QR_ATTACK_MAPS_4[idx])) {
-				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]) >
-					__builtin_ctzll((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR))) {
+
+				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]) <
+					__builtin_ctzll((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR))
+					|| (QR_ATTACK_MAPS_4[idx]&allPiecesExceptQR) == 0 ) {
 					threat |= 1L << __builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]);
-					if( board[IDX_MOVE_ID] == 1261 ){
-						printf("DEBUG 9.2\n");
-						printLongAsBitBoard( threat );
-					}
 				}
 			}
 		}
@@ -2216,12 +2199,16 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 		}
 
 		if( __builtin_popcountll( threat ) > 1 ){
+			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DISCOVERED;
 			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DOUBLE;
 		}
 	}
 	else {
 		board[IDX_CHECK_STATUS] = 0;
+
 	}
+
+
 
 
 
@@ -2232,8 +2219,8 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 // this is used to check for discovered and double checks on white king
 unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned long lastMoveMap ) {
 
-	board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board);
-	return 0;
+	//board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board);
+	//return 0;
 
 	unsigned long king = board[IDX_WHITE_KING];
 	unsigned long idx = __builtin_ctzll(king);
@@ -2241,7 +2228,7 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 	unsigned long threat = 0;
 
 	threat = KNIGHT_ATTACK_MAPS[idx] & board[IDX_BLACK_KNIGHTS];
-	threat |=  BLACK_PAWN_ATTACK_MAPS[idx] & board[IDX_BLACK_PAWNS];
+	threat |=  WHITE_PAWN_ATTACK_MAPS[idx] & board[IDX_BLACK_PAWNS];
 
 	// now for the vector threats. a piece may be on the map, but can be blocked
 	if (QB_ATTACK_MAPS[idx] & (board[IDX_BLACK_QUEENS] | board[IDX_BLACK_BISHOPS])) {
@@ -2261,46 +2248,96 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 
 			unsigned long allPiecesExceptQB = allPieces & ~qb;
 
-			if (king > (qb & (QB_ATTACK_MAPS_1[idx] | QB_ATTACK_MAPS_4[idx]))) {
+			// QB_ATTACK_MAPS_1 down right
+			// QB_ATTACK_MAPS_2 up left
+			// QB_ATTACK_MAPS_3 up right
+			// QB_ATTACK_MAPS_4 down left
 
-				if ((qb & QB_ATTACK_MAPS_4[idx]) > ((QB_ATTACK_MAPS_4[idx] & allPiecesExceptQB))) {
-					threat |=  1l << ( 63 - __builtin_clzll( qb & QB_ATTACK_MAPS_4[idx] ) );
+			// up left
+			if( qb & QB_ATTACK_MAPS_2[idx] ){
+				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
+				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_2[idx] ) == 1 ){
+					threat |= allPieces & QB_ATTACK_MAPS_2[idx];
 				}
-				if ((qb & QB_ATTACK_MAPS_1[idx]) > ((QB_ATTACK_MAPS_1[idx] & allPiecesExceptQB))) {
-					threat |=  1l << ( 63 - __builtin_clzll( qb & QB_ATTACK_MAPS_1[idx] ) );
+				else {
+					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+					int test = __builtin_ctzll( qb & QB_ATTACK_MAPS_2[idx] );
+					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
+					if( (allPieces & QB_ATTACK_MAPS_2[idx] ) == (qb & QB_ATTACK_MAPS_2[idx]) ){
+						threat |= 1L << test;
+					}
+					else {
+						int apnq = __builtin_ctzll( allPiecesExceptQB & QB_ATTACK_MAPS_2[idx] );
+						if( test < apnq ){
+							threat |= 1L << test;
+						}
+					}
+
+				}
+			}
+
+			// up right
+			if( qb & QB_ATTACK_MAPS_3[idx] ){
+				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
+				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_3[idx] ) == 1 ){
+					threat |= allPieces & QB_ATTACK_MAPS_3[idx];
+				}
+				else {
+					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+					int test = __builtin_ctzll( qb & QB_ATTACK_MAPS_3[idx] );
+					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
+					if( (allPieces & QB_ATTACK_MAPS_3[idx] ) == (qb & QB_ATTACK_MAPS_3[idx]) ){
+						threat |= 1L << test;
+					}
+					else {
+						int apnq = __builtin_ctzll( allPiecesExceptQB & QB_ATTACK_MAPS_3[idx] );
+						if( test < apnq ){
+							threat |= 1L << test;
+						}
+					}
+
 				}
 			}
 
 
-			if( qb & QB_ATTACK_MAPS_2[idx] ){
+			// down right
+			if( qb & QB_ATTACK_MAPS_1[idx] ){
+				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
+				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_1[idx] ) == 1 ){
+					threat |= qb & QB_ATTACK_MAPS_1[idx];
+				}
+				else {
+					int test = __builtin_clzll( qb & QB_ATTACK_MAPS_1[idx] );
 
-				if (king < (qb & QB_ATTACK_MAPS_2[idx])) {
-
-					if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_2[idx] ) == 1 ){
-						threat |= qb & QB_ATTACK_MAPS_2[idx];
+					if( (allPieces & QB_ATTACK_MAPS_1[idx] ) == (qb & QB_ATTACK_MAPS_1[idx]) ){
+						threat |= 1L << ( 63-test);
 					}
 					else {
-						unsigned long testThreat = __builtin_ctzll(qb & QB_ATTACK_MAPS_2[idx]);
-
-						if ( testThreat <= __builtin_ctzll(QB_ATTACK_MAPS_2[idx] & allPieces) ) {
-							threat |= (1L << testThreat);
+						// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+						int apnq = __builtin_clzll( allPiecesExceptQB & QB_ATTACK_MAPS_1[idx] );
+						if( test < apnq ){
+							threat |= 1L << ( 63 - test );
 						}
 					}
 				}
 			}
+			// down left
+			if( qb & QB_ATTACK_MAPS_4[idx] ){
+				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
+				if( __builtin_popcountll( allPieces & QB_ATTACK_MAPS_4[idx] ) == 1 ){
+					threat |= allPieces & QB_ATTACK_MAPS_4[idx];
 
-
-			if (king < (qb & QB_ATTACK_MAPS_3[idx])) {
-				if( __builtin_popcountll(qb & QB_ATTACK_MAPS_3[idx]) == 1 ){
-					threat |= qb & QB_ATTACK_MAPS_3[idx];
 				}
 				else {
-					unsigned long testThreat = __builtin_ctzll(qb & QB_ATTACK_MAPS_3[idx]);
-					if ( testThreat <= __builtin_ctzll((QB_ATTACK_MAPS_3[idx]  & allPieces))) {
-						threat |= (1L << testThreat);
+					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
+					int apnq = __builtin_clzll( allPiecesExceptQB & QB_ATTACK_MAPS_4[idx] );
+					int test = __builtin_clzll( qb & QB_ATTACK_MAPS_4[idx] );
+					if( test < apnq ){
+						threat |= 1L << ( 63 - test );
 					}
 				}
 			}
+
 		}
 	}
 
@@ -2325,57 +2362,61 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 			// QR_ATTACK_MAPS_4[] = left
 			unsigned long allPiecesExceptQR = allPieces & ~qr;
 
+			if (__builtin_popcountll( qr & QR_ATTACK_MAPS_1[idx]) == 1 && __builtin_popcountll( allPieces & QR_ATTACK_MAPS_1[idx]) == 1) {
+				threat |= qr & QR_ATTACK_MAPS_1[idx];
+			} else if (__builtin_popcountll( qr & QR_ATTACK_MAPS_2[idx]) == 1 && __builtin_popcountll( allPieces & QR_ATTACK_MAPS_2[idx]) == 1  ) {
+				threat |= qr & QR_ATTACK_MAPS_2[idx];
+			} else {
 
-			if (king > (qr & (QR_ATTACK_MAPS_1[idx] | QR_ATTACK_MAPS_2[idx]))) {
+				if ((qr & QR_ATTACK_MAPS_2[idx]) > ((QR_ATTACK_MAPS_2[idx] & allPiecesExceptQR))) {
+					long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_2[idx])));
+					threat |= testThreat;
 
-				if (__builtin_popcountll(qr & QR_ATTACK_MAPS_1[idx]) == 1) {
-					threat |= qr & QR_ATTACK_MAPS_1[idx];
-				} else if (__builtin_popcountll(qr & QR_ATTACK_MAPS_2[idx]) == 1) {
-					threat |= qr & QR_ATTACK_MAPS_2[idx];
-				} else {
-					if ((qr & QR_ATTACK_MAPS_2[idx]) > ((QR_ATTACK_MAPS_2[idx] & allPiecesExceptQR))) {
-						long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_2[idx])));
-						threat |= testThreat;
-					}
-					if ((qr & QR_ATTACK_MAPS_1[idx]) > ((QR_ATTACK_MAPS_1[idx] & allPiecesExceptQR))) {
-						long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_1[idx])));
-						threat |= testThreat;
-					}
+				}
+				if ((qr & QR_ATTACK_MAPS_1[idx]) > ((QR_ATTACK_MAPS_1[idx] & allPiecesExceptQR))) {
+					long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_1[idx])));
+					threat |= testThreat;
 				}
 			}
 
 			if (king < (qr & QR_ATTACK_MAPS_3[idx])) {
-				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]) >
-					__builtin_ctzll((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR))) {
-					threat |= (1L << __builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]));
+				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]) <
+					__builtin_ctzll((QR_ATTACK_MAPS_3[idx] & allPiecesExceptQR))
+					|| (QR_ATTACK_MAPS_3[idx]&allPiecesExceptQR) == 0) {
+					threat |= 1L << __builtin_ctzll(qr & QR_ATTACK_MAPS_3[idx]);
 				}
 			}
 
 			if (king < (qr & QR_ATTACK_MAPS_4[idx])) {
-				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]) >
-					__builtin_ctzll((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR))) {
+
+				if (__builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]) <
+					__builtin_ctzll((QR_ATTACK_MAPS_4[idx] & allPiecesExceptQR))
+					|| (QR_ATTACK_MAPS_4[idx]&allPiecesExceptQR) == 0 ) {
 					threat |= 1L << __builtin_ctzll(qr & QR_ATTACK_MAPS_4[idx]);
 				}
 			}
 		}
 	}
 
+
 	board[IDX_KING_THREATS] = threat;
 
 	if( threat ){
-		board[IDX_CHECK_STATUS] |= MASK_WHITE_KING_CHECKED;
+		board[IDX_CHECK_STATUS] = MASK_WHITE_KING_CHECKED;
 
 		if( !(threat & lastMoveMap) ){
 			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DISCOVERED;
 		}
 
 		if( __builtin_popcountll( threat ) > 1 ){
+			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DISCOVERED;
 			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DOUBLE;
 		}
 	}
 	else {
 		board[IDX_CHECK_STATUS] = 0;
 	}
+
 
 
 	return threat;
@@ -2400,18 +2441,47 @@ void count(unsigned long b[]) {
 	numMoves[level]++;
 	if ((b[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE)) {
 		numCaptures[level]++;
+		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE ) {
+			numDoubleCaptureChecks[level]++;
+		}
+		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED) {
+			numDiscoveryCaptureChecks[level]++;
+		}
 	}
 	if ((b[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_EP_STRIKE)) {
 		numEP[level]++;
+		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE ) {
+			numDoubleEPChecks[level]++;
+			printBitBoard( b );
+		}
+		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED) {
+			numDiscoveryEPChecks[level]++;
+		}
 	}
 	if ((b[IDX_LAST_MOVE_WAS] & (MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE | MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE))) {
 		numCastles[level]++;
 	}
-	if ((b[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_PROMO)) {
+	if ( b[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_PROMO ) {
 		numPromos[level]++;
+
+		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE ) {
+			numDoublePromoChecks[level]++;
+		}
+		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED) {
+			numDiscoveryPromoChecks[level]++;
+		}
+
 	}
 	if ((b[IDX_CHECK_STATUS] & (MASK_WHITE_KING_CHECKED | MASK_BLACK_KING_CHECKED))) {
 		numChecks[level]++;
+
+		if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE)) {
+			numDoubleChecks[level]++;
+		}
+		if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED)) {
+			numDiscoveryChecks[level]++;
+		}
+
 	}
 	if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_MATED)) {
 		numCheckmates[level]++;
@@ -2419,12 +2489,7 @@ void count(unsigned long b[]) {
 	if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_STALEMATED)) {
 		numStalemates[level]++;
 	}
-	if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE)) {
-		numDoubleChecks[level]++;
-	}
-	if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED)) {
-		numDiscoveryChecks[level]++;
-	}
+
 
 }
 
@@ -2506,6 +2571,7 @@ void printLongAsBitBoard(unsigned long bitstream) {
 	printf("\n%#lx", backup);
 	printf("\n%lu\n", backup);
 	printf("\n\n");
+	fflush(stdout);
 }
 
 void setBitsToChar(char *str, unsigned long bits, char c) {
