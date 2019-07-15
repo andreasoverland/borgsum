@@ -92,7 +92,6 @@ public class Main {
 
                 if( replaced.equals("0") ) {
 
-
                     String newRow = row.substring(0, k) + "B" + row.substring(k + 1);
                     checkIndex(a, newRow);
                     newRow = row.substring(0, k) + "C" + row.substring(k + 1);
@@ -126,14 +125,12 @@ public class Main {
         System.out.println( "num rows:" + numRows );
     }
 
-    public void checkIndex(int a, String row) {
+    private void checkIndex(int a, String row) {
         int idx = Integer.parseInt( row, 13 );
         if( check[idx] > 1 ){
             System.out.println("Helsikke " + a + " " + row + " "  + check[idx]);
         }
         check[idx] += 1;
-
-
     }
 
 
