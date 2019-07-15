@@ -117,7 +117,7 @@ void printCompactBoard(unsigned long board[]);
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-int MAX_LEVEL = 6;
+int MAX_LEVEL = 5	;
 
 unsigned long numMoves[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numCaptures[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -770,7 +770,6 @@ int moveBlackPawns(unsigned long b[]) {
 	// 4. Make en passant captures for pawns with BLACK_PAWN_ATTACK_MAPS that matches EP Index/map
 
 	unsigned long move[NUM_BYTES];
-
 
 	unsigned long allPieces = b[IDX_ALL_PIECES];
 	unsigned long pawnsThatCanMoveOneForward = pawns & ~(allPieces << 8);
@@ -2472,20 +2471,27 @@ void count(unsigned long b[]) {
 		}
 
 	}
-	if ((b[IDX_CHECK_STATUS] & (MASK_WHITE_KING_CHECKED | MASK_BLACK_KING_CHECKED))) {
-		numChecks[level]++;
 
-		if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE)) {
-			numDoubleChecks[level]++;
-		}
-		if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED)) {
-			numDiscoveryChecks[level]++;
-		}
-
-	}
 	if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_MATED)) {
 		numCheckmates[level]++;
 	}
+
+	if ((b[IDX_CHECK_STATUS] & (MASK_WHITE_KING_CHECKED | MASK_BLACK_KING_CHECKED))) {
+		numChecks[level]++;
+	}
+
+	if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE)) {
+		numDoubleChecks[level]++;
+	}
+
+	if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED)) {
+		numDiscoveryChecks[level]++;
+	}
+
+
+
+
+
 	if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_STALEMATED)) {
 		numStalemates[level]++;
 	}
