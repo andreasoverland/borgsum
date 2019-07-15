@@ -4,9 +4,21 @@ import java.math.BigInteger;
 
 public class Main {
 
+    byte[] check = new byte[805643928];
+
     public static void main(String[] args) {
 
+        new Main().doit();
+
+    }
+
+    public void doit(){
+
         Long sum = 0L;
+
+        Long max = Long.parseLong( "CABAAAAA",13) + 1;
+
+        System.out.println( "Max : " +  max );
 
         Long l = Long.parseLong( "AAAAAAAA",11) + 1;
 
@@ -20,7 +32,7 @@ public class Main {
         System.out.println( "\t"+ sum + " = number of ways Q_e can be combined on one line, including zero or one king" );
 
         l = Long.parseLong( "AAAAAA",11) + 1;
-        sum += 42*l;
+        sum += 42*2*l;
 
         System.out.println( "\t"+ sum + " = number of ways Q_e can be combined on one line, including zero, one or two kings" );
 
@@ -53,10 +65,11 @@ public class Main {
                 row = "0" + row;
             }
 
-
             if( MAX < 2000 ){
                 System.out.println( row );
             }
+
+            checkIndex(a, row);
 
             numRows ++;
 
@@ -79,12 +92,12 @@ public class Main {
 
                 if( replaced.equals("0") ) {
 
-                    if( MAX < 2000 ) {
-                        String newRow = row.substring(0, k) + "B" + row.substring(k + 1);
-                        System.out.println(newRow);
-                        newRow = row.substring(0, k) + "C" + row.substring(k + 1);
-                        System.out.println(newRow);
-                    }
+
+                    String newRow = row.substring(0, k) + "B" + row.substring(k + 1);
+                    checkIndex(a, newRow);
+                    newRow = row.substring(0, k) + "C" + row.substring(k + 1);
+                    checkIndex(a, newRow);
+
                     numRows+=2;
 
                     for( int k2 = 0;k2<8;k2++){
@@ -95,15 +108,14 @@ public class Main {
                         String replaced2 = row.substring(k2,k2+1);
                         if( replaced2.equals("0") ) {
 
-                            if( MAX < 2000 ) {
-                                String newRow = row.substring(0, k) + "B" + row.substring(k + 1);
-                                newRow = newRow.substring(0,k2) + "C" + newRow.substring(k2+1);
-                                System.out.println(newRow);
+                            newRow = row.substring(0, k) + "B" + row.substring(k + 1);
+                            newRow = newRow.substring(0,k2) + "C" + newRow.substring(k2+1);
+                            checkIndex(a, newRow);
 
-                                newRow = row.substring(0, k) + "C" + row.substring(k + 1);
-                                newRow = newRow.substring(0,k2) + "B" + newRow.substring(k2+1);
-                                System.out.println(newRow);
-                            }
+                            newRow = row.substring(0, k) + "C" + row.substring(k + 1);
+                            newRow = newRow.substring(0,k2) + "B" + newRow.substring(k2+1);
+                            checkIndex(a, newRow);
+
                             numRows+=2;
                         }
                     }
@@ -112,6 +124,16 @@ public class Main {
         }
 
         System.out.println( "num rows:" + numRows );
+    }
+
+    public void checkIndex(int a, String row) {
+        int idx = Integer.parseInt( row, 13 );
+        if( check[idx] > 1 ){
+            System.out.println("Helsikke " + a + " " + row + " "  + check[idx]);
+        }
+        check[idx] += 1;
+
+
     }
 
 
