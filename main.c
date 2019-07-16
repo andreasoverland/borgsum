@@ -50,7 +50,7 @@ void printDiagram(unsigned long board[]);
 
 void printNumBoard(unsigned long board[]);
 
-long printStats();
+unsigned long printStats();
 
 void dig(unsigned long board[]);
 
@@ -103,6 +103,8 @@ void makeBlackBitPromos(unsigned long board[], unsigned long map);
 
 // util for board printing and conversion.
 void setBitsToChar(char *str, unsigned long bits, char c);
+
+void sprintDiagram(char *target, unsigned long board[] );
 
 void printBitBoard(unsigned long board[]);
 
@@ -169,20 +171,35 @@ int main( int argc, char **argv){
                       P P P B B P P P\
                       R . . . K . . R";
 
-	printf( "%ld\n",PIECE_COMBOS );
 
-	long board[NUM_BYTES];
+	unsigned long board[NUM_BYTES];
+
+
 
 	if( argc > 1 ){
-		if( strcmp(argv[1],"SLEEP") ==0 ){
+		if( strcmp(argv[1],"SLEEP") == 0 ){
 			printf("SLEEPING");
 			fflush(stdout);
 			sleep(60);
 			return 0;
 		}
+		else if( strcmp(argv[1],"-h") == 0 ){
+			printf("** Borgsum Chess Engine (fast, but stupid version) **\r\n");
+			printf("Arguments:\r\n");
+			printf("1 : board diagram enclosed in \"\r\n");
+			printf("2 : turn b or w\r\n");
+			printf("3 : castling rights, KQkq or - if no castling rights are left\r\n" );
+			printf("4 : max level recursion, integer\r\n");
+			printf("5 : workunit id\r\n");
+			printf("\r\nandreasoverland@gmail.com\r\n");
+			fflush(stdout);
+			exit(0);
+		}
 		initialBoard = argv[1];
 	}
-	diagramToByteBoard( board, initialBoard);
+
+	diagramToBitBoard( board, initialBoard);
+	
 
 	if( argc > 2 ){
 		if( strcmp(argv[2], "b" ) == 0 ){
@@ -194,7 +211,23 @@ int main( int argc, char **argv){
 	}
 
 	if( argc > 3 ){
-		board[IDX_CASTLING] = atoi(argv[3]);
+		board[IDX_CASTLING] = 0;
+
+		if( strchr(argv[3],'K') != NULL ){
+			board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+		}
+
+		if( strchr(argv[3],'k') != NULL ){
+			board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+		}
+
+		if( strchr(argv[3],'Q') != NULL ){
+			board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+		}
+
+		if( strchr(argv[3],'q') != NULL ){
+			board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
+		}
 	}
 
 	if( argc > 4 ){
@@ -204,6 +237,13 @@ int main( int argc, char **argv){
 	if( argc > 5 ){
 		workUnitId = argv[5];
 		printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
+	}
+
+	if( argc == 1){
+		printf("run this with arguments :\r\n");
+		char line[120];
+		sprintDiagram(line, board);
+		printf("./chessengine %s %d\n", line, MAX_LEVEL  );
 	}
 
 	printBitBoard( board );
@@ -227,41 +267,49 @@ int main( int argc, char **argv){
 
 	printf("Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
 
-	printf( "%lu calculateCheckStatusInvocations\n", calculateCheckStatusInvocations );
-	printf( "%lu makeNewBoardInvocations\n", makeNewBoardInvocations );
-	printf( "%lu isSquaresThreatenedByColorInvocations\n", isSquaresThreatenedByColorInvocations );
-	printf( "%lu influenceMapForSquareInvocations\n", influenceMapForSquareInvocations );
-	printf( "%lu moveLinearInvocations\n", moveLinearInvocations );
-
 	return 0;
 } // end main
 
-long printStats(){
+unsigned long printStats() {
 
-	printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
-			"Depth",
-			"Nodes",
-			"Caps",
-			"E.p.",
-			"Castles",
-			"Promos",
-			"Checks",
-			"Mates"
-	);
+	/*printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+		   "Depth",
+		   "Nodes",
+		   "Caps",
+		   "E.p.",
+		   "Castles",
+		   "Promos",
+		   "Checks",
+		   "Disc.Chk",
+		   "Dbl.Chk"
+		   "Mates",
+		   "S.mates"
+	);*/
 
-	static long total = 0;
+	static unsigned long total = 0;
 
-	for (int t = 0; t <= MAX_LEVEL+1; t++) {
-		printf("%3d",t);
-		printf("\t%20lu",numMoves[t]);
-		printf("\t%20lu",numCaptures[t]);
-		printf("\t%10lu",numEP[t]);
-		printf("\t%10lu",numCastles[t]);
-		printf("\t%10lu",numPromos[t]);
-		printf("\t%20lu",numChecks[t]);
-		printf("\t%20lu\n",numCheckmates[t]);
+	for (int t = 0; t < MAX_LEVEL + 1; t++) {
+		printf("%d", t);
+		printf(", N: %lu", numMoves[t]);
+		printf(", Caps: %lu", numCaptures[t]);
+		printf(", EP: %lu", numEP[t]);
+		printf(", Cast: %lu", numCastles[t]);
+		printf(", Prom: %lu", numPromos[t]);
+		printf(", Checks: %lu", numChecks[t]);
+		printf(", Disc: %lu", numDiscoveryChecks[t]);
+		printf(", Disc(p): %lu", numDiscoveryPromoChecks[t]);
+		printf(", Disc(c): %lu", numDiscoveryCaptureChecks[t]);
+		printf(", Disc(ep): %lu", numDiscoveryEPChecks[t]);
+		printf(", Dbl: %lu", numDoubleChecks[t]);
+		printf(", Dbl(p) : %lu", numDoublePromoChecks[t] );
+		printf(", Dbl(c) : %lu", numDoubleCaptureChecks[t] );
+		printf(", Dbl(ep) : %lu", numDoubleEPChecks[t] );
+		printf(", Mates: %lu", numCheckmates[t]);
+		printf(", S.Mates: %lu\n", numStalemates[t]);
+
 		total += numMoves[t];
 	}
+
 	printf("\n");
 	fflush(stdout);
 	return total;
@@ -1852,7 +1900,6 @@ int calculateBlackKingCheckStatus(unsigned long board[]) {
 				}
 
 				if ((QB_ATTACK_MAPS_2[idx] & allPiecesExceptQB) == 0) {
-					printBitBoard( board );
 					return MASK_BLACK_KING_CHECKED;
 				}
 			}
@@ -2375,7 +2422,6 @@ void count(unsigned long b[]) {
 		numEP[level]++;
 		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE ) {
 			numDoubleEPChecks[level]++;
-			printBitBoard( b );
 		}
 		if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED) {
 			numDiscoveryEPChecks[level]++;
@@ -2439,6 +2485,51 @@ void printNumBoard(unsigned long board[]) {
 	}
 }
 
+void sprintDiagram( char *target, unsigned long board[] ){
+
+	char str[] = "................................................................\0";
+
+	setBitsToChar(str, board[IDX_WHITE_PAWNS], 'P');
+	setBitsToChar(str, board[IDX_WHITE_ROOKS], 'R');
+	setBitsToChar(str, board[IDX_WHITE_BISHOPS], 'B');
+	setBitsToChar(str, board[IDX_WHITE_KNIGHTS], 'N');
+	setBitsToChar(str, board[IDX_WHITE_QUEENS], 'Q');
+	setBitsToChar(str, board[IDX_WHITE_KING], 'K');
+
+	setBitsToChar(str, board[IDX_BLACK_PAWNS], 'p');
+	setBitsToChar(str, board[IDX_BLACK_ROOKS], 'r');
+	setBitsToChar(str, board[IDX_BLACK_BISHOPS], 'b');
+	setBitsToChar(str, board[IDX_BLACK_KNIGHTS], 'n');
+	setBitsToChar(str, board[IDX_BLACK_QUEENS], 'q');
+	setBitsToChar(str, board[IDX_BLACK_KING], 'k');
+
+	char res[] = "                                                                       \0";
+
+	for (int t = 0; t < 64; t++) {
+		res[t + (t >> 3)] = str[t];
+	}
+
+	char castling[] = "\0\0\0\0\0";
+
+	int moveCursor = 0;
+	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) == MASK_CASTLING_WHITE_KING_SIDE ){
+		castling[moveCursor++] = 'K';
+	}
+	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ){
+		castling[moveCursor++] = 'Q';
+	}
+	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) == MASK_CASTLING_BLACK_KING_SIDE ){
+		castling[moveCursor++] = 'k';
+	}
+	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ){
+		castling[moveCursor++] = 'q';
+	}
+
+	sprintf(target, "\"%s\" %s %s", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling);
+	//sprintf(target, "\"%s\" %s %lu %lu %lu", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", board[IDX_CASTLING], board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
+
+}
+
 void printDiagram(unsigned long board[]) {
 
 	char str[] = "................................................................\0";
@@ -2467,12 +2558,21 @@ void printDiagram(unsigned long board[]) {
 
 
 	printf(" %s", board[IDX_TURN] == WHITE_MASK ? "w" : "b");
-	char castling[] = "		 \0";
+	char castling[] = "\0\0\0\0\0";
 
-	castling[2] = (board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) == MASK_CASTLING_BLACK_KING_SIDE ? 'k' : ' ';
-	castling[3] = (board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ? 'q' : ' ';
-	castling[0] = (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) == MASK_CASTLING_WHITE_KING_SIDE ? 'K' : ' ';
-	castling[1] = (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ? 'Q' : ' ';
+	int moveCursor = 0;
+	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) == MASK_CASTLING_WHITE_KING_SIDE ){
+		castling[moveCursor++] = 'K';
+	}
+	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ){
+		castling[moveCursor++] = 'Q';
+	}
+	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) == MASK_CASTLING_BLACK_KING_SIDE ){
+		castling[moveCursor++] = 'k';
+	}
+	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ){
+		castling[moveCursor++] = 'q';
+	}
 
 	printf(" %s ", castling);
 
@@ -2553,7 +2653,6 @@ void printBitBoard(unsigned long board[]) {
 
 
 	printf("Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black");
-
 
 	if ((board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED)) {
 		printf("There is a MATE\n");
