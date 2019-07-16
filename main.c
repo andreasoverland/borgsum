@@ -50,7 +50,7 @@ void printDiagram(unsigned long board[]);
 
 void printNumBoard(unsigned long board[]);
 
-unsigned long printStats();
+long printStats();
 
 void dig(unsigned long board[]);
 
@@ -144,9 +144,11 @@ int maxNumMoves = 0;
 
 char *workUnitId = NULL;
 
-int main(int argc, char **argv) {
-/*
-	char *initialBoard = "\
+int main( int argc, char **argv){
+
+	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
+
+	/*char *initialBoard = "\
 						 r n b q k b n r\
 						 p p p p p p p p\
 						 . . . . . . . .\
@@ -154,135 +156,62 @@ int main(int argc, char **argv) {
 						 . . . . . . . .\
 						 . . . . . . . .\
 						 P P P P P P P P\
-						 R N B Q K B N R";
-						 // w KQkq 4";
-*/
-/*
-	FILE *fp;
-   	char buff[255];
+						 R N B Q K B N R";*/
 
-	char *filename = "chessengine.txt";
+	//*
+	char *initialBoard = "\
+                      r . . . k . . r\
+                      p . p p q p b .\
+                      b n . . p n p .\
+                      . . . P N . . .\
+                      . p . . P . . .\
+                      . . N . . Q . p\
+                      P P P B B P P P\
+                      R . . . K . . R";
 
-	char initialBoard[255];
+	printf( "%ld\n",PIECE_COMBOS );
 
+	long board[NUM_BYTES];
 
-   	fp = fopen( filename , "r");
-	while( fgets(buff, 255, (FILE*)fp) != NULL ){
-    	printf("%s", buff );
-		sprintf(initialBoard,"%s",buff);
+	if( argc > 1 ){
+		if( strcmp(argv[1],"SLEEP") ==0 ){
+			printf("SLEEPING");
+			fflush(stdout);
+			sleep(60);
+			return 0;
+		}
+		initialBoard = argv[1];
+	}
+	diagramToByteBoard( board, initialBoard);
+
+	if( argc > 2 ){
+		if( strcmp(argv[2], "b" ) == 0 ){
+			board[IDX_TURN] = BLACK_MASK;
+		}
+		else {
+			board[IDX_TURN] = WHITE_MASK;
+		}
 	}
 
- 	fclose(fp);
-*/
+	if( argc > 3 ){
+		board[IDX_CASTLING] = atoi(argv[3]);
+	}
 
+	if( argc > 4 ){
+		MAX_LEVEL = atoi(argv[4]);
+	}
 
-//*/
+	if( argc > 5 ){
+		workUnitId = argv[5];
+		printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
+	}
 
-
-	// for testing multiple checks on black king
-	/*
-	char *initialBoard = "\
-						 . B . . Q . . B\
-						 . . B . Q . Q .\
-						 . . N . . . . .\
-						 R Q . . k . R Q\
-						 . . . . . P . .\
-						 . . . . . N P .\
-						 . B . . R . . Q\
-						 Q . . . R K . .";*/
-/*
-	char *initialBoard = "\
-						 . . . . . . . q\
-						 q . . . . . B .\
-						 . B . . . . . .\
-						 . . . . . . . .\
-						 . . . k . . . .\
-						 . . . . . . . .\
-						 . Q . . . B . .\
-						 r . . . . . r .";
-*/
-
-	// for testing multiple checks on white king
-	/*
-	char *initialBoard = "\
-						 . . . . . . . .\
-						 . . . . . . . .\
-						 k . . . . . . .\
-						 . . . . R p . .\
-						 . . . . K R . .\
-						 . . . . R . . .\
-						 . . . . R . . .\
-						 . . . . . . . .";
-*/
-	// for testing discovered and double check against black king
-	// last move : bishop from D2 to E1
-/*	char *initialBoard = "\
-					   . . . . . . . .\
-					   . . . . . k . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . . . B R . K";
-*/
-
-	// for testing discovered and double check against black king
-	// last move : bishop from F3 to D5
-	/*
-	char *initialBoard = "\
-					   . . . . . . . .\
-					   . . . . . k . .\
-					   . . . . . . . .\
-					   . . . B . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . R . .\
-					   . . . . . . . K";
-	*/
-
-
-	// kiwi pete
-	char *initialBoard = "\
-						r . . . k . . r\
-						p . p p q p b .\
-						b n . . p n p .\
-						. . . P N . . .\
-						. p . . P . . .\
-						. . N . . Q . p\
-						P P P B B P P P\
-						R . . . K . . R";
-
-
-
-/*	char *initialBoard = "\
-					   q . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   K . . . . . . .\
-					   . . . . . . . .\
-					   . . . . . . . .\
-					   R . . . . . . .\
-					   . . . . . . k .";
-*/
-
-	unsigned long board[NUM_BYTES];
-
-	diagramToBitBoard(board, initialBoard);
-	printBitBoard(board);
-
-/*
-	unsigned long threat = calculateWhiteKingCheckStatus2( board, A1 );
-	printf("Final threat:\n");
-	printLongAsBitBoard( threat );
 	printBitBoard( board );
-	return 0;
-*/
 
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
 
-	dig(board); // do everything
+	dig(board);
 
 	clock_gettime(CLOCK_REALTIME, &ts2);
 	if (ts2.tv_nsec < ts1.tv_nsec) {
@@ -290,54 +219,49 @@ int main(int argc, char **argv) {
 		ts2.tv_sec--;
 	}
 
-	unsigned long total = printStats();
+	int l = 14;
 
-	printf("\nTotal valid moves: %lu \n", total);
-	printf("Time: %ld.%09ld \n", (unsigned long) (ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
+	long total = printStats();
+
+	printf("\nTotal valid moves found : %lu \n" ,total);
+
+	printf("Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
+
+	printf( "%lu calculateCheckStatusInvocations\n", calculateCheckStatusInvocations );
+	printf( "%lu makeNewBoardInvocations\n", makeNewBoardInvocations );
+	printf( "%lu isSquaresThreatenedByColorInvocations\n", isSquaresThreatenedByColorInvocations );
+	printf( "%lu influenceMapForSquareInvocations\n", influenceMapForSquareInvocations );
+	printf( "%lu moveLinearInvocations\n", moveLinearInvocations );
 
 	return 0;
 } // end main
 
-unsigned long printStats() {
+long printStats(){
 
-	/*printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-		   "Depth",
-		   "Nodes",
-		   "Caps",
-		   "E.p.",
-		   "Castles",
-		   "Promos",
-		   "Checks",
-		   "Disc.Chk",
-		   "Dbl.Chk"
-		   "Mates",
-		   "S.mates"
-	);*/
+	printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
+			"Depth",
+			"Nodes",
+			"Caps",
+			"E.p.",
+			"Castles",
+			"Promos",
+			"Checks",
+			"Mates"
+	);
 
-	static unsigned long total = 0;
+	static long total = 0;
 
-	for (int t = 0; t < MAX_LEVEL + 1; t++) {
-		printf("%d", t);
-		printf(", N: %lu", numMoves[t]);
-		printf(", Caps: %lu", numCaptures[t]);
-		printf(", EP: %lu", numEP[t]);
-		printf(", Cast: %lu", numCastles[t]);
-		printf(", Prom: %lu", numPromos[t]);
-		printf(", Checks: %lu", numChecks[t]);
-		printf(", Disc: %lu", numDiscoveryChecks[t]);
-		printf(", Disc(p): %lu", numDiscoveryPromoChecks[t]);
-		printf(", Disc(c): %lu", numDiscoveryCaptureChecks[t]);
-		printf(", Disc(ep): %lu", numDiscoveryEPChecks[t]);
-		printf(", Dbl: %lu", numDoubleChecks[t]);
-		printf(", Dbl(p) : %lu", numDoublePromoChecks[t] );
-		printf(", Dbl(c) : %lu", numDoubleCaptureChecks[t] );
-		printf(", Dbl(ep) : %lu", numDoubleEPChecks[t] );
-		printf(", Mates: %lu", numCheckmates[t]);
-		printf(", S.Mates: %lu\n", numStalemates[t]);
-
+	for (int t = 0; t <= MAX_LEVEL+1; t++) {
+		printf("%3d",t);
+		printf("\t%20lu",numMoves[t]);
+		printf("\t%20lu",numCaptures[t]);
+		printf("\t%10lu",numEP[t]);
+		printf("\t%10lu",numCastles[t]);
+		printf("\t%10lu",numPromos[t]);
+		printf("\t%20lu",numChecks[t]);
+		printf("\t%20lu\n",numCheckmates[t]);
 		total += numMoves[t];
 	}
-
 	printf("\n");
 	fflush(stdout);
 	return total;
