@@ -119,7 +119,7 @@ void printCompactBoard(unsigned long board[]);
 /*** LEVEL ***/
 /*** LEVEL ***/
 
-int MAX_LEVEL = 5	;
+int MAX_LEVEL = 5;
 
 unsigned long numMoves[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numCaptures[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -199,7 +199,7 @@ int main( int argc, char **argv){
 	}
 
 	diagramToBitBoard( board, initialBoard);
-	
+
 
 	if( argc > 2 ){
 		if( strcmp(argv[2], "b" ) == 0 ){
