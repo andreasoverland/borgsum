@@ -11,3 +11,8 @@ Super Simple Chess Engine
 
 to make diagrams for input
 cat testbatch.txt|xargs -n 5  sh -c 'echo \"$1\" $2 $3 $4 $0'  
+
+2019.07.16 - Status
+	The fastest version is now in the branch bitboards, but the most versatile client is in master.
+	Plan : merge the client-parts from master, into bitboards. then move set bitboards as master.
+
