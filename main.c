@@ -35,7 +35,7 @@ int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMa
 int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
-int MAX_LEVEL = 7;
+int MAX_LEVEL = 5;
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -56,7 +56,7 @@ int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-  char *initialBoard = "\
+  /*char *initialBoard = "\
                        r n b q k b n r\
                        p p p p p p p p\
                        . . . . . . . .\
@@ -64,9 +64,9 @@ int main( int argc, char **argv){
                        . . . . . . . .\
                        . . . . . . . .\
                        P P P P P P P P\
-                       R N B Q K B N R";
+                       R N B Q K B N R";*/
 
-   /*char *initialBoard = "\
+   char *initialBoard = "\
                       r . . . k . . r\
                       p . p p q p b .\
                       b n . . p n p .\
@@ -74,7 +74,7 @@ int main( int argc, char **argv){
                       . p . . P . . .\
                       . . N . . Q . p\
                       P P P B B P P P\
-                      R . . . K . . R";*/
+                      R . . . K . . R";
 
     long board[NUM_BYTES];
 
