@@ -35,7 +35,11 @@ int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMa
 int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
+<<<<<<< HEAD
 int MAX_LEVEL = 5;
+=======
+int MAX_LEVEL = 4;
+>>>>>>> b2c029d2eace016105a4f58266122ff2722331f1
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
@@ -52,6 +56,14 @@ long moveLinearInvocations = 0;
 
 char *workUnitId = NULL;
 
+
+const long PIECE_COMBOS =
+  (long)Pieces_QBK        |  (long)Pieces_QB <<  6 |
+  (long)Pieces_QBPK << 12 |  (long)Pieces_QB << 18 |
+  (long)Pieces_QRK <<  24 |  (long)Pieces_QR << 30 |
+  (long)Pieces_QRK <<  36 |  (long)Pieces_QR << 42
+  ;
+
 int main( int argc, char **argv){
 
   // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
@@ -66,6 +78,7 @@ int main( int argc, char **argv){
                        P P P P P P P P\
                        R N B Q K B N R";*/
 
+   //*
    char *initialBoard = "\
                       r . . . k . . r\
                       p . p p q p b .\
@@ -75,6 +88,9 @@ int main( int argc, char **argv){
                       . . N . . Q . p\
                       P P P B B P P P\
                       R . . . K . . R";
+                      R . . . K . . R";
+
+  printf( "%ld\n",PIECE_COMBOS );
 
     long board[NUM_BYTES];
 
@@ -143,7 +159,6 @@ int main( int argc, char **argv){
 
 long printStats(){
 
-
   printf( "%3s\t%20s\t%20s\t%10s\t%10s\t%10s\t%20s\t%20s\n",
           "Depth",
           "Nodes",
@@ -193,11 +208,11 @@ void dig(long board[]){
         }
     }
     count(board);
-    /*if( MAX_LEVEL <= 3 ){
-      if( board[IDX_MOVE_NUM] == MAX_LEVEL){
-        printDiagram( board );
-      }
-    }*/
+
+  	if( board[IDX_MOVE_NUM] == MAX_LEVEL){
+    	//printDiagram( board );
+    }
+
     /*if( board[IDX_MOVE_NUM] == 2){
       printStats();
     }*/
@@ -387,6 +402,15 @@ int findAllPossibleMoves(long originalBoard[]) {
                             newBoard[toIdx] = p;
                             newBoard[fromIdx] = 0;
 
+							int castlingMask = originalBoard[IDX_CASTLING];
+							if (toIdx == A8) {
+								castlingMask &= 0xf ^ MASK_CASTLING_BLACK_QUEEN_SIDE;
+							}
+							else if (toIdx == H8) {
+								castlingMask &= 0xf ^ MASK_CASTLING_BLACK_KING_SIDE;
+							}
+							newBoard[IDX_CASTLING] = castlingMask;
+
                             const int checkStatus = calculateCheckStatus(newBoard);
                             newBoard[IDX_CHECK_STATUS] = checkStatus;
                             if ((checkStatus & MASK_WHITE_KING_CHECKED) == 0) {
@@ -434,7 +458,7 @@ int findAllPossibleMoves(long originalBoard[]) {
                             newBoard[toIdx] = p;
                             newBoard[fromIdx] = 0;
                             newBoard[IDX_WHITE_KING_INDEX] = toIdx;
-                            newBoard[IDX_CASTLING] &= 0xf ^ (MASK_CASTLING_WHITE_KING_SIDE | MASK_CASTLING_WHITE_QUEEN_SIDE);
+                            newBoard[IDX_CASTLING] &= ~(MASK_CASTLING_WHITE_KING_SIDE | MASK_CASTLING_WHITE_QUEEN_SIDE);
 
                             const int checkStatus = calculateCheckStatus(newBoard);
 
@@ -462,7 +486,7 @@ int findAllPossibleMoves(long originalBoard[]) {
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
-                            newBoard[IDX_CASTLING] &= 0xf ^ (MASK_CASTLING_WHITE_QUEEN_SIDE | MASK_CASTLING_WHITE_KING_SIDE);
+                            newBoard[IDX_CASTLING] &= ~(MASK_CASTLING_WHITE_QUEEN_SIDE | MASK_CASTLING_WHITE_KING_SIDE);
                             newBoard[A1] = 0;
                             newBoard[E1] = 0;
                             newBoard[C1] = Piece_K;
@@ -492,7 +516,7 @@ int findAllPossibleMoves(long originalBoard[]) {
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE;
-                            newBoard[IDX_CASTLING] &= 0xf ^ (MASK_CASTLING_WHITE_QUEEN_SIDE | MASK_CASTLING_WHITE_KING_SIDE);
+                            newBoard[IDX_CASTLING] &= ~(MASK_CASTLING_WHITE_QUEEN_SIDE | MASK_CASTLING_WHITE_KING_SIDE);
                             newBoard[H1] = 0;
                             newBoard[E1] = 0;
                             newBoard[G1] = Piece_K;
@@ -685,6 +709,15 @@ int findAllPossibleMoves(long originalBoard[]) {
                             newBoard[toIdx] = p;
                             newBoard[fromIdx] = 0;
 
+							int castlingMask = originalBoard[IDX_CASTLING];
+							if (toIdx == A1) {
+								castlingMask &= 0xf ^ MASK_CASTLING_WHITE_QUEEN_SIDE;
+							}
+							else if (toIdx == H1) {
+								castlingMask &= 0xf ^ MASK_CASTLING_WHITE_KING_SIDE;
+							}
+							newBoard[IDX_CASTLING] = castlingMask;
+
                             int checkStatus = calculateCheckStatus(newBoard);
                             if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
                                 newBoard[IDX_CHECK_STATUS] = checkStatus;
@@ -730,6 +763,9 @@ int findAllPossibleMoves(long originalBoard[]) {
 
                             int checkStatus = calculateCheckStatus(newBoard);
                             if ((checkStatus & MASK_BLACK_KING_CHECKED) == 0) {
+
+								newBoard[IDX_CASTLING] &= ~(MASK_CASTLING_BLACK_QUEEN_SIDE | MASK_CASTLING_BLACK_KING_SIDE);
+
                                 newBoard[IDX_CHECK_STATUS] = checkStatus;
 
                                 numMovesFound++;
@@ -753,7 +789,7 @@ int findAllPossibleMoves(long originalBoard[]) {
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
-                            newBoard[IDX_CASTLING] &= 0xf ^ (MASK_CASTLING_BLACK_QUEEN_SIDE | MASK_CASTLING_BLACK_KING_SIDE);
+                            newBoard[IDX_CASTLING] &=  ~(MASK_CASTLING_BLACK_QUEEN_SIDE | MASK_CASTLING_BLACK_KING_SIDE);
                             newBoard[A8] = 0;
                             newBoard[E8] = 0;
                             newBoard[C8] = Piece_k;
@@ -780,7 +816,7 @@ int findAllPossibleMoves(long originalBoard[]) {
                             makeNewBoard(originalBoard,newBoard);
 
                             newBoard[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE;
-                            newBoard[IDX_CASTLING] &= 0xf ^ (MASK_CASTLING_BLACK_QUEEN_SIDE | MASK_CASTLING_BLACK_KING_SIDE);
+                            newBoard[IDX_CASTLING] &= ~(MASK_CASTLING_BLACK_QUEEN_SIDE | MASK_CASTLING_BLACK_KING_SIDE);
                             newBoard[H8] = 0;
                             newBoard[E8] = 0;
                             newBoard[G8] = Piece_k;
@@ -833,6 +869,23 @@ int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatr
                     }
                     newBoard[toIdx] = p;
                     newBoard[fromIdx] = 0;
+
+					int castlingMask = b[IDX_CASTLING];
+					if (toIdx == A8) {
+						castlingMask &= 0xf ^ MASK_CASTLING_BLACK_QUEEN_SIDE;
+					}
+					else if (toIdx == H8) {
+						castlingMask &= 0xf ^ MASK_CASTLING_BLACK_KING_SIDE;
+					}
+					if (toIdx == A1) {
+						castlingMask &= 0xf ^ MASK_CASTLING_WHITE_QUEEN_SIDE;
+					}
+					else if (toIdx == H1) {
+						castlingMask &= 0xf ^ MASK_CASTLING_WHITE_KING_SIDE;
+					}
+
+					newBoard[IDX_CASTLING] = castlingMask;
+
 
                     const int checkStatus = calculateCheckStatus(newBoard);
                     newBoard[IDX_CHECK_STATUS] = checkStatus;
@@ -1092,36 +1145,37 @@ boolean isSquaresThreatenedByColor(long board[], int indices[], int color) {
     return FALSE;
 }
 
+
  const int WHITE_ATTACK_MAP_PIECES[] = {
   Pieces_QBK,  Pieces_QB,
-  Pieces_QRK,  Pieces_QR,
   Pieces_QBK,  Pieces_QB,
-  Pieces_QRK,  Pieces_QR,
+  Pieces_QBPK, Pieces_QB,
   Pieces_QBPK, Pieces_QB,
   Pieces_QRK,  Pieces_QR,
-  Pieces_QBPK, Pieces_QB,
+  Pieces_QRK,  Pieces_QR,
+  Pieces_QRK,  Pieces_QR,
   Pieces_QRK,  Pieces_QR,
 };
  const int BLACK_ATTACK_MAP_PIECES[] = {
   Pieces_qbpk,Pieces_qb,
-  Pieces_qrk, Pieces_qr,
   Pieces_qbpk,Pieces_qb,
-  Pieces_qrk, Pieces_qr,
+  Pieces_qbk, Pieces_qb,
   Pieces_qbk, Pieces_qb,
   Pieces_qrk, Pieces_qr,
-  Pieces_qbk, Pieces_qb,
+  Pieces_qrk, Pieces_qr,
+  Pieces_qrk, Pieces_qr,
   Pieces_qrk, Pieces_qr,
 };
 
  const int ATTACK_MAP_INDEXES[] = {
    -1,-1,
-   -1,0,
    -1,1,
-    0,1,
     1,-1,
-    1,0,
     1,1,
-    0,-1
+    0,-1,
+    -1,0,
+    1,0,
+    0,1,
 };
 
 int numFaults = 0;
@@ -1424,7 +1478,10 @@ void printDiagram( long board[] ){
   }
   printf( "\"");
   printf( " %s", board[IDX_TURN] == WHITE_MASK ? "w" : "b" );
-  printf( " %ld", board[IDX_CASTLING] );
+  printf( " %c", (board[IDX_CASTLING]&MASK_CASTLING_WHITE_KING_SIDE)?'K':' ' );
+  printf( "%c", (board[IDX_CASTLING]&MASK_CASTLING_WHITE_QUEEN_SIDE)?'Q':' ' );
+  printf( "%c", (board[IDX_CASTLING]&MASK_CASTLING_BLACK_KING_SIDE)?'k':' ' );
+  printf( "%c ", (board[IDX_CASTLING]&MASK_CASTLING_BLACK_QUEEN_SIDE)?'q':' ' );
 
 
   printf("\n");
