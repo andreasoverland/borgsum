@@ -35,11 +35,8 @@ int makeBlackPromotions(long b[], int from, int to, int moveMask, int castlingMa
 int makeWhitePromotions(long b[], int from, int to, int moveMask, int castlingMask);
 int moveLinear(long b[], int fromIdx, const int moveMatrix[], const int moveMatrixLength);
 
-<<<<<<< HEAD
 int MAX_LEVEL = 5;
-=======
-int MAX_LEVEL = 4;
->>>>>>> b2c029d2eace016105a4f58266122ff2722331f1
+
 long numMoves[]      = {0,0,0,0,0,0,0,0,0,0,0};
 long numCaptures[]   = {0,0,0,0,0,0,0,0,0,0,0};
 long numEP[]         = {0,0,0,0,0,0,0,0,0,0,0};
