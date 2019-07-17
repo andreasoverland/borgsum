@@ -340,7 +340,9 @@ void dig(unsigned long board[]) {
 			board[IDX_CHECK_STATUS] = MASK_KING_IS_STALEMATED;
 		}
 	}
-
+	if( MAX_LEVEL < 3){
+		printDiagram(board);
+	}
 	count(board);
 
 }
