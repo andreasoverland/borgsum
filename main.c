@@ -120,6 +120,7 @@ void printCompactBoard(unsigned long board[]);
 /*** LEVEL ***/
 
 int MAX_LEVEL = 5;
+int LOG_TYPE = LOG_TYPE_NONE;
 
 unsigned long numMoves[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numCaptures[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -169,7 +170,8 @@ int main( int argc, char **argv){
                       . p . . P . . .\
                       . . N . . Q . p\
                       P P P B B P P P\
-                      R . . . K . . R";
+                      R . . . K . . R\
+	                  w KQkq -";
 
 
 	unsigned long board[NUM_BYTES];
@@ -185,30 +187,69 @@ int main( int argc, char **argv){
 		}
 		else if( strcmp(argv[1],"-h") == 0 ){
 			printf("** Borgsum Chess Engine (fast, but stupid version) **\r\n");
+			printf("Usage:\r\n");
+			printf("chessengine [arguments]\r\n");
 			printf("Arguments:\r\n");
-			printf("1 : board diagram enclosed in \"\r\n");
-			printf("2 : turn b or w\r\n");
-			printf("3 : castling rights, KQkq or - if no castling rights are left\r\n" );
-			printf("4 : max level recursion, integer\r\n");
-			printf("5 : workunit id\r\n");
-			printf("\r\nandreasoverland@gmail.com\r\n");
+			printf("No arguments       The chessengine will run once with the Kiwi Pete setup, to a level of 5 deep, then print statistics.\r\n");
+			printf("-diagram \"string\"  A human readable form of the board enclosed in \"'s\r\n");
+			printf("                   Examples:\r\n");
+			printf("                   \"rnbqkbnr .ppppppp ........ p....... ........ .......P PPPPPPP. RNBQKBNR w KQkq a6\"\r\n");
+			printf("                   \".r..k..r p..pqpb. bn..pnp. ..pPN... Pp..P... ..N..QPp .PPBBP.P R....K.R b k -\"\r\n");
+			printf("                   \".r...rk. p..pqpb. .n..pnN. ..pP.... Pp..P... ..Nb.QPp .PPBBP.P R....K.R - -\"\r\n");
+			printf("                   Each row, beginning with black pieces on a8, then followed by turn w or b, followed by\r\n");
+			printf("                   castling rights in any combo of KQkq, or - for none, followed by en passant square if the last move\r\n");
+			printf("                   was a pawn being moved to squares. The an passant square is the attackable square behind the moved pawn.\r\n");
+			printf("                   Spaces are ignored, and dots are treated as empty squares.\r\n");
+			printf("-fen \"string\"      Instead of diagram, use FEN to define a starting position. (not implemented)\r\n");
+			printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
+			printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
+			printf("-log [fen|diagram] Will print out each new board found, in diagram or fen format. If omitted, the \r\n");
+			printf("SLEEP              The program will sleep for 60 seconds. Useful when running as a distributed client.\r\n");
+
+			printf("\r\n\r\nandreasoverland@gmail.com\r\n\r\n");
 			fflush(stdout);
 			exit(0);
 		}
-		initialBoard = argv[1];
+
 	}
 
+	for( int a = 1; a < argc; a++ ){
+
+		if( strcmp( argv[a], "-diagram") == 0 ){
+			// TODO: parse diagram, skip one argument count
+			a++;
+		}
+
+		if( strcmp( argv[a], "-fen") == 0 ) {
+			// TODO: parse fen, skip one argument count
+			a++;
+		}
+
+		if( strcmp( argv[a], "-maxlevel") == 0 ) {
+			a++;
+			MAX_LEVEL = atoi(argv[a]);
+		}
+
+		if( strcmp( argv[a], "-workunitid") == 0 ) {
+			a++;
+			workUnitId = argv[a];
+		}
+
+		if( strcmp( argv[a], "-log") == 0 ) {
+			a++;
+			if( strcmp( argv[a], "fen" ) == 0 ){
+				LOG_TYPE = LOG_TYPE_FEN;
+			}
+			else if( strcmp( argv[a], "diagram" ) == 0 ){
+				LOG_TYPE = LOG_TYPE_DIAGRAM;
+			}
+		}
+
+	}
 	diagramToBitBoard( board, initialBoard);
 
 
-	if( argc > 2 ){
-		if( strcmp(argv[2], "b" ) == 0 ){
-			board[IDX_TURN] = BLACK_MASK;
-		}
-		else {
-			board[IDX_TURN] = WHITE_MASK;
-		}
-	}
+	/*
 
 	if( argc > 3 ){
 		board[IDX_CASTLING] = 0;
@@ -230,20 +271,16 @@ int main( int argc, char **argv){
 		}
 	}
 
-	if( argc > 4 ){
-		MAX_LEVEL = atoi(argv[4]);
-	}
-
 	if( argc > 5 ){
 		workUnitId = argv[5];
 		printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
 	}
-
+*/
 	if( argc == 1){
 		printf("run this with arguments :\r\n");
 		char line[120];
 		sprintDiagram(line, board);
-		printf("./chessengine %s %d\n", line, MAX_LEVEL  );
+		printf("./chessengine -diagram %s -maxlevel %d\n", line, MAX_LEVEL  );
 	}
 
 	printBitBoard( board );
@@ -2514,20 +2551,30 @@ void sprintDiagram( char *target, unsigned long board[] ){
 	char castling[] = "\0\0\0\0\0";
 
 	int moveCursor = 0;
-	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) == MASK_CASTLING_WHITE_KING_SIDE ){
-		castling[moveCursor++] = 'K';
+	if( board[IDX_CASTLING] == 0 ){
+		castling[moveCursor++] = '-';
 	}
-	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ){
-		castling[moveCursor++] = 'Q';
-	}
-	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) == MASK_CASTLING_BLACK_KING_SIDE ){
-		castling[moveCursor++] = 'k';
-	}
-	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ){
-		castling[moveCursor++] = 'q';
+	else {
+		if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) == MASK_CASTLING_WHITE_KING_SIDE) {
+			castling[moveCursor++] = 'K';
+		}
+		if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE) {
+			castling[moveCursor++] = 'Q';
+		}
+		if ((board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) == MASK_CASTLING_BLACK_KING_SIDE) {
+			castling[moveCursor++] = 'k';
+		}
+		if ((board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE) {
+			castling[moveCursor++] = 'q';
+		}
 	}
 
-	sprintf(target, "\"%s\" %s %s", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling);
+	char epSquare[] = "-\0\0";
+	if( board[IDX_EP_IDX] != 0){
+
+	}
+
+	sprintf(target, "\"%s %s %s\"", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling);
 	//sprintf(target, "\"%s\" %s %lu %lu %lu", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", board[IDX_CASTLING], board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
 
 }
@@ -2733,15 +2780,12 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 	memset(board, 0, sizeof(unsigned long) * NUM_BYTES);
 
-	board[IDX_CASTLING] =
-			MASK_CASTLING_WHITE_QUEEN_SIDE |
-			MASK_CASTLING_WHITE_KING_SIDE |
-			MASK_CASTLING_BLACK_QUEEN_SIDE |
-			MASK_CASTLING_BLACK_KING_SIDE;
-
+	board[IDX_CASTLING] = 0;
+	board[IDX_EP_IDX] = 0;
 	board[IDX_TURN] = WHITE_MASK;
 
 	int pos = 0;
+	int lastLenUsed = 0;
 
 	for (int t = 0; t < len; t++) {
 		switch (diagram[t]) {
@@ -2801,6 +2845,13 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 		}// switch
 
+
+
+		if( pos > 63 ){
+			lastLenUsed = len;
+			break;
+		}
+
 	} // 0..len
 
 	board[IDX_WHITE_PIECES] = board[IDX_WHITE_PAWNS] |
@@ -2820,7 +2871,56 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 	board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] |
 							board[IDX_BLACK_PIECES];
 
+
 	board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board) | calculateBlackKingCheckStatus(board);
+
+	int mode = 0; // looking for turn character
+	int modeTurnDone = 0;
+	int modeCastlingDone = 0;
+	int modeEnPassSquareDone = 0;
+
+	for( int t=lastLenUsed;t < len;t++){
+
+		if( mode == 0){
+			if( diagram[t] == 'w' ){
+				board[IDX_TURN] = WHITE_MASK;
+				mode = 1;
+			}
+			else if( diagram[t] == 'b' ){
+				board[IDX_TURN] = BLACK_MASK;
+				mode = 1;
+			}
+		}
+		else if( mode == 1 ){
+			if( diagram[t] == 'K' ) {
+				board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+				modeCastlingDone = 1;
+			}
+			if( diagram[t] == 'Q' ) {
+				board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+				modeCastlingDone = 1;
+			}
+			if( diagram[t] == 'k') {
+				board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+				modeCastlingDone = 1;
+			}
+			if( diagram[t] == 'q') {
+				board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
+				modeCastlingDone = 1;
+			}
+			if( diagram[t] == '-') {
+				board[IDX_CASTLING] = 0 ;
+				modeCastlingDone = 1;
+			}
+			if( modeCastlingDone == 1 && diagram[t] == ' ') {
+				mode = 2;
+			}
+		}
+		else if( mode == 2 ){
+
+		}
+
+	}
 
 
 } // diagramToBitBoard

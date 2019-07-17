@@ -1,14 +1,18 @@
-
+// TURN BITS
 
 const int WHITE_MASK 								= 0b00000001;
 const int BLACK_MASK 								= 0b00000010;
 const int TURN_INVERTER 							= 0b00000011;
+
+// LAST MOVE STATUS BITS
 
 const int MASK_LAST_MOVE_WAS_CAPTURE             	= 0b00000001;
 const int MASK_LAST_MOVE_WAS_EP_STRIKE           	= 0b00000010;
 const int MASK_LAST_MOVE_WAS_PROMO               	= 0b00000100;
 const int MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE 	= 0b00001000;
 const int MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE  	= 0b00010000;
+
+// CHECK STATUS BITS
 
 const int MASK_WHITE_KING_CHECKED 		 			= 0b00000001;
 const int MASK_BLACK_KING_CHECKED 		 			= 0b00000010;
@@ -17,6 +21,8 @@ const int MASK_KING_IS_STALEMATED        			= 0b00001000;
 
 const int MASK_CHECK_TYPE_DOUBLE					= 0b00010000;
 const int MASK_CHECK_TYPE_DISCOVERED				= 0b00100000;
+
+// BOARD ARRAY INDEXES
 
 const int IDX_MOVE_ID 	     =  0;
 const int IDX_PARENT_MOVE_ID =  1;
@@ -88,6 +94,8 @@ const unsigned long F8_MASK = (1L << F8);
 const unsigned long G8_MASK = (1L << G8);
 const unsigned long H8_MASK = (1L << H8);
 
+// CASTLING MASKS
+
 const unsigned long B1_C1_D1_MASK = B1_MASK|C1_MASK|D1_MASK;
 const unsigned long F1_G1_MASK    = F1_MASK|G1_MASK;
 
@@ -99,7 +107,7 @@ const unsigned long MASK_CASTLING_WHITE_KING_SIDE  = H1_MASK|E1_MASK;
 const unsigned long MASK_CASTLING_BLACK_QUEEN_SIDE = A8_MASK|E8_MASK;
 const unsigned long MASK_CASTLING_BLACK_KING_SIDE  = H8_MASK|E8_MASK;
 
-// BITMAPS
+// ROW MASKS
 
 const unsigned long R8 = 0xFF00000000000000;
 const unsigned long R7 = 0x00FF000000000000;
@@ -110,8 +118,10 @@ const unsigned long R3 = 0x0000000000FF0000;
 const unsigned long R2 = 0x000000000000FF00;
 const unsigned long R1 = 0x00000000000000FF;
 
+// EDGE MASK
 const unsigned long R1_R8 = R8|R1;
 
+// FILE MASKS
 const unsigned long FA = 0x8080808080808080;
 const unsigned long FB = 0x4040404040404040;
 const unsigned long FC = 0x2020202020202020;
@@ -120,3 +130,8 @@ const unsigned long FE = 0x0808080808080808;
 const unsigned long FF = 0x0404040404040404;
 const unsigned long FG = 0x0202020202020202;
 const unsigned long FH = 0x0101010101010101;
+
+// LOGGING
+const int LOG_TYPE_NONE = 0;
+const int LOG_TYPE_DIAGRAM = 1;
+const int LOG_TYPE_FEN = 2;

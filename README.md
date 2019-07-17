@@ -30,3 +30,5 @@ cat testbatch.txt|xargs -n 5  sh -c 'echo \"$1\" $2 $3 $4 $0'
 		  - maxlevel
 		  - workunitid
 		  - log = fen/diagram (if omitted, only statistics are logged at the end)
+
+
