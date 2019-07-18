@@ -98,6 +98,8 @@ void printBitBoard(unsigned long board[]);
 
 void diagramToBitBoard(unsigned long board[], char diagram[]);
 
+void fenToBitBoard( unsigned long board[], char fen[] );
+
 void printLongAsBitBoard(unsigned long bitstream);
 
 void printCompactBoard(unsigned long board[]);
@@ -2719,6 +2721,26 @@ void printBitBoard(unsigned long board[]) {
 rn..kbnrpppqpppp...........p........P.bP........PPPP.PP.RNB.KBNR w KQkq 4 1
 */
 
+void fenToBitBoard( unsigned long board[], char fen[] ){
+
+    "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10";
+
+    char str[strlen(fen)];
+    sprintf(str,"%s",fen);
+
+    char delim[] = " \t\n";
+    char *ptr = strtok(str, delim);
+    // TODO: IMPLement next
+    // første dings = fen
+    // loop fen, ta hver char
+    //   - hvis brikke sett brikke på pos
+    //   - hvis tall add pos
+    //   - hvis / pos++
+    // neste dingser
+    //   - gjør som diagram-parsing
+
+}
+
 void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 	//
@@ -2834,8 +2856,6 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 	int modeTurnDone = 0;
 	int modeCastlingDone = 0;
 	int modeEnPassSquareDone = 0;
-
-	printf("String tokenizer\r\n");
 
 
     char str[strlen(diagram)];
