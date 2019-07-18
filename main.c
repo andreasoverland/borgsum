@@ -149,6 +149,8 @@ char *workUnitId = NULL;
 
 int main( int argc, char **argv){
 
+    printf("a=%d 1=%d\r\n",'a','1');
+
 	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
 	/*char *initialBoard = "\
@@ -171,12 +173,11 @@ int main( int argc, char **argv){
                       . . N . . Q . p\
                       P P P B B P P P\
                       R . . . K . . R\
-	                  w KQkq -";
+	                  w KQkq e3";
 
+    unsigned long board[NUM_BYTES];
 
-	unsigned long board[NUM_BYTES];
-
-
+    diagramToBitBoard( board, initialBoard);
 
 	if( argc > 1 ){
 		if( strcmp(argv[1],"SLEEP") == 0 ){
@@ -216,8 +217,8 @@ int main( int argc, char **argv){
 	for( int a = 1; a < argc; a++ ){
 
 		if( strcmp( argv[a], "-diagram") == 0 ){
-			// TODO: parse diagram, skip one argument count
 			a++;
+            diagramToBitBoard( board, argv[a] );
 		}
 
 		if( strcmp( argv[a], "-fen") == 0 ) {
@@ -246,7 +247,6 @@ int main( int argc, char **argv){
 		}
 
 	}
-	diagramToBitBoard( board, initialBoard);
 
 
 	/*
@@ -377,9 +377,13 @@ void dig(unsigned long board[]) {
 			board[IDX_CHECK_STATUS] = MASK_KING_IS_STALEMATED;
 		}
 	}
-	if( MAX_LEVEL < 3){
-		printDiagram(board);
+
+	if( LOG_TYPE == LOG_TYPE_DIAGRAM ){
+	    if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
+            printDiagram(board);
+        }
 	}
+
 	count(board);
 
 }
@@ -2571,7 +2575,7 @@ void sprintDiagram( char *target, unsigned long board[] ){
 
 	char epSquare[] = "-\0\0";
 	if( board[IDX_EP_IDX] != 0){
-
+        // TODO: implement
 	}
 
 	sprintf(target, "\"%s %s %s\"", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling);
@@ -2581,50 +2585,7 @@ void sprintDiagram( char *target, unsigned long board[] ){
 
 void printDiagram(unsigned long board[]) {
 
-	char str[] = "................................................................\0";
-
-	setBitsToChar(str, board[IDX_WHITE_PAWNS], 'P');
-	setBitsToChar(str, board[IDX_WHITE_ROOKS], 'R');
-	setBitsToChar(str, board[IDX_WHITE_BISHOPS], 'B');
-	setBitsToChar(str, board[IDX_WHITE_KNIGHTS], 'N');
-	setBitsToChar(str, board[IDX_WHITE_QUEENS], 'Q');
-	setBitsToChar(str, board[IDX_WHITE_KING], 'K');
-
-	setBitsToChar(str, board[IDX_BLACK_PAWNS], 'p');
-	setBitsToChar(str, board[IDX_BLACK_ROOKS], 'r');
-	setBitsToChar(str, board[IDX_BLACK_BISHOPS], 'b');
-	setBitsToChar(str, board[IDX_BLACK_KNIGHTS], 'n');
-	setBitsToChar(str, board[IDX_BLACK_QUEENS], 'q');
-	setBitsToChar(str, board[IDX_BLACK_KING], 'k');
-
-	char res[] = "                                                                       \0";
-
-	for (int t = 0; t < 64; t++) {
-		res[t + (t >> 3)] = str[t];
-	}
-
-	printf("\"%s\"", res);
-
-
-	printf(" %s", board[IDX_TURN] == WHITE_MASK ? "w" : "b");
-	char castling[] = "\0\0\0\0\0";
-
-	int moveCursor = 0;
-	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) == MASK_CASTLING_WHITE_KING_SIDE ){
-		castling[moveCursor++] = 'K';
-	}
-	if( (board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) == MASK_CASTLING_WHITE_QUEEN_SIDE ){
-		castling[moveCursor++] = 'Q';
-	}
-	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) == MASK_CASTLING_BLACK_KING_SIDE ){
-		castling[moveCursor++] = 'k';
-	}
-	if( (board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) == MASK_CASTLING_BLACK_QUEEN_SIDE ){
-		castling[moveCursor++] = 'q';
-	}
-
-	printf(" %s ", castling);
-
+    // TODO: use sprintDiagram  
 	printf(" %lu %lu\n", board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
 
 }
@@ -2848,7 +2809,8 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 
 		if( pos > 63 ){
-			lastLenUsed = len;
+            lastLenUsed = t+1;
+		    printf("breaking after board data parsing %d %d\r\n", lastLenUsed, t);
 			break;
 		}
 
@@ -2874,6 +2836,7 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 	board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board) | calculateBlackKingCheckStatus(board);
 
+
 	int mode = 0; // looking for turn character
 	int modeTurnDone = 0;
 	int modeCastlingDone = 0;
@@ -2884,10 +2847,12 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 		if( mode == 0){
 			if( diagram[t] == 'w' ){
 				board[IDX_TURN] = WHITE_MASK;
+				printf("turn : white\r\n");
 				mode = 1;
 			}
 			else if( diagram[t] == 'b' ){
 				board[IDX_TURN] = BLACK_MASK;
+                printf("turn : black\r\n");
 				mode = 1;
 			}
 		}
@@ -2913,11 +2878,30 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 				modeCastlingDone = 1;
 			}
 			if( modeCastlingDone == 1 && diagram[t] == ' ') {
+			    printf( "castling %lu\r\n", board[IDX_CASTLING] );
 				mode = 2;
 			}
 		}
 		else if( mode == 2 ){
-
+			if( diagram[t] == '-') {
+				board[IDX_EP_IDX] = 0 ;
+				modeEnPassSquareDone = 1;
+				mode = 3;
+				break;
+			}
+			else if( diagram[t] == ' ') {
+				continue;
+			}
+			else if( diagram[t] >= 'a' && diagram[t] <= 'h'){
+			    printf("** en passant argument: %c%c \r\n",diagram[t],diagram[t+1] );
+			    printf(" file: %d  rank: %d\r\n", diagram[t] - 97, diagram[t+1]-49 );
+			    int rank = (diagram[t+1]-49);
+			    if( rank == 2 || rank == 5){
+                    board[IDX_EP_IDX] = 1L << (7-(diagram[t]-97)+(rank<<3));
+			    }
+			    mode = 3;
+			    break;
+			}
 		}
 
 	}
