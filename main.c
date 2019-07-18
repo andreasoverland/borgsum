@@ -12,18 +12,6 @@ typedef enum {
 } boolean;
 
 
-// Logic for testing threats in quadrants
-/*
-
-
-if( board[IDX_WHITE_KING] > (board[IDX_BLACK_QUEENS] & qbAttackMap ) ){
-	if( (QB_ATTACK_MAPS[kingIndex] & board[IDX_BLACK_QUEENS]) > (QB_ATTACK_MAPS[kingIndex] & board[IDX_ALL_PIECES] & ~board[IDX_BLACK_QUEENS] )) {
-		printf( "White king is in check, bit test 1.\n");
-	}
-}
-
-*/
-
 // Authors
 // Andreas Øverland
 // Eva Solfrid Øverland
@@ -39,7 +27,7 @@ if( board[IDX_WHITE_KING] > (board[IDX_BLACK_QUEENS] & qbAttackMap ) ){
 //    - make extra function to check for how the move affected the other king, which includes moved piece
 // DONE: log stalemate
 // 2. Implement ^ for moving, instead of &~ and then |. Do it in makeBlack/WhiteMove
-// 3. DONE always exopects a file input
+// 3. file input
 // 4. on check on last level only check until the first valid move is found
 // 5. check stalemate counting for with and black maybe bugging for black
 // 6. rewrite diagram, create new for level 6, include multiplier
@@ -143,6 +131,7 @@ unsigned long makeNewBoardInvocations = 0;
 unsigned long isSquaresThreatenedByColorInvocations = 0;
 unsigned long influenceMapForSquareInvocations = 0;
 unsigned long moveLinearInvocations = 0;
+
 int maxNumMoves = 0;
 
 char *workUnitId = NULL;
@@ -194,13 +183,14 @@ int main( int argc, char **argv){
 			printf("No arguments       The chessengine will run once with the Kiwi Pete setup, to a level of 5 deep, then print statistics.\r\n");
 			printf("-diagram \"string\"  A human readable form of the board enclosed in \"'s\r\n");
 			printf("                   Examples:\r\n");
-			printf("                   \"rnbqkbnr .ppppppp ........ p....... ........ .......P PPPPPPP. RNBQKBNR w KQkq a6\"\r\n");
-			printf("                   \".r..k..r p..pqpb. bn..pnp. ..pPN... Pp..P... ..N..QPp .PPBBP.P R....K.R b k -\"\r\n");
-			printf("                   \".r...rk. p..pqpb. .n..pnN. ..pP.... Pp..P... ..Nb.QPp .PPBBP.P R....K.R - -\"\r\n");
+			printf("                   \"rnbqkbnr .ppppppp ........ p....... ........ .......P PPPPPPP. RNBQKBNR w KQkq a6 2\"\r\n");
+			printf("                   \"r....rk. p.ppqpb. bn..pnN. ...P.... .p..P... ..N..Q.p PPPBBPPP R....RK. b - - 3\"\r\n");
+			printf("                   \"r....r.. p..pqpbk bn..pnN. ..pP.... .p..P... ..N..Q.p PPPBBPPP R....R.K w - b5 6\"\r\n");
 			printf("                   Each row, beginning with black pieces on a8, then followed by turn w or b, followed by\r\n");
 			printf("                   castling rights in any combo of KQkq, or - for none, followed by en passant square if the last move\r\n");
-			printf("                   was a pawn being moved to squares. The an passant square is the attackable square behind the moved pawn.\r\n");
-			printf("                   Spaces are ignored, and dots are treated as empty squares.\r\n");
+			printf("                   was a pawn being moved to squares.The an passant square is the attackable square behind the moved pawn.\r\n");
+			printf("                    The last number is the move number, or ply really. \r\n");
+			printf("                   Spaces are ignored, and dots are treated as empty squares. \r\n");
 			printf("-fen \"string\"      Instead of diagram, use FEN to define a starting position. (not implemented)\r\n");
 			printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
 			printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
@@ -2575,18 +2565,23 @@ void sprintDiagram( char *target, unsigned long board[] ){
 
 	char epSquare[] = "-\0\0";
 	if( board[IDX_EP_IDX] != 0){
-        // TODO: implement
+        int idx = __builtin_ctzll(board[IDX_EP_IDX]);
+        int file = 7 - ( idx >> 3 );
+        int rank = idx & 0x7;
+        epSquare[0] = 96 + file;
+        epSquare[1] = 48 + rank;
 	}
 
-	sprintf(target, "\"%s %s %s\"", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling);
+	sprintf(target, "\"%s %s %s %s %lu\"", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling, epSquare, board[IDX_MOVE_NUM] );
 	//sprintf(target, "\"%s\" %s %lu %lu %lu", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", board[IDX_CASTLING], board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
 
 }
 
 void printDiagram(unsigned long board[]) {
 
-    // TODO: use sprintDiagram  
-	printf(" %lu %lu\n", board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
+    char str[200];
+    sprintDiagram( str, board );
+	printf("%s %lu %lu\n", str, board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
 
 }
 
@@ -2810,7 +2805,6 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 		if( pos > 63 ){
             lastLenUsed = t+1;
-		    printf("breaking after board data parsing %d %d\r\n", lastLenUsed, t);
 			break;
 		}
 
@@ -2836,11 +2830,69 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 	board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board) | calculateBlackKingCheckStatus(board);
 
-
 	int mode = 0; // looking for turn character
 	int modeTurnDone = 0;
 	int modeCastlingDone = 0;
 	int modeEnPassSquareDone = 0;
+
+	printf("String tokenizer\r\n");
+
+
+    char str[strlen(diagram)];
+    sprintf(str,"%s",diagram+lastLenUsed);
+
+    char delim[] = " \t\n";
+    char *ptr = strtok(str, delim);
+
+    int arg = 0;
+    while(ptr != NULL) {
+        printf("'%s'\n", ptr);
+
+        if( arg == 0) {
+            if (strcmp(ptr, "w") == 0) {
+                board[IDX_TURN] = WHITE_MASK;
+            }
+            else if (strcmp(ptr, "b")) {
+                board[IDX_TURN] = BLACK_MASK;
+            }
+            printf("turn : %s\r\n", ptr );
+        }
+        else if ( arg == 1 ){
+            if( strchr( ptr,'K') != NULL ){
+                board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+            }
+
+            if( strchr(ptr,'k') != NULL ){
+                board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+            }
+
+            if( strchr(ptr,'Q') != NULL ){
+                board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+            }
+
+            if( strchr(ptr,'q') != NULL ){
+                board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
+            }
+        }
+        else if( arg == 2 ){
+
+            if( ptr[0] >= 'a' && ptr[0] <= 'h'){
+                printf("** en passant argument: %c%c \r\n", ptr[0],ptr[1] );
+                printf(" file: %d  rank: %d\r\n", ptr[0] - 97, ptr[1]-49 );
+                int rank = (ptr[1]-49);
+                if( rank == 2 || rank == 5){
+                    board[IDX_EP_IDX] = 1L << (7-(ptr[0]-97)+(rank<<3));
+                }
+            }
+        }
+        else if( arg == 3 ){
+            board[IDX_MOVE_NUM] = atoi(ptr);
+        }
+
+
+        ptr = strtok(NULL, delim);
+        arg++;
+    }
 
 	for( int t=lastLenUsed;t < len;t++){
 
@@ -2887,7 +2939,6 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 				board[IDX_EP_IDX] = 0 ;
 				modeEnPassSquareDone = 1;
 				mode = 3;
-				break;
 			}
 			else if( diagram[t] == ' ') {
 				continue;
@@ -2896,12 +2947,18 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 			    printf("** en passant argument: %c%c \r\n",diagram[t],diagram[t+1] );
 			    printf(" file: %d  rank: %d\r\n", diagram[t] - 97, diagram[t+1]-49 );
 			    int rank = (diagram[t+1]-49);
+			    t++;
 			    if( rank == 2 || rank == 5){
                     board[IDX_EP_IDX] = 1L << (7-(diagram[t]-97)+(rank<<3));
 			    }
 			    mode = 3;
-			    break;
 			}
+		}
+		else if ( mode == 3 ){ // move number
+            if( diagram[t] == ' ') {
+                continue;
+            }
+
 		}
 
 	}
