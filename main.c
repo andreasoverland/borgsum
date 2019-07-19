@@ -155,6 +155,15 @@ int main( int argc, char **argv){
 						 R N B Q K B N R";*/
 
 	//*
+
+	// ADA Chess FEN test
+	// 7k/8/8/8/6p1/5p1r/7n/7K
+	// ".......k ........ ........ ........ ......p. .....p.r .......n .......K b - - 0"
+
+	// Position 4
+    // r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1
+    // "r..q.rk. pP.p..pp Q....n.. bbp.p... Np...... .B...NBn pPPP.PPP R...K..R b kq - 0"
+
 	char *initialBoard = "\
                       r . . . k . . r\
                       p . p p q p b .\
@@ -326,12 +335,12 @@ unsigned long printStats() {
 		printf(", Prom: %lu", numPromos[t]);
 		printf(", Checks: %lu", numChecks[t]);
 		printf(", Disc: %lu", numDiscoveryChecks[t]);
-		printf(", Disc(p): %lu", numDiscoveryPromoChecks[t]);
-		printf(", Disc(c): %lu", numDiscoveryCaptureChecks[t]);
+		printf(", Disc(promo): %lu", numDiscoveryPromoChecks[t]);
+		printf(", Disc(capture): %lu", numDiscoveryCaptureChecks[t]);
 		printf(", Disc(ep): %lu", numDiscoveryEPChecks[t]);
 		printf(", Dbl: %lu", numDoubleChecks[t]);
-		printf(", Dbl(p) : %lu", numDoublePromoChecks[t] );
-		printf(", Dbl(c) : %lu", numDoubleCaptureChecks[t] );
+		printf(", Dbl(promo) : %lu", numDoublePromoChecks[t] );
+		printf(", Dbl(capture) : %lu", numDoubleCaptureChecks[t] );
 		printf(", Dbl(ep) : %lu", numDoubleEPChecks[t] );
 		printf(", Mates: %lu", numCheckmates[t]);
 		printf(", S.Mates: %lu\n", numStalemates[t]);
