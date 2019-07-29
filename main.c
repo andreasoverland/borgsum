@@ -111,7 +111,7 @@ void printCompactBoard(unsigned long board[]);
 
 int MAX_LEVEL = 5;
 int LOG_TYPE = LOG_TYPE_NONE;
-
+unsigned long MULTIPLIER = 0;
 unsigned long numMoves[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numCaptures[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numEP[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -217,7 +217,10 @@ int main( int argc, char **argv){
 			printf("-fen \"string\"      Instead of diagram, use FEN to define a starting position. (not implemented)\r\n");
 			printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
 			printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
-			printf("-log [fen|diagram] Will print out each new board found, in diagram or fen format. If omitted, the \r\n");
+			printf("-logtype TYPE      Either fen or diagram. Will print out each new board found, in diagram or fen format.\r\n");
+			printf("                   If omitted, only the statistics will be printed at the end of the run.\r\n");
+			printf("-mul N             Multiplier number. Only used as pass-on value for logging and collating results\r\n");
+            printf("                   when calculating results for a board that exists N times in a set.\r\n");
 			printf("SLEEP              The program will sleep for 60 seconds. Useful when running as a distributed client.\r\n");
 
 			printf("\r\n\r\nandreasoverland@gmail.com\r\n\r\n");
@@ -249,7 +252,7 @@ int main( int argc, char **argv){
 			workUnitId = argv[a];
 		}
 
-		if( strcmp( argv[a], "-log") == 0 ) {
+		if( strcmp( argv[a], "-logtype") == 0 ) {
 			a++;
 			if( strcmp( argv[a], "fen" ) == 0 ){
 				LOG_TYPE = LOG_TYPE_FEN;
@@ -258,6 +261,10 @@ int main( int argc, char **argv){
 				LOG_TYPE = LOG_TYPE_DIAGRAM;
 			}
 		}
+        if( strcmp( argv[a], "-mul") == 0 ) {
+            a++;
+            MULTIPLIER = atoi(argv[a]);
+        }
 
 	}
 
@@ -293,7 +300,8 @@ int main( int argc, char **argv){
 		printf("run this with arguments :\r\n");
 		char line[120];
 		sprintDiagram(line, board);
-		printf("./chessengine -diagram %s -maxlevel %d\n", line, MAX_LEVEL  );
+        printf("./chessengine -diagram %s -maxlevel %d\n", line, MAX_LEVEL   );
+
 	}
 
 	printBitBoard( board );
@@ -313,11 +321,14 @@ int main( int argc, char **argv){
 
 	long total = printStats();
 
-	printf("\nTotal valid moves found : %lu \n" ,total);
+	printf("\n# Total valid moves found : %lu \n" ,total);
 
-	printf("Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
+	printf("# Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
+    if( MULTIPLIER != 0 ){
+        printf("# multiplier %lu\n", MULTIPLIER  );
+    }
 
-	return 0;
+    return 0;
 } // end main
 
 unsigned long printStats() {
@@ -339,7 +350,7 @@ unsigned long printStats() {
 	static unsigned long total = 0;
 
 	for (int t = 0; t < MAX_LEVEL + 1; t++) {
-		printf("%d", t);
+		printf("# %d", t);
 		printf(", N: %lu", numMoves[t]);
 		printf(", Caps: %lu", numCaptures[t]);
 		printf(", EP: %lu", numEP[t]);
@@ -2604,7 +2615,8 @@ void printDiagram(unsigned long board[]) {
 
     char str[200];
     sprintDiagram( str, board );
-	printf("%s %lu %lu\n", str, board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
+	//printf("%s %lu %lu\n", str, board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
+	printf("%% %s\n", str);
 
 }
 
