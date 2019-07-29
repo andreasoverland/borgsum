@@ -140,8 +140,6 @@ char *workUnitId = NULL;
 
 int main( int argc, char **argv){
 
-    printf("a=%d 1=%d\r\n",'a','1');
-
 	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
 	/*char *initialBoard = "\
@@ -164,6 +162,8 @@ int main( int argc, char **argv){
     // r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1
     // "r..q.rk. pP.p..pp Q....n.. bbp.p... Np...... .B...NBn pPPP.PPP R...K..R b kq - 0"
 
+
+
 	char *initialBoard = "\
                       r . . . k . . r\
                       p . p p q p b .\
@@ -173,7 +173,19 @@ int main( int argc, char **argv){
                       . . N . . Q . p\
                       P P P B B P P P\
                       R . . . K . . R\
-	                  w KQkq e3";
+	                  w KQkq -";
+
+    /*char *initialBoard = "\
+                      . . . . k . . .\
+                      . . . . . . . .\
+                      . . . . . . . .\
+                      . . . . . . . .\
+                      . . P p . . . .\
+                      . . . . . . . .\
+                      . . . . . . . .\
+                      . . . . . . K .\
+	                  b - c3";*/
+
 
     unsigned long board[NUM_BYTES];
 
@@ -2577,10 +2589,10 @@ void sprintDiagram( char *target, unsigned long board[] ){
 	char epSquare[] = "-\0\0";
 	if( board[IDX_EP_IDX] != 0){
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
-        int file = 7 - ( idx >> 3 );
-        int rank = idx & 0x7;
-        epSquare[0] = 96 + file;
-        epSquare[1] = 48 + rank;
+        int file = (7 - ( idx >> 3 )) - 1;
+        int rank = (idx & 0x7) - 1;
+        epSquare[0] = 95 + file;
+        epSquare[1] = 47 + rank;
 	}
 
 	sprintf(target, "\"%s %s %s %s %lu\"", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling, epSquare, board[IDX_MOVE_NUM] );
@@ -2732,7 +2744,7 @@ rn..kbnrpppqpppp...........p........P.bP........PPPP.PP.RNB.KBNR w KQkq 4 1
 
 void fenToBitBoard( unsigned long board[], char fen[] ){
 
-    "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10";
+    // "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10";
 
     char str[strlen(fen)];
     sprintf(str,"%s",fen);
@@ -2875,16 +2887,14 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
     int arg = 0;
     while(ptr != NULL) {
-        printf("'%s'\n", ptr);
 
         if( arg == 0) {
             if (strcmp(ptr, "w") == 0) {
                 board[IDX_TURN] = WHITE_MASK;
             }
-            else if (strcmp(ptr, "b")) {
+            else if (strcmp(ptr, "b") == 0) {
                 board[IDX_TURN] = BLACK_MASK;
             }
-            printf("turn : %s\r\n", ptr );
         }
         else if ( arg == 1 ){
             if( strchr( ptr,'K') != NULL ){
@@ -2906,11 +2916,10 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
         else if( arg == 2 ){
 
             if( ptr[0] >= 'a' && ptr[0] <= 'h'){
-                printf("** en passant argument: %c%c \r\n", ptr[0],ptr[1] );
-                printf(" file: %d  rank: %d\r\n", ptr[0] - 97, ptr[1]-49 );
                 int rank = (ptr[1]-49);
                 if( rank == 2 || rank == 5){
                     board[IDX_EP_IDX] = 1L << (7-(ptr[0]-97)+(rank<<3));
+                    printf( "%lu\n", board[IDX_EP_IDX] );
                 }
             }
         }
@@ -2918,79 +2927,9 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
             board[IDX_MOVE_NUM] = atoi(ptr);
         }
 
-
         ptr = strtok(NULL, delim);
         arg++;
     }
-
-	for( int t=lastLenUsed;t < len;t++){
-
-		if( mode == 0){
-			if( diagram[t] == 'w' ){
-				board[IDX_TURN] = WHITE_MASK;
-				printf("turn : white\r\n");
-				mode = 1;
-			}
-			else if( diagram[t] == 'b' ){
-				board[IDX_TURN] = BLACK_MASK;
-                printf("turn : black\r\n");
-				mode = 1;
-			}
-		}
-		else if( mode == 1 ){
-			if( diagram[t] == 'K' ) {
-				board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
-				modeCastlingDone = 1;
-			}
-			if( diagram[t] == 'Q' ) {
-				board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
-				modeCastlingDone = 1;
-			}
-			if( diagram[t] == 'k') {
-				board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
-				modeCastlingDone = 1;
-			}
-			if( diagram[t] == 'q') {
-				board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
-				modeCastlingDone = 1;
-			}
-			if( diagram[t] == '-') {
-				board[IDX_CASTLING] = 0 ;
-				modeCastlingDone = 1;
-			}
-			if( modeCastlingDone == 1 && diagram[t] == ' ') {
-			    printf( "castling %lu\r\n", board[IDX_CASTLING] );
-				mode = 2;
-			}
-		}
-		else if( mode == 2 ){
-			if( diagram[t] == '-') {
-				board[IDX_EP_IDX] = 0 ;
-				modeEnPassSquareDone = 1;
-				mode = 3;
-			}
-			else if( diagram[t] == ' ') {
-				continue;
-			}
-			else if( diagram[t] >= 'a' && diagram[t] <= 'h'){
-			    printf("** en passant argument: %c%c \r\n",diagram[t],diagram[t+1] );
-			    printf(" file: %d  rank: %d\r\n", diagram[t] - 97, diagram[t+1]-49 );
-			    int rank = (diagram[t+1]-49);
-			    t++;
-			    if( rank == 2 || rank == 5){
-                    board[IDX_EP_IDX] = 1L << (7-(diagram[t]-97)+(rank<<3));
-			    }
-			    mode = 3;
-			}
-		}
-		else if ( mode == 3 ){ // move number
-            if( diagram[t] == ' ') {
-                continue;
-            }
-
-		}
-
-	}
 
 
 } // diagramToBitBoard
