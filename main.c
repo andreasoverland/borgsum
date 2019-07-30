@@ -319,6 +319,10 @@ int main( int argc, char **argv){
 
 	int l = 14;
 
+	if( workUnitId != NULL ){
+		printf("# WORKUNITID: %s\r\n", workUnitId);
+	}
+
 	long total = printStats();
 
 	printf("\n# Total valid moves found : %lu \n" ,total);
@@ -2525,14 +2529,9 @@ void count(unsigned long b[]) {
 		numDiscoveryChecks[level]++;
 	}
 
-
-
-
-
 	if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_STALEMATED)) {
 		numStalemates[level]++;
 	}
-
 
 }
 
@@ -2600,10 +2599,11 @@ void sprintDiagram( char *target, unsigned long board[] ){
 	char epSquare[] = "-\0\0";
 	if( board[IDX_EP_IDX] != 0){
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
-        int file = (7 - ( idx >> 3 )) - 1;
-        int rank = (idx & 0x7) - 1;
-        epSquare[0] = 95 + file;
-        epSquare[1] = 47 + rank;
+		int rank = (idx >> 3);
+        int file = (7 - ( idx >> 3 ));
+
+        epSquare[0] = 96 + file;
+        epSquare[1] = 49 + rank;
 	}
 
 	sprintf(target, "\"%s %s %s %s %lu\"", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling, epSquare, board[IDX_MOVE_NUM] );

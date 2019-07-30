@@ -2,6 +2,7 @@
 ### by Andreas Øverland - andreasoverland@gmail.com
 
 
+
 Super Simple Chess Engine
 
 - Status : Working on finding moves as fast as possible. No evaluation yet. Single thread for simplicity.
@@ -9,8 +10,11 @@ Super Simple Chess Engine
 - How to compile : make
 - How to run : ./chessengine
 
-to make diagrams for input
-cat testbatch.txt|xargs -n 5  sh -c 'echo \"$1\" $2 $3 $4 $0'  
+Preparing workbatches
+
+./chessengine -diagram "r...k..r p.ppqpb. bn..pnp. ...PN... .p..P... ..N..Q.p PPPBBPPP R...K..R w KQkq - 0" -maxlevel 3 -workunitid u723bd823d -logtype diagram|grep "%"|sort|uniq -c|sort > workunit.txt
+cat workunit.txt |awk '{printf("%s %s %s %s %s %s %s %s %s %s %s %s -mul %s\n",$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$1)}END{print}'
+
 
 #### 2019.07.16 09:45 - Status
 The fastest version is now in the branch bitboards, but the most versatile client is in master.
@@ -33,9 +37,15 @@ Plan:
  
 
 ### 2019.07.17 10:00 - Status all of the above done.
+
+
 Todo
 - CSV output format for statistics
 - Parse FEN
+- More parse friendly output of logging
 
 
 
+
+
+"r.n.k..r p.ppqpb. b...pnp. ...PN... .p..P... ..N..Q.p PPPBBPPP R...K..R b KQkq - 3" -mul 25
