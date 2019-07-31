@@ -1,31 +1,31 @@
 {
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ P....... .PPPPPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-00.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ..P..... ........ PP.PPPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-05.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ .P...... P.PPPPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-02.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ .P...... ........ P.PPPPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-03.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ ..P..... PP.PPPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-04.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ P....... .PPPPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >  /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-a.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ..P..... ........ PP.PPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-a.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ .P...... P.PPPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-a.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ .P...... ........ P.PPPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-a.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ..P..... PP.PPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-a.txt ;
 } &
 
 {
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ ....P... PPPP.PPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-08.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ P....... ........ .PPPPPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-01.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ ......P. PPPPPP.P RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-12.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ ...P.... PPP.PPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-06.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ N....... PPPPPPPP R.BQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-16.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ....P... PPPP.PPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >  /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-b.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ P....... ........ .PPPPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-b.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ......P. PPPPPP.P RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-b.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ...P.... PPP.PPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-b.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ N....... PPPPPPPP R.BQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-b.txt ;
 } &
 
 {
-./chessengine "rnbqkbnr pppppppp ........ ........ ....P... ........ PPPP.PPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-09.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ .....P.. ........ PPPPP.PP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-11.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ......P. ........ PPPPPP.P RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-13.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ .......P PPPPPPP. RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-14.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ....P... ........ PPPP.PPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >  /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-c.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ .....P.. ........ PPPPP.PP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-c.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ......P. ........ PPPPPP.P RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-c.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ .......P PPPPPPP. RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-c.txt ;
 } &
 
 {
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ .....P.. PPPPP.PP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-10.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ .......P ........ PPPPPPP. RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-15.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ...P.... ........ PPP.PPPP RNBQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-07.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ ..N..... PPPPPPPP R.BQKBNR" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-17.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ .....N.. PPPPPPPP RNBQKB.R" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-18.txt ;
-./chessengine "rnbqkbnr pppppppp ........ ........ ........ .......N PPPPPPPP RNBQKB.R" b 15 8 > ~/Dropbox/ChessEngine/multitest-8-19.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ .....P.. PPPPP.PP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >  /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-d.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ .......P ........ PPPPPPP. RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-d.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ...P.... ........ PPP.PPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-d.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ..N..... PPPPPPPP R.BQKBNR b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-d.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ .....N.. PPPPPPPP RNBQKB.R b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-d.txt ;
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ .......N PPPPPPPP RNBQKB.R b KQkq - 1" -maxlevel 7 -logtype diagram |grep "%" >> /Volumes/Photos2019/ChessEngine/results/default/level-7-all-part-d.txt ;
 } &
