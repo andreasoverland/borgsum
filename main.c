@@ -139,7 +139,7 @@ int maxNumMoves = 0;
 char *workUnitId = NULL;
 
 int main( int argc, char **argv){
-
+    10 357 438 400
 	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
 	/*char *initialBoard = "\

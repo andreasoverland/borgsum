@@ -15,6 +15,8 @@ Preparing workbatches
 ./chessengine -diagram "r...k..r p.ppqpb. bn..pnp. ...PN... .p..P... ..N..Q.p PPPBBPPP R...K..R w KQkq - 0" -maxlevel 3 -workunitid u723bd823d -logtype diagram|grep "%"|sort|uniq -c|sort > workunit.txt
 cat workunit.txt |awk '{printf("%s %s %s %s %s %s %s %s %s %s %s %s -mul %s\n",$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$1)}END{print}'
 
+./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR w KQkq - 0" -maxlevel 7 -logtype diagram|grep "%" > level-7-all.txt
+
 
 #### 2019.07.16 09:45 - Status
 The fastest version is now in the branch bitboards, but the most versatile client is in master.
