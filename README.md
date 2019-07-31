@@ -46,6 +46,3 @@ Todo
 
 
 
-
-
-"r.n.k..r p.ppqpb. b...pnp. ...PN... .p..P... ..N..Q.p PPPBBPPP R...K..R b KQkq - 3" -mul 25
