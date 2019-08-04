@@ -51,10 +51,10 @@ const int IDX_TURN 			 = 19;
 const int NUM_BYTES_TO_COPY  = 20; // keep divisable by 2 or 4 ?
 
 // positions below will not be copied into next moves
-const int IDX_KING_THREATS 	 = 20;
+const int IDX_EP_IDX         = 20; // 0..63, 6 bits
 const int IDX_CHECK_STATUS   = 21;
 const int IDX_LAST_MOVE_WAS  = 22; // 5 bits, status for last move,
-const int IDX_EP_IDX         = 23; // 0..63, 6 bits
+const int IDX_KING_THREATS 	 = 23;
 
 const int NUM_BYTES          = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
@@ -135,3 +135,4 @@ const unsigned long FH = 0x0101010101010101;
 const int LOG_TYPE_NONE = 0;
 const int LOG_TYPE_DIAGRAM = 1;
 const int LOG_TYPE_FEN = 2;
+const int LOG_TYPE_BINARY = 3;

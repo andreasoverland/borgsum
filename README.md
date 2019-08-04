@@ -46,5 +46,9 @@ Todo
 - Parse FEN
 - More parse friendly output of logging
 
+### 2019.01.02 12:45 - Testing binary data output
+- test reorganizing comparale piece data for fast output. må mekke fen med brikke + rle i en byte
+
+
 
 

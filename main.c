@@ -104,6 +104,8 @@ void printLongAsBitBoard(unsigned long bitstream);
 
 void printCompactBoard(unsigned long board[]);
 
+void compressBitBoard( unsigned long board[] );
+
 
 /*** LEVEL ***/
 /*** LEVEL ***/
@@ -134,15 +136,20 @@ unsigned long isSquaresThreatenedByColorInvocations = 0;
 unsigned long influenceMapForSquareInvocations = 0;
 unsigned long moveLinearInvocations = 0;
 
+
+
 int maxNumMoves = 0;
 
 char *workUnitId = NULL;
+FILE *outFile = NULL;
 
 int main( int argc, char **argv){
-    10 357 438 400
+
+
+
 	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-	/*char *initialBoard = "\
+	char *initialBoard = "\
 						 r n b q k b n r\
 						 p p p p p p p p\
 						 . . . . . . . .\
@@ -150,7 +157,8 @@ int main( int argc, char **argv){
 						 . . . . . . . .\
 						 . . . . . . . .\
 						 P P P P P P P P\
-						 R N B Q K B N R";*/
+						 R N B Q K B N R\
+						 w KQkq -";
 
 	//*
 
@@ -164,7 +172,7 @@ int main( int argc, char **argv){
 
 
 
-	char *initialBoard = "\
+	/*char *initialBoard = "\
                       r . . . k . . r\
                       p . p p q p b .\
                       b n . . p n p .\
@@ -173,7 +181,7 @@ int main( int argc, char **argv){
                       . . N . . Q . p\
                       P P P B B P P P\
                       R . . . K . . R\
-	                  w KQkq -";
+	                  w KQkq -";*/
 
     /*char *initialBoard = "\
                       . . . . k . . .\
@@ -188,6 +196,8 @@ int main( int argc, char **argv){
 
 
     unsigned long board[NUM_BYTES];
+
+
 
     diagramToBitBoard( board, initialBoard);
 
@@ -260,7 +270,11 @@ int main( int argc, char **argv){
 			else if( strcmp( argv[a], "diagram" ) == 0 ){
 				LOG_TYPE = LOG_TYPE_DIAGRAM;
 			}
-		}
+            else if( strcmp( argv[a], "binary" ) == 0 ){
+                LOG_TYPE = LOG_TYPE_BINARY;
+            }
+
+        }
         if( strcmp( argv[a], "-mul") == 0 ) {
             a++;
             MULTIPLIER = atoi(argv[a]);
@@ -268,46 +282,19 @@ int main( int argc, char **argv){
 
 	}
 
-
-	/*
-
-	if( argc > 3 ){
-		board[IDX_CASTLING] = 0;
-
-		if( strchr(argv[3],'K') != NULL ){
-			board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
-		}
-
-		if( strchr(argv[3],'k') != NULL ){
-			board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
-		}
-
-		if( strchr(argv[3],'Q') != NULL ){
-			board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
-		}
-
-		if( strchr(argv[3],'q') != NULL ){
-			board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
-		}
-	}
-
-	if( argc > 5 ){
-		workUnitId = argv[5];
-		printf("ID:\"%s\" %s %s %s %s\n", argv[1],argv[2],argv[3],argv[4],argv[5] );
-	}
-*/
 	if( argc == 1){
 		printf("run this with arguments :\r\n");
 		char line[120];
 		sprintDiagram(line, board);
         printf("./chessengine -diagram %s -maxlevel %d\n", line, MAX_LEVEL   );
-
 	}
 
 	printBitBoard( board );
 
-	struct timespec ts1, ts2;
-	clock_gettime(CLOCK_REALTIME, &ts1);
+    fflush(stdout);
+
+    struct timespec ts1, ts2;
+    clock_gettime(CLOCK_REALTIME, &ts1);
 
 	dig(board);
 
@@ -337,19 +324,6 @@ int main( int argc, char **argv){
 
 unsigned long printStats() {
 
-	/*printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-		   "Depth",
-		   "Nodes",
-		   "Caps",
-		   "E.p.",
-		   "Castles",
-		   "Promos",
-		   "Checks",
-		   "Disc.Chk",
-		   "Dbl.Chk"
-		   "Mates",
-		   "S.mates"
-	);*/
 
 	static unsigned long total = 0;
 
@@ -408,7 +382,12 @@ void dig(unsigned long board[]) {
 
 	if( LOG_TYPE == LOG_TYPE_DIAGRAM ){
 	    if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
-            printDiagram(board);
+            //printDiagram(board);
+        }
+	}
+	else if( LOG_TYPE == LOG_TYPE_BINARY ){
+        if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
+           compressBitBoard( board );
         }
 	}
 
@@ -2249,10 +2228,6 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 
 	}
 
-
-
-
-
 	return threat;
 }
 
@@ -2615,6 +2590,11 @@ void printDiagram(unsigned long board[]) {
 
     char str[200];
     sprintDiagram( str, board );
+    /*if( strcmp( str, "\"rnbqkbnr pppppppp ........ ........ ........ ......P. PPPPPP.P RNBQKBNR b KQkq - 5\"") == 0 ){
+        printf("# possile diff:\n");
+        printf("# %s\r\n# ",str);
+        compressBitBoard(board);
+    }*/
 	//printf("%s %lu %lu\n", str, board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
 	printf("%% %s\n", str);
 
@@ -2945,6 +2925,120 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 
 } // diagramToBitBoard
+
+// used when writing binary log for sorting, uniqueing and such
+void compressBitBoard( unsigned long board[] ){
+
+    char compressedBoard[] = "................................................................\0";
+
+    unsigned long idx = 1L << 63;
+    int positionCounter = 0;
+    int repeatCount=0;
+    char lastPiece = ' ';
+    char currentPiece = ' ';
+
+    for( int t=0;t<64;t++){
+
+        if( board[IDX_BLACK_PAWNS] & idx ){
+            currentPiece = 'p';
+        }
+        else if( board[IDX_BLACK_ROOKS ] & idx ){
+            currentPiece = 'r';
+        }
+        else if( board[IDX_BLACK_KNIGHTS ] & idx ){
+            currentPiece = 'n';
+        }
+        else if( board[IDX_BLACK_BISHOPS ] & idx ){
+            currentPiece = 'b';
+        }
+        else if( board[IDX_BLACK_QUEENS ] & idx ){
+            currentPiece = 'q';
+        }
+        else if( board[IDX_BLACK_KING ] & idx ){
+            currentPiece = 'k';
+        }
+        else if ( board[IDX_WHITE_PAWNS] & idx ){
+            currentPiece = 'P';
+        }
+        else if( board[IDX_WHITE_ROOKS ] & idx ){
+            currentPiece = 'R';
+        }
+        else if( board[IDX_WHITE_KNIGHTS ] & idx ){
+            currentPiece = 'N';
+        }
+        else if( board[IDX_WHITE_BISHOPS ] & idx ){
+            currentPiece = 'B';
+        }
+        else if( board[IDX_WHITE_QUEENS ] & idx ){
+            currentPiece = 'Q';
+        }
+        else if( board[IDX_WHITE_KING ] & idx ){
+            currentPiece = 'K';
+        }
+        else {
+            currentPiece = 'e';
+        }
+
+
+        if( currentPiece != lastPiece && lastPiece != ' ' ){
+            if( repeatCount > 1 ){
+                sprintf(compressedBoard+positionCounter,"%d%c",repeatCount,lastPiece );
+                positionCounter+=2;
+                if( repeatCount > 9 ){
+                    positionCounter+=1;
+                }
+                repeatCount = 1;
+            }
+            else {
+                sprintf(compressedBoard+positionCounter,"%c",lastPiece );
+                positionCounter ++ ;
+            }
+            lastPiece = currentPiece;
+        }
+        else {
+            repeatCount++;
+            lastPiece = currentPiece;
+        }
+
+        idx >>= 1L;
+        fflush(stdout);
+    }
+
+    if( repeatCount > 1 ){
+        sprintf(compressedBoard+positionCounter,"%d%c",repeatCount,lastPiece );
+    }
+    else if ( repeatCount == 1){
+        sprintf(compressedBoard+positionCounter,"%c",lastPiece );
+    }
+
+
+    int KQkq = 0;
+    KQkq  = (MASK_CASTLING_BLACK_KING_SIDE  & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_KING_SIDE ? 1 : 0 ;
+    KQkq |= (MASK_CASTLING_BLACK_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_QUEEN_SIDE ? 2 : 0 ;
+    KQkq |= (MASK_CASTLING_WHITE_KING_SIDE  & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_KING_SIDE ? 4 : 0 ;
+    KQkq |= (MASK_CASTLING_WHITE_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_QUEEN_SIDE ? 8 : 0 ;
+
+    char epSquare[] = "-\0\0";
+    if( board[IDX_EP_IDX] != 0){
+        int idx = __builtin_ctzll(board[IDX_EP_IDX]);
+        int rank = (idx >> 3);
+        int file = (7 - ( idx >> 3 ));
+        epSquare[0] = 96 + file;
+        epSquare[1] = 49 + rank;
+    }
+
+    //char comp[] = "................................................................\0";
+    //sprintf(comp,"%s %d %s",compressedBoard , KQkq , epSquare);
+    //printf("%s\n",comp);
+   // if( strcmp( "rnbqkbnr8p24eN7e8PReBQKBNR 15 -", comp) == 0 ){
+    //    printDiagram(board);
+    //    printf( "%%%s %d %s\r\n",compressedBoard , KQkq , epSquare);
+    //}
+
+    printf( "%%%s%d%s\r\n",compressedBoard , KQkq , epSquare);
+
+
+}
 
 
 void printCompactBoard(unsigned long board[]) {
