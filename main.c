@@ -382,7 +382,7 @@ void dig(unsigned long board[]) {
 
 	if( LOG_TYPE == LOG_TYPE_DIAGRAM ){
 	    if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
-            //printDiagram(board);
+            printDiagram(board);
         }
 	}
 	else if( LOG_TYPE == LOG_TYPE_BINARY ){
