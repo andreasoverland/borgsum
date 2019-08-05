@@ -1,4 +1,4 @@
-{./chessengine -maxlevel 7 -logtype binary|grep "%"|cut -b2- >
+{
 ./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ P....... .PPPPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype binary |grep "%"|cut -b2- > ~/Desktop/level-7-all-part-a0.txt ;
 ./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ..P..... ........ PP.PPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype binary |grep "%"|cut -b2- > ~/Desktop/level-7-all-part-a1.txt ;
 ./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ .P...... P.PPPPPP RNBQKBNR b KQkq - 1" -maxlevel 7 -logtype binary |grep "%"|cut -b2- > ~/Desktop/level-7-all-part-a2.txt ;
