@@ -14,6 +14,7 @@ Preparing workbatches
 
 ./chessengine -diagram "r...k..r p.ppqpb. bn..pnp. ...PN... .p..P... ..N..Q.p PPPBBPPP R...K..R w KQkq - 0" -maxlevel 3 -workunitid u723bd823d -logtype diagram|grep "%"|sort|uniq -c|sort > workunit.txt
 cat workunit.txt |awk '{printf("%s %s %s %s %s %s %s %s %s %s %s %s -mul %s\n",$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$1)}END{print}'
+cat level-6-test.txt |awk '{printf("./chessengine -cfen \"%s w 6\" -maxlevel 7 -logtype binary >> mul_%s.txt\n", $2,$1)}END{print}'
 
 ./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR w KQkq - 0" -maxlevel 7 -logtype diagram|grep "%" > level-7-all.txt
 
@@ -46,9 +47,15 @@ Todo
 - Parse FEN
 - More parse friendly output of logging
 
-### 2019.01.02 12:45 - Testing binary data output
+### 2019.08.02 12:45 - Testing binary data output
 - test reorganizing comparale piece data for fast output. må mekke fen med brikke + rle i en byte
 
+### 2019.08.06 20:50 - Binary logging works. Now for proper duplication removal and next level calculations.
+- find a way to count the duplicates from different files
+ - todo :
+   - make cfen -> bitboard
+   - bring in the multiplier count for each result
+   - make it possile to run a large amount of runs
 
 
 

@@ -197,8 +197,6 @@ int main( int argc, char **argv){
 
     unsigned long board[NUM_BYTES];
 
-
-
     diagramToBitBoard( board, initialBoard);
 
 	if( argc > 1 ){
@@ -289,9 +287,10 @@ int main( int argc, char **argv){
         printf("./chessengine -diagram %s -maxlevel %d\n", line, MAX_LEVEL   );
 	}
 
-	printBitBoard( board );
-
-    fflush(stdout);
+	if( LOG_TYPE != LOG_TYPE_BINARY ) {
+        printBitBoard(board);
+        fflush(stdout);
+    }
 
     struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
@@ -306,19 +305,19 @@ int main( int argc, char **argv){
 
 	int l = 14;
 
-	if( workUnitId != NULL ){
+	if( workUnitId != NULL && LOG_TYPE != LOG_TYPE_BINARY ){
 		printf("# WORKUNITID: %s\r\n", workUnitId);
 	}
 
-	long total = printStats();
+	if( LOG_TYPE != LOG_TYPE_BINARY ){
 
-	printf("\n# Total valid moves found : %lu \n" ,total);
-
-	printf("# Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
-    if( MULTIPLIER != 0 ){
-        printf("# multiplier %lu\n", MULTIPLIER  );
+        long total = printStats();
+        printf("\n# Total valid moves found : %lu \n" ,total);
+        printf("# Time spent: %ld.%09ld \n", (long)(ts2.tv_sec - ts1.tv_sec), ts2.tv_nsec - ts1.tv_nsec);
+        if( MULTIPLIER != 0 ){
+            printf("# multiplier %lu\n", MULTIPLIER  );
+        }
     }
-
     return 0;
 } // end main
 
@@ -3027,16 +3026,7 @@ void compressBitBoard( unsigned long board[] ){
         epSquare[1] = 49 + rank;
     }
 
-    //char comp[] = "................................................................\0";
-    //sprintf(comp,"%s %d %s",compressedBoard , KQkq , epSquare);
-    //printf("%s\n",comp);
-   // if( strcmp( "rnbqkbnr8p24eN7e8PReBQKBNR 15 -", comp) == 0 ){
-    //    printDiagram(board);
-    //    printf( "%%%s %d %s\r\n",compressedBoard , KQkq , epSquare);
-    //}
-
-    printf( "%%%s%d%s\r\n",compressedBoard , KQkq , epSquare);
-
+    printf( "%s%d%s\r\n",compressedBoard , KQkq , epSquare);
 
 }
 
