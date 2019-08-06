@@ -97,6 +97,7 @@ void sprintDiagram(char *target, unsigned long board[] );
 void printBitBoard(unsigned long board[]);
 
 void diagramToBitBoard(unsigned long board[], char diagram[]);
+void cfenToBitBoard(unsigned long board[], char cfen[]);
 
 void fenToBitBoard( unsigned long board[], char fen[] );
 
@@ -223,6 +224,7 @@ int main( int argc, char **argv){
 			printf("                    The last number is the move number, or ply really. \r\n");
 			printf("                   Spaces are ignored, and dots are treated as empty squares. \r\n");
 			printf("-fen \"string\"      Instead of diagram, use FEN to define a starting position. (not implemented)\r\n");
+			printf("-cfen \"string\"     Uses a Compact FEN as starting position\r\n");
 			printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
 			printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
 			printf("-logtype TYPE      Either fen or diagram. Will print out each new board found, in diagram or fen format.\r\n");
@@ -244,6 +246,17 @@ int main( int argc, char **argv){
 			a++;
             diagramToBitBoard( board, argv[a] );
 		}
+
+        if( strcmp( argv[a], "-cfen") == 0 ){
+            a++;
+            printf("parsing cfen %s", argv[a] );
+            fflush(stdout);
+            cfenToBitBoard( board, argv[a] );
+            printBitBoard( board );
+            printDiagram( board );
+            fflush(stdout);
+            exit(0);
+        }
 
 		if( strcmp( argv[a], "-fen") == 0 ) {
 			// TODO: parse fen, skip one argument count
@@ -2571,12 +2584,14 @@ void sprintDiagram( char *target, unsigned long board[] ){
 	}
 
 	char epSquare[] = "-\0\0";
+	int rank = 0;
+	int file = 0;
 	if( board[IDX_EP_IDX] != 0){
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
-		int rank = (idx >> 3);
-        int file = (7 - ( idx >> 3 ));
+		rank = (idx >> 3);
+        file = (7 - ( idx & 7 ));
 
-        epSquare[0] = 96 + file;
+        epSquare[0] = 97 + file;
         epSquare[1] = 49 + rank;
 	}
 
@@ -2753,6 +2768,194 @@ void fenToBitBoard( unsigned long board[], char fen[] ){
 
 }
 
+void cfenToBitBoard(unsigned long board[], char cfen[]) {
+
+    // "rnbqkbnr4pe3p4ep24eP2e5Pe2PRNBQKBNR15- w 6"
+
+    int len = strlen(cfen);
+
+    memset(board, 0, sizeof(unsigned long) * NUM_BYTES);
+
+    board[IDX_CASTLING] = 0;
+    board[IDX_EP_IDX] = 0;
+    board[IDX_TURN] = WHITE_MASK;
+
+    int pos = 0;
+    int lastLenUsed = 0;
+    int parsePos = 0;
+    while (pos < 64){
+        int runLength = 1;
+        if( cfen[parsePos] == 32 ){
+            break;
+        }
+        if( cfen[parsePos] <= 57 ) { // 57 = 9 in ascii
+            runLength = cfen[parsePos]-48;
+            // beginning of runlength number
+            if( cfen[parsePos+1] <= 57) {
+                runLength*=10;
+                runLength+= (cfen[parsePos+1]-48);
+                parsePos++;
+            }
+            parsePos++;
+        }
+
+        char piece = cfen[parsePos];
+        parsePos++;
+        printf("runlength %d for piece %c\r\n", runLength, piece );
+        for( int rle=0;rle<runLength;rle++) {
+            switch (piece) {
+
+                case 'e':
+                    pos++;
+                    break;
+                case 'p':
+                    board[IDX_BLACK_PAWNS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'r':
+                    board[IDX_BLACK_ROOKS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'b':
+                    board[IDX_BLACK_BISHOPS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'n':
+                    board[IDX_BLACK_KNIGHTS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'q':
+                    board[IDX_BLACK_QUEENS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'k':
+                    board[IDX_BLACK_KING] = (1l << (63 - pos));
+                    pos++;
+                    break;
+                    // WHITE PIECES
+                case 'P':
+                    board[IDX_WHITE_PAWNS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'R':
+                    board[IDX_WHITE_ROOKS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'N':
+                    board[IDX_WHITE_KNIGHTS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'B':
+                    board[IDX_WHITE_BISHOPS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'Q':
+                    board[IDX_WHITE_QUEENS] |= (1l << (63 - pos));
+                    pos++;
+                    break;
+                case 'K':
+                    board[IDX_WHITE_KING] = (1l << (63 - pos));
+                    pos++;
+                    break;
+            }
+        }
+
+    }
+
+
+    board[IDX_WHITE_PIECES] = board[IDX_WHITE_PAWNS] |
+                              board[IDX_WHITE_ROOKS] |
+                              board[IDX_WHITE_KNIGHTS] |
+                              board[IDX_WHITE_BISHOPS] |
+                              board[IDX_WHITE_QUEENS] |
+                              board[IDX_WHITE_KING];
+
+    board[IDX_BLACK_PIECES] = board[IDX_BLACK_PAWNS] |
+                              board[IDX_BLACK_ROOKS] |
+                              board[IDX_BLACK_KNIGHTS] |
+                              board[IDX_BLACK_BISHOPS] |
+                              board[IDX_BLACK_QUEENS] |
+                              board[IDX_BLACK_KING];
+
+    board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] |
+                            board[IDX_BLACK_PIECES];
+
+
+    board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board) | calculateBlackKingCheckStatus(board);
+
+    int castling = 0;
+    if( cfen[parsePos] >= 48 && cfen[parsePos+1] <= 57 ) { // 57 = 9 in ascii
+        castling = cfen[parsePos]-48;
+        // beginning of runlength number
+        if( cfen[parsePos+1] >= 48 && cfen[parsePos+1] <= 57) {
+            castling*=10;
+            castling+= (cfen[parsePos+1]-48);
+            parsePos++;
+        }
+        parsePos++;
+    }
+
+    if( castling & 1 ){
+        board[IDX_CASTLING] = MASK_CASTLING_BLACK_KING_SIDE;
+    }
+    if( castling & 2 ){
+        board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
+    }
+    if( castling & 4 ){
+        board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+    }
+    if( castling & 8 ){
+        board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+    }
+
+    if( cfen[parsePos] == '-'){
+        printf("no ep index\r\n");
+        parsePos++;
+    }
+    else {
+        if( cfen[parsePos] >= 'a' && cfen[parsePos] <= 'h'){
+            int rank = (cfen[parsePos+1]-49);
+            if( rank == 2 || rank == 5){
+                board[IDX_EP_IDX] = 1L << (7-(cfen[parsePos]-97)+(rank<<3));
+            }
+            parsePos++;
+            parsePos++;
+        }
+    }
+
+    if( cfen[parsePos] == ' '){
+        parsePos++;
+    }
+
+    printf("c %c\r\n",cfen[parsePos]);
+
+    if( cfen[parsePos] == 'w' ){
+        board[IDX_TURN] = WHITE_MASK;
+        parsePos++;
+    }
+    else if( cfen[parsePos] == 'b' ){
+        board[IDX_TURN] = BLACK_MASK;
+        parsePos++;
+    }
+
+    if( cfen[parsePos] == ' '){
+        parsePos++;
+    }
+
+    if( cfen[parsePos] >= 48 && cfen[parsePos+1] <= 57 ) { // 57 = 9 in ascii
+        board[IDX_MOVE_NUM] = cfen[parsePos]-48;
+
+        if( cfen[parsePos+1] >= 48 && cfen[parsePos+1] <= 57) {
+            board[IDX_MOVE_NUM]*=10;
+            board[IDX_MOVE_NUM]+= (cfen[parsePos+1]-48);
+            parsePos++;
+        }
+        parsePos++;
+    }
+    // movenum
+
+}
+
 void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 	//
@@ -2910,7 +3113,6 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
                 int rank = (ptr[1]-49);
                 if( rank == 2 || rank == 5){
                     board[IDX_EP_IDX] = 1L << (7-(ptr[0]-97)+(rank<<3));
-                    printf( "%lu\n", board[IDX_EP_IDX] );
                 }
             }
         }
@@ -3021,8 +3223,8 @@ void compressBitBoard( unsigned long board[] ){
     if( board[IDX_EP_IDX] != 0){
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
         int rank = (idx >> 3);
-        int file = (7 - ( idx >> 3 ));
-        epSquare[0] = 96 + file;
+        int file = (7 - ( idx & 7 ));
+        epSquare[0] = 97 + file;
         epSquare[1] = 49 + rank;
     }
 
