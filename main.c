@@ -143,10 +143,9 @@ int maxNumMoves = 0;
 
 char *workUnitId = NULL;
 FILE *outFile = NULL;
+FILE *inFile = NULL;
 
 int main( int argc, char **argv){
-
-
 
     // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
@@ -242,6 +241,23 @@ int main( int argc, char **argv){
 
     for( int a = 1; a < argc; a++ ){
 
+		if( strcmp( argv[a], "-infile") == 0 ){
+			a++;
+
+			inFile = fopen( argv[a], "r");
+			if (inFile == NULL) {
+
+				printf("** ERORR : File not found '%s' **\r\n", argv[a]);
+				exit(EXIT_FAILURE);
+			}
+
+		}
+
+		if( strcmp( argv[a], "-outfile") == 0 ){
+			a++;
+			outFile = fopen( argv[a], "w");
+		}
+
         if( strcmp( argv[a], "-diagram") == 0 ){
             a++;
             diagramToBitBoard( board, argv[a] );
@@ -299,10 +315,39 @@ int main( int argc, char **argv){
         fflush(stdout);
     }
 
-    struct timespec ts1, ts2;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+
+	struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
 
-    dig(board);
+    
+    while( 1 ) {
+
+    	if( inFile != NULL ){
+
+			read = getline(&line, &len, inFile);
+			if( read < 10 ){
+
+				break;
+			}
+
+			printf("Retrieved line of length %zu:\n", read);
+			printf("%s", line);
+
+			cfenToBitBoard( board, line );
+			printBitBoard( board );
+    	}
+
+    	dig(board);
+
+    	if( inFile == NULL ){
+    		break;
+    	}
+
+	}
+
 
     clock_gettime(CLOCK_REALTIME, &ts2);
     if (ts2.tv_nsec < ts1.tv_nsec) {
@@ -310,7 +355,15 @@ int main( int argc, char **argv){
         ts2.tv_sec--;
     }
 
-    int l = 14;
+	if (line) {
+		free(line);
+	}
+	if( inFile != NULL ){
+		fclose(inFile);
+	}
+
+
+	int l = 14;
 
     if( workUnitId != NULL && LOG_TYPE != LOG_TYPE_BINARY ){
         printf("# WORKUNITID: %s\r\n", workUnitId);
@@ -325,6 +378,11 @@ int main( int argc, char **argv){
             printf("# multiplier %lu\n", MULTIPLIER  );
         }
     }
+
+    if( outFile != NULL ){
+		fclose(outFile);
+    }
+
     return 0;
 } // end main
 
@@ -388,7 +446,14 @@ void dig(unsigned long board[]) {
 
     if( LOG_TYPE == LOG_TYPE_DIAGRAM ){
         if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
-            printDiagram(board);
+        	if( outFile != NULL ){
+				char line[120];
+				sprintDiagram(line, board);
+				fputs(line, outFile);
+        	}
+        	else {
+				printDiagram(board);
+        	}
         }
     }
     else if( LOG_TYPE == LOG_TYPE_BINARY ){
@@ -3221,7 +3286,15 @@ void compressBitBoard( unsigned long board[] ){
         epSquare[1] = 49 + rank;
     }
 
-    printf( "%s%d%s\r\n",compressedBoard , KQkq , epSquare);
+	if( outFile != NULL ){
+		char line[120];
+		sprintf( line, "%s%d%s%c%lu\n",compressedBoard , KQkq , epSquare, board[IDX_TURN] == WHITE_MASK ? 'w':'b', board[IDX_MOVE_NUM]);
+		fputs( line, outFile);
+	}
+	else {
+		printf( "%s%d%s%c%lu\n",compressedBoard , KQkq , epSquare, board[IDX_TURN] == WHITE_MASK ? 'w':'b', board[IDX_MOVE_NUM]);
+	}
+
 
 }
 
