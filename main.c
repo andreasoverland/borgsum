@@ -322,22 +322,17 @@ int main( int argc, char **argv){
 	struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
 
-    
+
     while( 1 ) {
 
     	if( inFile != NULL ){
 
 			read = getline(&line, &len, inFile);
 			if( read < 10 ){
-
 				break;
 			}
 
-			printf("Retrieved line of length %zu:\n", read);
-			printf("%s", line);
-
 			cfenToBitBoard( board, line );
-			printBitBoard( board );
     	}
 
     	dig(board);

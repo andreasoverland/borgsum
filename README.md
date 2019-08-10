@@ -12,9 +12,13 @@ Super Simple Chess Engine
 
 Preparing workbatches
 
-./chessengine -diagram "r...k..r p.ppqpb. bn..pnp. ...PN... .p..P... ..N..Q.p PPPBBPPP R...K..R w KQkq - 0" -maxlevel 3 -workunitid u723bd823d -logtype diagram|grep "%"|sort|uniq -c|sort > workunit.txt
-cat workunit.txt |awk '{printf("%s %s %s %s %s %s %s %s %s %s %s %s -mul %s\n",$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$1)}END{print}'
-cat level-6-test.txt |awk '{printf("./chessengine -cfen \"%s w 6\" -maxlevel 7 -logtype binary >> mul_%s.txt\n", $2,$1)}END{print}'
+tail level_6_mul_9.txt.sorted | awk '{printf("%s %s\n",$2,$1);}END{}'
+
+
+for f in *.txt; do
+sort $f -o $f.sorted
+done
+
 
 ./chessengine -diagram "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR w KQkq - 0" -maxlevel 7 -logtype diagram|grep "%" > level-7-all.txt
 
