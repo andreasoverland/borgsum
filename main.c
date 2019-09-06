@@ -226,7 +226,7 @@ int main( int argc, char **argv){
             printf("-cfen \"string\"     Uses a Compact FEN as starting position\r\n");
             printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
             printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
-            printf("-logtype TYPE      Either fen or diagram. Will print out each new board found, in diagram or fen format.\r\n");
+            printf("-logtype TYPE      Either fen,cfen or diagram. Will print out each new board found, in diagram or (compact)fen format.\r\n");
             printf("                   If omitted, only the statistics will be printed at the end of the run.\r\n");
             printf("-mul N             Multiplier number. Only used as pass-on value for logging and collating results\r\n");
             printf("                   when calculating results for a board that exists N times in a set.\r\n");
@@ -291,7 +291,7 @@ int main( int argc, char **argv){
             else if( strcmp( argv[a], "diagram" ) == 0 ){
                 LOG_TYPE = LOG_TYPE_DIAGRAM;
             }
-            else if( strcmp( argv[a], "binary" ) == 0 ){
+            else if( strcmp( argv[a], "cfen" ) == 0 ){
                 LOG_TYPE = LOG_TYPE_BINARY;
             }
 
