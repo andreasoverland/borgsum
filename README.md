@@ -14,6 +14,35 @@ Preparing workbatches
 
 tail level_6_mul_9.txt.sorted | awk '{printf("%s %s\n",$2,$1);}END{}'
 
+cat level-5-unique-sorted.txt |awk '{printf("./chessengine -maxlevel 6 -logtype cfen >> results/level_6/level_6_%s.txt\n",$2,$1);}END{}' > run_level_6.sh
+
+sort --random-sort ../level_3_results.txt -o ../level_3_results_rnd.txt
+
+// split opp resultat
+split -l1113  ../level_3_results_rnd.txt level_3_
+
+// generer kjørings
+ls -1 level_5_* | awk '{printf("../chessengine -infile %s -maxlevel 6 > level6/%s_to_6_out.txt &\n",$1,$1);}END{}' > run_level_6.sh
+
+### NÅR
+- lag sortering av hver fil
+ls -1 level_6_mul_*.txt | awk '{printf("sort %s > sorted/%s ; ",$1,$1);}END{}'
+- og kjør generert sortering
+
+- merge resultat
+sort -m *.txt > level_6_sorted.txt
+
+-. Sorterresultat output
+ls -1 | awk '{printf("sort %s -o %s.sorted &;\n",$1,$1);}END{}'
+
+- Sorter og tell
+cat level_6_sorted.txt| uniq -c > level_6_sorted_counted.txt
+
+- split opp cfen slik at m blir erstattet med space, for å kunne multiplisere
+cat level_6_sorted_counted.txt | sed $'s/m/\ /g'| awk '{printf("%sm%i\n",$2,$1*$3)};END{}' > level_6_multiplied.txt
+
+- Kjør combiner
+ ~/Projects/Personal/ChessEngine/borgsum/workunit-preparator/count-multipliers.js
 
 for f in *.txt; do
 sort $f -o $f.sorted
@@ -63,3 +92,7 @@ Todo
 
 
 
+### 2019.09.07 - todo
+- MÅL: lag et redusert workset på level 7 for å nå level 10 på default setup
+- lage outputfile med counters, for å dele opp filene i mindre biter
+- utfordring er å ta duplikater fra feks level_6_mul_4.txt og level_6_mul_5.txt og slå de sammen i neste workunit

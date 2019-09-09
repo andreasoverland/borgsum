@@ -145,6 +145,13 @@ char *workUnitId = NULL;
 FILE *outFile = NULL;
 FILE *inFile = NULL;
 
+int outFileBuffOffset = 0;
+const int outFileBuffSize = 1024*1024;
+char outFileBuff[outFileBuffSize];
+
+int buffWrites = 0;
+int fileWrites = 0;
+
 int main( int argc, char **argv){
 
     // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
@@ -255,8 +262,9 @@ int main( int argc, char **argv){
 
 		if( strcmp( argv[a], "-outfile") == 0 ){
 			a++;
-			outFile = fopen( argv[a], "w");
-		}
+			outFile = fopen( argv[a], "wb");
+
+        }
 
         if( strcmp( argv[a], "-diagram") == 0 ){
             a++;
@@ -375,8 +383,15 @@ int main( int argc, char **argv){
     }
 
     if( outFile != NULL ){
+        if( outFileBuffOffset != 0 ){
+            // fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
+            fputs( outFileBuff, outFile);
+            outFileBuffOffset = 0;
+        }
 		fclose(outFile);
     }
+
+    printf("buffWrites: %d, fileWrites: %d\n", buffWrites, fileWrites);
 
     return 0;
 } // end main
@@ -1785,6 +1800,7 @@ void makeNewBoard(unsigned long oldBoard[], unsigned long newBoard[]) {
     memcpy(newBoard, oldBoard, sizeof(unsigned long) * NUM_BYTES_TO_COPY);
     newBoard[IDX_LAST_MOVE_WAS] = 0;
     newBoard[IDX_EP_IDX] = 0;
+    newBoard[IDX_MULTIPLIER] = oldBoard[IDX_MULTIPLIER];
 
     newBoard[IDX_MOVE_ID] = makeNewBoardInvocations;
     newBoard[IDX_PARENT_MOVE_ID] = oldBoard[IDX_MOVE_ID];
@@ -2520,58 +2536,59 @@ void clearWhitePiecesWithClearMap(unsigned long board[], unsigned long clear) {
 void count(unsigned long b[]) {
 
     const int level = b[IDX_MOVE_NUM];
-    numMoves[level]++;
+    const int add = b[IDX_MULTIPLIER];
+    numMoves[level] += add;
     if ((b[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE)) {
-        numCaptures[level]++;
+        numCaptures[level]+=add;
         if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE ) {
-            numDoubleCaptureChecks[level]++;
+            numDoubleCaptureChecks[level]+=add;
         }
         if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED) {
-            numDiscoveryCaptureChecks[level]++;
+            numDiscoveryCaptureChecks[level]+=add;
         }
     }
     if ((b[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_EP_STRIKE)) {
-        numEP[level]++;
+        numEP[level]+=add;
         if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE ) {
-            numDoubleEPChecks[level]++;
+            numDoubleEPChecks[level]+=add;
         }
         if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED) {
-            numDiscoveryEPChecks[level]++;
+            numDiscoveryEPChecks[level]+=add;
         }
     }
     if ((b[IDX_LAST_MOVE_WAS] & (MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE | MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE))) {
-        numCastles[level]++;
+        numCastles[level]+=add;
     }
     if ( b[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_PROMO ) {
-        numPromos[level]++;
+        numPromos[level]+=add;
 
         if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE ) {
-            numDoublePromoChecks[level]++;
+            numDoublePromoChecks[level]+=add;
         }
         if( b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED) {
-            numDiscoveryPromoChecks[level]++;
+            numDiscoveryPromoChecks[level]+=add;
         }
 
     }
 
     if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_MATED)) {
-        numCheckmates[level]++;
+        numCheckmates[level]+=add;
     }
 
     if ((b[IDX_CHECK_STATUS] & (MASK_WHITE_KING_CHECKED | MASK_BLACK_KING_CHECKED))) {
-        numChecks[level]++;
+        numChecks[level]+=add;
     }
 
     if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DOUBLE)) {
-        numDoubleChecks[level]++;
+        numDoubleChecks[level]+=add;
     }
 
     if ((b[IDX_CHECK_STATUS] & MASK_CHECK_TYPE_DISCOVERED)) {
-        numDiscoveryChecks[level]++;
+        numDiscoveryChecks[level]+=add;
     }
 
     if ((b[IDX_CHECK_STATUS] & MASK_KING_IS_STALEMATED)) {
-        numStalemates[level]++;
+        numStalemates[level]+=add;
     }
 
 }
@@ -2788,6 +2805,8 @@ void printBitBoard(unsigned long board[]) {
         }
 
     }
+
+    printf("Multiplier: %lu", board[IDX_MULTIPLIER]);
     printf("\n");
 
     fflush(stdout);
@@ -2824,7 +2843,7 @@ void fenToBitBoard( unsigned long board[], char fen[] ){
 
 void cfenToBitBoard(unsigned long board[], char cfen[]) {
 
-    // "rnbqkbnr4pe3p4ep24eP2e5Pe2PRNBQKBNR15- w 6"
+    // "rnbqkbnr5pe2p13ep7eP2eP8e4Pe2PRNBQKBNR15-b3m1"
 
     int len = strlen(cfen);
 
@@ -2961,7 +2980,7 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
         board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
     }
 
-
+    // en passant position if any, else just a -
     if( cfen[parsePos] == '-'){
         parsePos++;
     }
@@ -3007,6 +3026,27 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
         parsePos++;
     }
 
+    int mul = 1;
+    // helt til parsePos == cfen.length, board[IDX_MUL] *= 10
+    //                                   board[IDX_MUL] += cfen[parsePos]
+
+
+    if( cfen[parsePos] == 'm'){
+        int parsingMultiplier = 1;
+        parsePos++;
+        board[IDX_MULTIPLIER] = (cfen[parsePos]-48);
+        while( parsePos < strlen(cfen) && parsingMultiplier == 1){
+            if( cfen[parsePos+1] >= 48 && cfen[parsePos+1] <= 57) {
+                board[IDX_MULTIPLIER]*=10;
+                board[IDX_MULTIPLIER]+= (cfen[parsePos+1]-48);
+                parsePos++;
+            }
+            else {
+                parsingMultiplier = 0;
+            }
+        }
+    }
+
 }
 
 void diagramToBitBoard(unsigned long board[], char diagram[]) {
@@ -3029,7 +3069,7 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
     board[IDX_CASTLING] = 0;
     board[IDX_EP_IDX] = 0;
     board[IDX_TURN] = WHITE_MASK;
-
+    board[IDX_MULTIPLIER] = 1;
     int pos = 0;
     int lastLenUsed = 0;
 
@@ -3233,20 +3273,18 @@ void compressBitBoard( unsigned long board[] ){
             currentPiece = 'e';
         }
 
-
         if( currentPiece != lastPiece && lastPiece != ' ' ){
+            if( repeatCount > 9 ){
+                compressedBoard[positionCounter] = 48 + (repeatCount/10);
+                positionCounter++;
+            }
             if( repeatCount > 1 ){
-                sprintf(compressedBoard+positionCounter,"%d%c",repeatCount,lastPiece );
-                positionCounter+=2;
-                if( repeatCount > 9 ){
-                    positionCounter+=1;
-                }
+                compressedBoard[positionCounter] = 48 + (repeatCount%10);
+                positionCounter++;
                 repeatCount = 1;
             }
-            else {
-                sprintf(compressedBoard+positionCounter,"%c",lastPiece );
-                positionCounter ++ ;
-            }
+            compressedBoard[positionCounter] = lastPiece;
+            positionCounter ++ ;
             lastPiece = currentPiece;
         }
         else {
@@ -3255,14 +3293,24 @@ void compressBitBoard( unsigned long board[] ){
         }
 
         idx >>= 1L;
-        fflush(stdout);
+
     }
 
     if( repeatCount > 1 ){
-        sprintf(compressedBoard+positionCounter,"%d%c",repeatCount,lastPiece );
+        if( repeatCount > 9 ){
+            compressedBoard[positionCounter] = 48 + (repeatCount/10);
+            positionCounter++;
+        }
+
+        compressedBoard[positionCounter] = 48 + (repeatCount%10);
+        positionCounter++;
+
+        compressedBoard[positionCounter] = lastPiece;
+        positionCounter ++ ;
     }
     else if ( repeatCount == 1){
-        sprintf(compressedBoard+positionCounter,"%c",lastPiece );
+        compressedBoard[positionCounter] = lastPiece;
+        positionCounter ++ ;
     }
 
 
@@ -3272,24 +3320,72 @@ void compressBitBoard( unsigned long board[] ){
     KQkq |= (MASK_CASTLING_WHITE_KING_SIDE  & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_KING_SIDE ? 4 : 0 ;
     KQkq |= (MASK_CASTLING_WHITE_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_QUEEN_SIDE ? 8 : 0 ;
 
-    char epSquare[] = "-\0\0";
+    if( KQkq > 9 ){
+        compressedBoard[positionCounter] = 48 + (KQkq/10);
+        positionCounter++;
+    }
+    compressedBoard[positionCounter] = 48 + (KQkq%10);
+    positionCounter++;
+
+
+    compressedBoard[positionCounter] = '-';
     if( board[IDX_EP_IDX] != 0){
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
         int rank = (idx >> 3);
         int file = (7 - ( idx & 7 ));
-        epSquare[0] = 97 + file;
-        epSquare[1] = 49 + rank;
+        compressedBoard[positionCounter] = 97 + file;
+        compressedBoard[positionCounter+1] = 49 + rank;
+        positionCounter++;
+    }
+    positionCounter++;
+
+    compressedBoard[positionCounter] = board[IDX_TURN] == WHITE_MASK ? 'w':'b';
+    positionCounter++;
+
+    if( board[IDX_MOVE_NUM] > 9 ){
+        compressedBoard[positionCounter] = 48 + (board[IDX_MOVE_NUM]/10);
+        positionCounter++;
     }
 
+    compressedBoard[positionCounter] = 48 + (board[IDX_MOVE_NUM]%10);
+    positionCounter++;
+
+    compressedBoard[positionCounter] = 'm';
+    positionCounter++;
+
+    unsigned long mul = board[IDX_MULTIPLIER];
+    char digits[] = "xxxxxxxxxxxxxx";
+    int md = 0;
+    while(mul>0){
+        digits[md] = 48 + (char)(mul % 10);
+        mul /= 10;
+        md++;
+    }
+    for( int t=0;t<md;t++){
+        compressedBoard[positionCounter] = digits[md-t-1];
+        positionCounter++;
+    }
+
+    compressedBoard[positionCounter] = 0;
+
 	if( outFile != NULL ){
-		char line[120];
-		sprintf( line, "%s%d%s%c%lu\n",compressedBoard , KQkq , epSquare, board[IDX_TURN] == WHITE_MASK ? 'w':'b', board[IDX_MOVE_NUM]);
-		fputs( line, outFile);
+		//char line[120];
+		//sprintf( line, "%s%d%s%c%lum%lu\n",compressedBoard , KQkq , epSquare, board[IDX_TURN] == WHITE_MASK ? 'w':'b', board[IDX_MOVE_NUM], board[IDX_MULTIPLIER]);
+        //char *line = "rebqkber8pn4en13eN12e8PReBQKBNR15-b5m1\n";
+		sprintf( outFileBuff + outFileBuffOffset, "%s\n", compressedBoard );
+		outFileBuffOffset+= (strlen(compressedBoard)+1 );
+		buffWrites++;
+		if( outFileBuffOffset > 1023*1024 ){
+		    fileWrites++;
+            //fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
+            fputs( outFileBuff, outFile);
+            outFileBuffOffset = 0;
+		}
+
 	}
 	else {
-		printf( "%s%d%s%c%lu\n",compressedBoard , KQkq , epSquare, board[IDX_TURN] == WHITE_MASK ? 'w':'b', board[IDX_MOVE_NUM]);
+		printf( "%s\n",compressedBoard );
 	}
-
 
 }
 

@@ -55,6 +55,7 @@ const int IDX_EP_IDX         = 20; // 0..63, 6 bits
 const int IDX_CHECK_STATUS   = 21;
 const int IDX_LAST_MOVE_WAS  = 22; // 5 bits, status for last move,
 const int IDX_KING_THREATS 	 = 23;
+const int IDX_MULTIPLIER     = 24;
 
 const int NUM_BYTES          = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
