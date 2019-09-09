@@ -320,7 +320,6 @@ int main( int argc, char **argv){
 
     if( LOG_TYPE != LOG_TYPE_BINARY ) {
         printBitBoard(board);
-        fflush(stdout);
     }
 
 	char * line = NULL;
@@ -384,8 +383,8 @@ int main( int argc, char **argv){
 
     if( outFile != NULL ){
         if( outFileBuffOffset != 0 ){
-            // fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
-            fputs( outFileBuff, outFile);
+            fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
+            //fputs( outFileBuff, outFile);
             outFileBuffOffset = 0;
         }
 		fclose(outFile);
@@ -3366,19 +3365,21 @@ void compressBitBoard( unsigned long board[] ){
         positionCounter++;
     }
 
-    compressedBoard[positionCounter] = 0;
+    compressedBoard[positionCounter] = '\n';
+    positionCounter++;
 
 	if( outFile != NULL ){
 		//char line[120];
 		//sprintf( line, "%s%d%s%c%lum%lu\n",compressedBoard , KQkq , epSquare, board[IDX_TURN] == WHITE_MASK ? 'w':'b', board[IDX_MOVE_NUM], board[IDX_MULTIPLIER]);
         //char *line = "rebqkber8pn4en13eN12e8PReBQKBNR15-b5m1\n";
-		sprintf( outFileBuff + outFileBuffOffset, "%s\n", compressedBoard );
-		outFileBuffOffset+= (strlen(compressedBoard)+1 );
+        memcpy(outFileBuff+outFileBuffOffset,compressedBoard,positionCounter);
+		//sprintf( outFileBuff + outFileBuffOffset, "%s\n", compressedBoard );
+		outFileBuffOffset += positionCounter;
 		buffWrites++;
 		if( outFileBuffOffset > 1023*1024 ){
 		    fileWrites++;
-            //fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
-            fputs( outFileBuff, outFile);
+            fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
+            //fputs( outFileBuff, outFile);
             outFileBuffOffset = 0;
 		}
 
