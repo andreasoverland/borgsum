@@ -3,3 +3,4 @@ chessengine
 *.out
 .idea/
 *.o
+test/*.*
