@@ -11,7 +11,7 @@ const fs = require('fs');
 //  skriv alle kombinerte linjer i en ny fil
 // les nye 1000 (ubrukte) linjer, og repeter
 
-let numMasterLines = 10000;
+let numMasterLines = 100000;
 let masterLines = [];
 let masterLineFiles = fs.readdirSync(".");
 
@@ -39,7 +39,7 @@ while( moreMasterLinesAvailable ){
 
 
 function readNextMasterLinesFromNextFile(){
-	let size = 100000;
+	let size = 1000000;
 	let file = fs.openSync(masterLineFileName,"rs+");
 
 	let readBuffer = Buffer.alloc(size);
@@ -137,7 +137,7 @@ function scanAllFilesForMasterLines(currentFileName){
 
 
 function scanAndMarkLinesInFile( file ,readStartPos) {
- 	let size = 100000;
+ 	let size = 1000000;
 	let position = readStartPos;
 	let buffer = Buffer.alloc(size);
 	let numRead = fs.readSync(file, buffer, 0, size, position);
