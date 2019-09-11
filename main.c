@@ -2844,6 +2844,8 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
 
     // "rnbqkbnr5pe2p13ep7eP2eP8e4Pe2PRNBQKBNR15-b3m1"
 
+    // FEILPRODUKT: nbqk2er4pb3p5en3eN2ep4eP14ePe6PReBQKBNR15-w6m2
+
     int len = strlen(cfen);
 
     memset(board, 0, sizeof(unsigned long) * NUM_BYTES);
@@ -3215,6 +3217,8 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
         ptr = strtok(NULL, delim);
         arg++;
     }
+
+
 
 
 } // diagramToBitBoard

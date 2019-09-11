@@ -2,14 +2,7 @@
 
 const fs = require('fs');
 
-// åpne første fil i folderen (antar at det er mange filer som skal kombineres, multipleres og reduseres)
-// les 1000 første unike linjer/brett
-//  alt må skje sync
-//  fortsett å lese linjer, og sammenlikn med innleste
-//  hvis det er match, kombiner&pultipliser, marker linje som brukt (med # feks på første char)
-//  fortsett å les til alle linjer i alle filer er lest
-//  skriv alle kombinerte linjer i en ny fil
-// les nye 1000 (ubrukte) linjer, og repeter
+// TODO: fiks rnbqk2er4pb3p5en3eN2ep4eP14ePe6PReBQKBNR15-w6m2
 
 let numMasterLines = 100000;
 let masterLines = [];
@@ -24,7 +17,7 @@ let masterLineFilePosition = 0;
 
 let moreMasterLinesAvailable = true;
 
-fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
+fs.writeFileSync("combined.txt", Buffer.from( "", "utf-8") );
 
 while( moreMasterLinesAvailable ){
 	masterLines = [];
@@ -75,7 +68,8 @@ function readNextMasterLinesFromNextFile(){
 
 		if (dirty) {
 			let writeBuffer = lines.join("\n");
-			fs.writeSync(file, writeBuffer, masterLineFilePosition, "UTF-8");
+			// fs.writeSync(file, Buffer.from( writeBuffer, "UTF-8" ), masterLineFilePosition, numRead );
+			fs.writeSync(file, writeBuffer, masterLineFilePosition, "UTF-8", numRead );
 		}
 
 		masterLineFilePosition += numRead;
@@ -115,7 +109,7 @@ function prepareScan(currentFileName){
 	Object.keys(map).forEach( k=>{
 		buff += (k + "m" + map[k] + "\n");
 	});
-	fs.writeFileSync("../combined.txt", Buffer.from( buff, "utf-8"), {flag: 'a'});
+	fs.writeFileSync("combined.txt", Buffer.from( buff, "utf-8"), {flag: 'a'});
 	map = {};
 
 }
@@ -169,7 +163,7 @@ function scanAndMarkLinesInFile( file ,readStartPos) {
 
 		if (dirty) {
 			let writeBuffer = lines.join("\n");
-			fs.writeSync(file, writeBuffer, position, "UTF-8");
+			fs.writeSync(file, writeBuffer, position, "UTF-8", numRead );
 		}
 
 		position += numRead;
@@ -179,5 +173,3 @@ function scanAndMarkLinesInFile( file ,readStartPos) {
 	}
 
 }
-
-
