@@ -1,5 +1,21 @@
 #!/usr/local/bin/node
 
+
+// issue : noen linjer blir trunca
+/*
+combined.txt: nbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m1
+combined.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m3
+combined.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
+multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m4
+multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
+
+combined.txt  : nbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m1
+combined.txt  :rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m3
+combined.txt  :rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
+multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m4
+multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
+*/
+
 const fs = require('fs');
 
 // Combiner 2
@@ -10,7 +26,7 @@ const fs = require('fs');
 // - Flytt fil 1.new til 1
 // - Les hver fil, ta vare på ubrukte linjer i ny fil, og overskriv når enden på fila er nådd
 
-let minNumMasterLines = 10000;
+let minNumMasterLines = 100000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
@@ -26,7 +42,7 @@ let uniqueLines = 0;
 fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 
 while( moreMasterLinesAvailable ){
-	console.log( "Reading master lines from " + masterLineFileName );
+	console.log( new Date() +  " : Reading master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
 
 	// console.log( JSON.stringify( map , null, 2) );
@@ -37,7 +53,7 @@ console.log( "Total number of lines read:", numLinesRead );
 console.log( "Number of unique lines found:", uniqueLines );
 
 function readNextMasterLinesFromNextFile(){
-	let size = 1000;
+	let size = 100000;
 	let file = fs.openSync(masterLineFileName,"r");
 
 	let readBuffer = Buffer.alloc(size);
@@ -48,11 +64,14 @@ function readNextMasterLinesFromNextFile(){
 
 	while( Object.keys(map).length < minNumMasterLines ){
 
-		let lines = readBuffer.toString("UTF-8").trim().split("\n");
+		let strBuf = readBuffer.toString("UTF-8");
+		let lines = strBuf.trim().split("\n");
+
 		while( lines[lines.length-1].startsWith("\0")){
 			lines.pop();
 		}
-		if (numRead === size) {
+
+		if (numRead === size && strBuf[numRead-1] !== '\n') {
 			let lastLine = lines.pop();
 			let lengthOfLastLine = lastLine.length;
 			numRead -= lengthOfLastLine; // for next read
@@ -61,6 +80,7 @@ function readNextMasterLinesFromNextFile(){
 		numLinesRead += lines.length;
 
 		for (let i = 0; i < lines.length; i++) {
+
 
 			let p = lines[i].split("m");
 			if (map[p[0]] === undefined ) {
@@ -125,7 +145,6 @@ function readNextMasterLinesFromNextFile(){
 	fs.closeSync( copyFile );
 	fs.renameSync( masterLineFileName+".copy", masterLineFileName );
 
-
 }
 
 
@@ -166,13 +185,14 @@ function scanAndMarkLinesInFile( filename ) {
 
 	while (numRead > 0) {
 
-		let lines = buffer.toString("utf-8").trim().split("\n");
+		let strBuf = buffer.toString("UTF-8");
+		let lines = strBuf.trim().split("\n");
 
 		while( lines[lines.length-1].startsWith("\0")){
 			lines.pop();
 		}
 
-		if (numRead === size) {
+		if (numRead === size && strBuf[numRead-1] !== '\n') {
 			let lastLine = lines.pop();
 			let lengthOfLastLine = lastLine.length;
 			numRead -= lengthOfLastLine; // for next read

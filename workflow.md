@@ -3,7 +3,6 @@
 
 ## Lag en output-fil
 
-
 ## Sorte resultatene
 mkdir sorted
 
@@ -23,7 +22,7 @@ uniq -c merged.txt counted.txt
 
 ### combine counts with multipliers
 cat counted.txt | sed $'s/m/\ /g'| awk '{printf("%sm%i\n",$2,$1*$3)};END{}' > multiplied.txt
- ~/Projects/Personal/ChessEngine/borgsum/workunit-preparator/count-multipliers.js
+ ~/Projects/Personal/borgsum/utils/count-multipliers.js
 
 ### reduce duplicates
 
