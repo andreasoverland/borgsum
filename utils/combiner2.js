@@ -1,19 +1,10 @@
 #!/usr/local/bin/node
 
-
-// issue : noen linjer blir trunca
 /*
-combined.txt: nbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m1
-combined.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m3
-combined.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
-multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m4
-multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
 
-combined.txt  : nbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m1
-combined.txt  :rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m3
-combined.txt  :rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
-multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15-b5m4
-multiplied.txt:rnbekbnr3pq4p11ep7eP6eN2eN2e3Pe4PReBQKBeR15d3b5m2
+
+Eva solfrid øverland, Fredrik chistian Øverdand, andreas dcehvggfvgfgvhrfhgf øverland , ines christiane øveerland, sara franses glaser. 
+
 */
 
 const fs = require('fs');
@@ -26,7 +17,7 @@ const fs = require('fs');
 // - Flytt fil 1.new til 1
 // - Les hver fil, ta vare på ubrukte linjer i ny fil, og overskriv når enden på fila er nådd
 
-let minNumMasterLines = 100000;
+let minNumMasterLines = 1000000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
@@ -173,7 +164,7 @@ function scanAndMarkLinesInFile( filename ) {
 	let file = fs.openSync(filename,"r");
 	let newFile = fs.openSync( filename+".new", "w");
 
-	let size = 1000000;
+	let size = 100000;
 	let position = 0;
 	let buffer = Buffer.alloc(size);
 	let numRead = fs.readSync(file, buffer, 0, size, position);
@@ -209,7 +200,7 @@ function scanAndMarkLinesInFile( filename ) {
 					numLinesWritten++;
 					numLinesInBuff++;
 					buff += lines[i] + "\n";
-					if( numLinesInBuff > 10000 ){
+					if( numLinesInBuff > 100000 ){
 						fs.writeFileSync( newFile, buff );
 						buff = "";
 						numLinesInBuff = 0;

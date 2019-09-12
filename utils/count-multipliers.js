@@ -4,7 +4,7 @@ const fs = require('fs');
 
 
 var lineReader = require('readline').createInterface({
-	input: require('fs').createReadStream( "multiplied.txt" )
+	input: require('fs').createReadStream( "combined.txt" )
 });
 
 fs.writeFileSync("combined.txt", Buffer.from("", "UTF-8"));
@@ -32,10 +32,7 @@ lineReader.on('line', function (line) {
 			buffer += lastLine + "m" + lastMultiplier + "\n";
 			numDifferentBoards++;
 			numBoards+= lastMultiplier;
-			if (buffer.length > 1000000) {
-				fs.writeFileSync("combined.txt", Buffer.from(buffer, "utf-8"), {flag: 'a'});
-				buffer = "";
-			}
+			
 		}
 		lastLine = l[0];
 		lastMultiplier = multiplier;
