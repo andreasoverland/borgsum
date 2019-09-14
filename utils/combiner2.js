@@ -47,15 +47,6 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 //while( moreMasterLinesAvailable ){
 	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
-	let counts = [0,0,0,0,0,0];
-
-	let minLength = 1000;
-	let shortestKey = "";
-
-	console.log( "Shortest k4 " + minLength + " " + shortestKey );
-	console.log( "Min line length " + minLineLength );
-	console.log( counts );
-
 
 	scanAllFilesForMasterLines(); // bigtime
 	writeMap();
@@ -69,8 +60,7 @@ function makeKeyArray( line ){
 	let a = [];
 	a.push( line.substring(0,8) );
 	a.push( line.substring(8,16) );
-	a.push( line.substring(16,24) );
-	a.push( line.substring(24) );
+	a.push( line.substring(16) );
 	return a;
 }
 
@@ -122,14 +112,11 @@ function readNextMasterLinesFromNextFile(){
 				map[ keys[0] ][ keys[1] ] = {};
 			}
 			if( map[ keys[0] ][ keys[1] ][ keys[2] ] === undefined ){
-				map[ keys[0] ][ keys[1] ][ keys[2] ] = {};
-			}
-			if( map[ keys[0] ][ keys[1] ][ keys[2] ][keys[3] ] === undefined ){
-				map[ keys[0] ][ keys[1] ][ keys[2] ][keys[3] ] = parseInt(p[1]);
+				map[ keys[0] ][ keys[1] ][ keys[2] ] =  parseInt(p[1]);
 				uniqueLines++;
 			}
 			else {
-				map[ keys[0] ][ keys[1] ][ keys[2] ][keys[3] ] += parseInt(p[1]);
+				map[ keys[0] ][ keys[1] ][ keys[2] ] += parseInt(p[1]);
 			}
 
 		}
@@ -196,9 +183,7 @@ function writeMap(){
 	Object.keys(map).forEach( k1 => {
 		Object.keys(map[k1]).forEach( k2 => {
 			Object.keys(map[k1][k2]).forEach( k3 => {
-				Object.keys(map[k1][k2][k3]).forEach( k4 => {
-					buff += (k1 + k2 + k3 + k4 + "m" + (map[k1][k2][k3][k4]) + "\n");
-				});
+				buff += (k1 + k2 + k3 + "m" + (map[k1][k2][k3]) + "\n");
 			});
 		});
 	});
@@ -257,9 +242,9 @@ function scanAndMarkLinesInFile( filename ) {
 
 			if ( map[k[0]] !== undefined &&
 				 map[k[0]][k[1]] !== undefined &&
-				 map[k[0]][k[1]][k[2]] !== undefined &&
-				 map[k[0]][k[1]][k[2]][k[3]] !== undefined ){
-				 map[k[0]][k[1]][k[2]][k[3]] += parseInt(p[1]);
+				 map[k[0]][k[1]][k[2]] !== undefined ) {
+					 map[k[0]][k[1]][k[2]]] += parseInt(p[1]);
+				 }
 			}
 			else {
 				numLinesWritten++;
