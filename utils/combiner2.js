@@ -3,7 +3,7 @@
 /*
 
 
-Eva solfrid øverland, Fredrik chistian Øverdand, andreas dcehvggfvgfgvhrfhgf øverland , ines christiane øveerland, sara franses glaser. 
+Eva solfrid øverland, Fredrik chistian Øverdand, andreas dcehvggfvgfgvhrfhgf øverland , ines christiane øveerland, sara franses glaser.
 
 */
 
@@ -17,7 +17,17 @@ const fs = require('fs');
 // - Flytt fil 1.new til 1
 // - Les hver fil, ta vare på ubrukte linjer i ny fil, og overskriv når enden på fila er nådd
 
-let minNumMasterLines = 1000000;
+// original data : 5941248 kb
+//     1046 : 112 ,   24528Kb,   219Kb/sec
+//    16804 : 115 ,   57252Kb,   498Kb/sec
+//   135404 : 130 ,  106684Kb,   821Kb/sec
+//   506989 : 139 ,  324580Kb,  2335Kb/sec
+//  1049080 : 138 ,  552684Kb,  4005Kb/sec
+//  2256721 : 140 , 1174248Kb,  8387Kb/sec
+//  5337391 : 168 , 2525568Kb, 15033Kb/sec
+// 10000000 : Not finished reading linesn after 18 minNumMasterLines
+
+let minNumMasterLines = 4000000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
@@ -32,19 +42,22 @@ let uniqueLines = 0;
 
 fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 
-while( moreMasterLinesAvailable ){
-	console.log( new Date() +  " : Reading master lines from " + masterLineFileName );
+//while( moreMasterLinesAvailable ){
+	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
+	console.log( "Actual lines :", Object.keys(map).length );
 
 	// console.log( JSON.stringify( map , null, 2) );
 	scanAllFilesForMasterLines(); // bigtime
 	writeMap();
-}
+	console.log( new Date() +  " : Scan done "  );
+//}
+
 console.log( "Total number of lines read:", numLinesRead );
 console.log( "Number of unique lines found:", uniqueLines );
 
 function readNextMasterLinesFromNextFile(){
-	let size = 100000;
+	let size = 40*minNumMasterLines;
 	let file = fs.openSync(masterLineFileName,"r");
 
 	let readBuffer = Buffer.alloc(size);
@@ -72,7 +85,7 @@ function readNextMasterLinesFromNextFile(){
 
 		for (let i = 0; i < lines.length; i++) {
 
-
+			// TODO: Split the line in 5 byte chunks, and make binary tree with 4-5 levels
 			let p = lines[i].split("m");
 			if (map[p[0]] === undefined ) {
 				map[p[0]] = parseInt(p[1]);
@@ -164,7 +177,7 @@ function scanAndMarkLinesInFile( filename ) {
 	let file = fs.openSync(filename,"r");
 	let newFile = fs.openSync( filename+".new", "w");
 
-	let size = 100000;
+	let size = 1000000;
 	let position = 0;
 	let buffer = Buffer.alloc(size);
 	let numRead = fs.readSync(file, buffer, 0, size, position);
