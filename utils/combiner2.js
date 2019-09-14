@@ -62,7 +62,7 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 					let valLength =  k4.length;
 					if( valLength < minLength ){
 						minLength = valLength;
-						shortestKey = k4+":"+map[k1][k2][k3][k4];
+						shortestKey = k1+"."+k2+"."+k3+"."+k4+":"+map[k1][k2][k3][k4];
 					}
 				});
 			});
