@@ -28,7 +28,7 @@ const fs = require('fs');
 //  5337391 : 168 , 2525568Kb, 15033Kb/sec
 // 10000000 : Not finished reading linesn after 18 minNumMasterLines
 
-let minNumMasterLines = 4000000;
+let minNumMasterLines = 3000000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
@@ -40,6 +40,7 @@ let masterLineFileName = masterLineFiles.shift();
 let moreMasterLinesAvailable = true;
 let numLinesRead = 0;
 let uniqueLines = 0;
+let minLineLength = 1000;
 
 fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 
@@ -70,6 +71,7 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 	});
 
 	console.log( "Shortest k4 " + minLength + " " + shortestKey );
+	console.log( "Min line length " + minLineLength );
 	console.log( counts );
 /*
 
@@ -89,6 +91,8 @@ function makeKeyArray( line ){
 	a.push( line.substring(24) );
 	return a;
 }
+
+
 
 function readNextMasterLinesFromNextFile(){
 	let size = 40*minNumMasterLines;
@@ -115,6 +119,7 @@ function readNextMasterLinesFromNextFile(){
 			numRead -= lengthOfLastLine; // for next read
 		}
 
+
 		numLinesRead += lines.length;
 
 		for (let i = 0; i < lines.length; i++) {
@@ -123,6 +128,10 @@ function readNextMasterLinesFromNextFile(){
 
 			let p = lines[i].split("m");
 			let keys = makeKeyArray( p[0] );
+
+			if( minLength > p[0].length ){
+				minLength = p[0].length;
+			}
 
 			if( map[ keys[0] ] === undefined ){
 				map[ keys[0] ] = {};
