@@ -28,7 +28,7 @@ const fs = require('fs');
 //  5337391 : 168 , 2525568Kb, 15033Kb/sec
 // 10000000 : Not finished reading linesn after 18 minNumMasterLines
 
-let minNumMasterLines = 3000000;
+let minNumMasterLines = 4000000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
