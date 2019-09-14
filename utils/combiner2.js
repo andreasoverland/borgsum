@@ -129,8 +129,8 @@ function readNextMasterLinesFromNextFile(){
 			let p = lines[i].split("m");
 			let keys = makeKeyArray( p[0] );
 
-			if( minLength > p[0].length ){
-				minLength = p[0].length;
+			if( minLineLength > p[0].length ){
+				minLineLength = p[0].length;
 			}
 
 			if( map[ keys[0] ] === undefined ){
