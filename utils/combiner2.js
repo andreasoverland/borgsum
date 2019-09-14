@@ -44,7 +44,7 @@ let minLineLength = 1000;
 
 fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 
-while( moreMasterLinesAvailable ){
+//while( moreMasterLinesAvailable ){
 	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
 	let counts = [0,0,0,0,0,0];
@@ -60,7 +60,7 @@ while( moreMasterLinesAvailable ){
 	scanAllFilesForMasterLines(); // bigtime
 	writeMap();
 	console.log( new Date() +  " : Scan done "  );
-}
+//}
 
 console.log( "Total number of lines read:", numLinesRead );
 console.log( "Number of unique lines found:", uniqueLines );
