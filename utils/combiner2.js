@@ -24,6 +24,7 @@ const fs = require('fs');
 //   506989 : 139 ,  324580Kb,  2335Kb/sec
 //  1049080 : 138 ,  552684Kb,  4005Kb/sec
 //  2256721 : 140 , 1174248Kb,  8387Kb/sec
+//  4520146 : 142,  2275524Kb, 16025Kb/sec **
 //  5337391 : 168 , 2525568Kb, 15033Kb/sec
 // 10000000 : Not finished reading linesn after 18 minNumMasterLines
 
