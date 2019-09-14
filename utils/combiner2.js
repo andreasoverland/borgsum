@@ -44,7 +44,7 @@ let minLineLength = 1000;
 
 fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 
-//while( moreMasterLinesAvailable ){
+while( moreMasterLinesAvailable ){
 	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
 	let counts = [0,0,0,0,0,0];
@@ -52,33 +52,15 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 	let minLength = 1000;
 	let shortestKey = "";
 
-	Object.keys(map).forEach( k1 => {
-		counts[0]++;
-		Object.keys(map[k1]).forEach( k2 => {
-			counts[1]++;
-			Object.keys(map[k1][k2]).forEach( k3 => {
-				counts[2]++;
-				Object.keys(map[k1][k2][k3]).forEach( k4 => {
-					counts[3]++;
-					let valLength =  k4.length;
-					if( valLength < minLength ){
-						minLength = valLength;
-						shortestKey = k1+"."+k2+"."+k3+"."+k4+":"+map[k1][k2][k3][k4];
-					}
-				});
-			});
-		});
-	});
-
 	console.log( "Shortest k4 " + minLength + " " + shortestKey );
 	console.log( "Min line length " + minLineLength );
 	console.log( counts );
-/*
+
 
 	scanAllFilesForMasterLines(); // bigtime
 	writeMap();
 	console.log( new Date() +  " : Scan done "  );*/
-//}
+}
 
 console.log( "Total number of lines read:", numLinesRead );
 console.log( "Number of unique lines found:", uniqueLines );
