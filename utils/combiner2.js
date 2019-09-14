@@ -88,6 +88,7 @@ function readNextMasterLinesFromNextFile(){
 
 			// TODO: Split the line in 5 byte chunks, and make binary tree with 4-5 levels
 			let p = lines[i].split("m");
+			
 			if (map[p[0]] === undefined ) {
 				map[p[0]] = parseInt(p[1]);
 				uniqueLines++;
