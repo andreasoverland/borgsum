@@ -59,7 +59,7 @@ while( moreMasterLinesAvailable ){
 
 	scanAllFilesForMasterLines(); // bigtime
 	writeMap();
-	console.log( new Date() +  " : Scan done "  );*/
+	console.log( new Date() +  " : Scan done "  );
 }
 
 console.log( "Total number of lines read:", numLinesRead );
