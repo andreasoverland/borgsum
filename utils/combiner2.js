@@ -259,7 +259,6 @@ function scanAndMarkLinesInFile( filename ) {
 					 map[k[0]][k[1]][k[2]] !== undefined &&
 					 map[k[0]][k[1]][k[2]][k[3]] !== undefined ){
 					 	map[k[0]][k[1]][k[2]][k[3]] += parseInt(p[1]);
-					}
 				}
 				else {
 					numLinesWritten++;
