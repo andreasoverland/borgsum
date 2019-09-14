@@ -46,16 +46,40 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 //while( moreMasterLinesAvailable ){
 	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
-	console.log( "Actual lines :", Object.keys(map).length );
+	let counts = [0,0,0,0,0,0];
 
+	Object.keys(map).forEach( k1 => {
+		counts[0]++;
+		Object.keys(map[k1]).forEach( k2 => {
+			counts[1]++;
+			Object.keys(map[k1][k2]).forEach( k3 => {
+				counts[2]++;
+				Object.keys(map[k1][k2][k3]).forEach( k4 => {
+					counts[3]++;
+				});
+			});
+		});
+	});
+
+	console.log( counts );
+/*
 	// console.log( JSON.stringify( map , null, 2) );
 	scanAllFilesForMasterLines(); // bigtime
 	writeMap();
-	console.log( new Date() +  " : Scan done "  );
+	console.log( new Date() +  " : Scan done "  );*/
 //}
 
 console.log( "Total number of lines read:", numLinesRead );
 console.log( "Number of unique lines found:", uniqueLines );
+
+function makeKeyArray( line ){
+	let a = [];
+	a.push( line.substring(0,8) );
+	a.push( line.substring(8,16) );
+	a.push( line.substring(16,24) );
+	a.push( line.substring(24) );
+	return a;
+}
 
 function readNextMasterLinesFromNextFile(){
 	let size = 40*minNumMasterLines;
@@ -67,7 +91,7 @@ function readNextMasterLinesFromNextFile(){
 	let position = 0;
 	let numRead = fs.readSync( file, readBuffer, 0 , size, position );
 
-	while( Object.keys(map).length < minNumMasterLines ){
+	while( uniqueLines < minNumMasterLines ){
 
 		let strBuf = readBuffer.toString("UTF-8");
 		let lines = strBuf.trim().split("\n");
@@ -86,16 +110,28 @@ function readNextMasterLinesFromNextFile(){
 
 		for (let i = 0; i < lines.length; i++) {
 
-			// TODO: Split the line in 5 byte chunks, and make binary tree with 4-5 levels
+			// TODO: Split the line in 5 byte chunks, and make binary tree with 4 levels
+
 			let p = lines[i].split("m");
-			
-			if (map[p[0]] === undefined ) {
-				map[p[0]] = parseInt(p[1]);
+			let keys = makeKeyArray( p[0] );
+
+			if( map[ keys[0] ] === undefined ){
+				map[ keys[0] ] = {};
+			}
+			if( map[ keys[0] ][ keys[1] ] === undefined ){
+				map[ keys[0] ][ keys[1] ] = {};
+			}
+			if( map[ keys[0] ][ keys[1] ][ keys[2] ] === undefined ){
+				map[ keys[0] ][ keys[1] ][ keys[2] ] = {};
+			}
+			if( map[ keys[0] ][ keys[1] ][ keys[2] ][keys[3] ] === undefined ){
+				map[ keys[0] ][ keys[1] ][ keys[2] ][keys[3] ] = parseInt(p[1]);
 				uniqueLines++;
 			}
 			else {
-				map[p[0]] += parseInt(p[1]);
+				map[ keys[0] ][ keys[1] ][ keys[2] ][keys[3] ] += parseInt(p[1]);
 			}
+
 		}
 
 		position += numRead;
@@ -157,9 +193,16 @@ function readNextMasterLinesFromNextFile(){
 function writeMap(){
 
 	let buff = "";
-	Object.keys(map).forEach( k=>{
-		buff += (k + "m" + map[k] + "\n");
+	Object.keys(map).forEach( k1 => {
+		Object.keys(map[k1]).forEach( k2 => {
+			Object.keys(map[k1][k2]).forEach( k3 => {
+				Object.keys(map[k1][k2][k3]).forEach( k4 => {
+					buff += (k1 + k2 + k3 + k4 + "m" + (map[k1][k2][k3][k4]) + "\n");
+				});
+			});
+		});
 	});
+
 	fs.writeFileSync("../combined.txt", Buffer.from( buff, "utf-8"), {flag: 'a'});
 	map = {};
 
@@ -208,8 +251,15 @@ function scanAndMarkLinesInFile( filename ) {
 
 		for (let i = 0; i < lines.length; i++) {
 				let p = lines[i].split("m");
-				if (map[p[0]] !== undefined) {
-					map[p[0]] += parseInt(p[1]);
+
+				let k = makeKeyArray( p[0] );
+
+				if ( map[k[0]] !== undefined &&
+					 map[k[0]][k[1]] !== undefined &&
+					 map[k[0]][k[1]][k[2]] !== undefined &&
+					 map[k[0]][k[1]][k[2]][k[3]] !== undefined ){
+					 	map[k[0]][k[1]][k[2]][k[3]] += parseInt(p[1]);
+					}
 				}
 				else {
 					numLinesWritten++;
