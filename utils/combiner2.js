@@ -243,7 +243,7 @@ function scanAndMarkLinesInFile( filename ) {
 			if ( map[k[0]] !== undefined &&
 				 map[k[0]][k[1]] !== undefined &&
 				 map[k[0]][k[1]][k[2]] !== undefined ) {
-					 map[k[0]][k[1]][k[2]]] += parseInt(p[1]);
+					 map[k[0]][k[1]][k[2]] += parseInt(p[1]);
 				 }
 			}
 			else {
