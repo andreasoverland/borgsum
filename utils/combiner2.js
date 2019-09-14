@@ -69,7 +69,7 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 		});
 	});
 
-	console.log( "Shortest k4 " + valLength + " " + shortestKey );
+	console.log( "Shortest k4 " + minLength + " " + shortestKey );
 	console.log( counts );
 /*
 
