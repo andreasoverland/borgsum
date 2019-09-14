@@ -48,6 +48,9 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 	readNextMasterLinesFromNextFile();
 	let counts = [0,0,0,0,0,0];
 
+	let minLength = 1000;
+	let shortestKey = "";
+
 	Object.keys(map).forEach( k1 => {
 		counts[0]++;
 		Object.keys(map[k1]).forEach( k2 => {
@@ -56,14 +59,20 @@ fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
 				counts[2]++;
 				Object.keys(map[k1][k2][k3]).forEach( k4 => {
 					counts[3]++;
+					let valLength =  k4.length;
+					if( valLength < minLength ){
+						minLength = valLength;
+						shortestKey = k4+":"+map[k1][k2][k3][k4];
+					}
 				});
 			});
 		});
 	});
 
+	console.log( "Shortest k4 " + valLength + " " + shortestKey );
 	console.log( counts );
 /*
-	// console.log( JSON.stringify( map , null, 2) );
+
 	scanAllFilesForMasterLines(); // bigtime
 	writeMap();
 	console.log( new Date() +  " : Scan done "  );*/
@@ -250,27 +259,27 @@ function scanAndMarkLinesInFile( filename ) {
 		numLinesReadAndChecked += lines.length;
 
 		for (let i = 0; i < lines.length; i++) {
-				let p = lines[i].split("m");
 
-				let k = makeKeyArray( p[0] );
+			let p = lines[i].split("m");
 
-				if ( map[k[0]] !== undefined &&
-					 map[k[0]][k[1]] !== undefined &&
-					 map[k[0]][k[1]][k[2]] !== undefined &&
-					 map[k[0]][k[1]][k[2]][k[3]] !== undefined ){
-					 	map[k[0]][k[1]][k[2]][k[3]] += parseInt(p[1]);
+			let k = makeKeyArray( p[0] );
+
+			if ( map[k[0]] !== undefined &&
+				 map[k[0]][k[1]] !== undefined &&
+				 map[k[0]][k[1]][k[2]] !== undefined &&
+				 map[k[0]][k[1]][k[2]][k[3]] !== undefined ){
+				 map[k[0]][k[1]][k[2]][k[3]] += parseInt(p[1]);
+			}
+			else {
+				numLinesWritten++;
+				numLinesInBuff++;
+				buff += lines[i] + "\n";
+				if( numLinesInBuff > 100000 ){
+					fs.writeFileSync( newFile, buff );
+					buff = "";
+					numLinesInBuff = 0;
 				}
-				else {
-					numLinesWritten++;
-					numLinesInBuff++;
-					buff += lines[i] + "\n";
-					if( numLinesInBuff > 100000 ){
-						fs.writeFileSync( newFile, buff );
-						buff = "";
-						numLinesInBuff = 0;
-					}
-
-				}
+			}
 		}
 
 		position += numRead;
