@@ -190,7 +190,8 @@ int main( int argc, char **argv){
                       R . . . K . . R\
                       w KQkq -";*/
 
-    /*char *initialBoard = "\
+    /*
+    char *initialBoard = "\
                       . . . . k . . .\
                       . . . . . . . .\
                       . . . . . . . .\
@@ -199,7 +200,11 @@ int main( int argc, char **argv){
                       . . . . . . . .\
                       . . . . . . . .\
                       . . . . . . K .\
-	                  b - c3";*/
+	                  b - c3";
+	*/
+
+
+
 
 
     unsigned long board[NUM_BYTES];
@@ -229,11 +234,10 @@ int main( int argc, char **argv){
             printf("                   was a pawn being moved to squares.The an passant square is the attackable square behind the moved pawn.\r\n");
             printf("                    The last number is the move number, or ply really. \r\n");
             printf("                   Spaces are ignored, and dots are treated as empty squares. \r\n");
-            printf("-fen \"string\"      Instead of diagram, use FEN to define a starting position. (not implemented)\r\n");
             printf("-cfen \"string\"     Uses a Compact FEN as starting position\r\n");
             printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
             printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
-            printf("-logtype TYPE      Either fen,cfen or diagram. Will print out each new board found, in diagram or (compact)fen format.\r\n");
+            printf("-logtype TYPE      Either binary, cfen or diagram. Will print out each new board found, raw binary, diagram or (compact)fen format.\r\n");
             printf("                   If omitted, only the statistics will be printed at the end of the run.\r\n");
             printf("-mul N             Multiplier number. Only used as pass-on value for logging and collating results\r\n");
             printf("                   when calculating results for a board that exists N times in a set.\r\n");
@@ -253,7 +257,6 @@ int main( int argc, char **argv){
 
 			inFile = fopen( argv[a], "r");
 			if (inFile == NULL) {
-
 				printf("** ERORR : File not found '%s' **\r\n", argv[a]);
 				exit(EXIT_FAILURE);
 			}
@@ -2688,7 +2691,7 @@ void sprintDiagram( char *target, unsigned long board[] ){
     }
 
     sprintf(target, "\"%s %s %s %s %lu\"", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", castling, epSquare, board[IDX_MOVE_NUM] );
-    //sprintf(target, "\"%s\" %s %lu %lu %lu", res, board[IDX_TURN] == WHITE_MASK ? "w" : "b", board[IDX_CASTLING], board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
+
 
 }
 
@@ -2701,7 +2704,7 @@ void printDiagram(unsigned long board[]) {
         printf("# %s\r\n# ",str);
         compressBitBoard(board);
     }*/
-    //printf("%s %lu %lu\n", str, board[IDX_MOVE_ID], board[IDX_PARENT_MOVE_ID]);
+
     printf("%% %s\n", str);
 
 }
@@ -2774,8 +2777,6 @@ void printBitBoard(unsigned long board[]) {
     }
     printf("\n");
     printf("Move num: %ld\n", board[IDX_MOVE_NUM]);
-    printf("Move ID: %ld\n", board[IDX_MOVE_ID]);
-    printf("Parent ID: %ld\n", board[IDX_PARENT_MOVE_ID]);
 
 
     printf("Turn : %s\n", board[IDX_TURN] == WHITE_MASK ? "White" : "Black");
@@ -2863,7 +2864,13 @@ void fenToBitBoard( unsigned long board[], char fen[] ){
 }
 
 void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
-    unsigned long whitePieces = binary[IDX_WHITE_PIECES];;
+
+	memset(board, 0, sizeof(unsigned long) * NUM_BYTES );
+
+    unsigned long whitePieces = binary[BINARY_IDX_WHITE_PCS];
+
+    board[IDX_MOVE_ID] 		 = 0l;
+
     board[IDX_WHITE_PIECES]  = whitePieces;
     
     board[IDX_WHITE_PAWNS]   = binary[BINARY_IDX_PAWNS]   & whitePieces;
@@ -2875,16 +2882,56 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
 
     unsigned long notWhitePieces = ~whitePieces;
 
+
     board[IDX_BLACK_PAWNS]   = binary[BINARY_IDX_PAWNS]   & notWhitePieces;
     board[IDX_BLACK_ROOKS]   = binary[BINARY_IDX_ROOKS]   & notWhitePieces;
     board[IDX_BLACK_KNIGHTS] = binary[BINARY_IDX_KNIGHTS] & notWhitePieces;
     board[IDX_BLACK_BISHOPS] = binary[BINARY_IDX_BISHOPS] & notWhitePieces;
     board[IDX_BLACK_QUEENS]  = binary[BINARY_IDX_QUEENS]  & notWhitePieces;
     board[IDX_BLACK_KING]    = binary[BINARY_IDX_KINGS]   & notWhitePieces;
-    
+
+	board[IDX_BLACK_PIECES]  = 	board[IDX_BLACK_PAWNS]   |
+								board[IDX_BLACK_ROOKS]   |
+								board[IDX_BLACK_KNIGHTS] |
+								board[IDX_BLACK_BISHOPS] |
+								board[IDX_BLACK_QUEENS]  |
+								board[IDX_BLACK_KING];
+
+	board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] | board[IDX_BLACK_PIECES];
+
+	unsigned long castling = 0;
+	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_BLACK_KING_SIDE ) {
+		board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+	}
+	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_BLACK_QUEEN_SIDE ) {
+		board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE ;
+	}
+	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_WHITE_KING_SIDE ) {
+		board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+	}
+	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_WHITE_QUEEN_SIDE  ){
+		board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+	}
+
+	if( binary[BINARY_IDX_FLAGS] & BINARY_WHITES_TURN ) {
+		board[IDX_TURN] = WHITE_MASK;
+	}
+	else {
+		board[IDX_TURN] = BLACK_MASK;
+	}
+
+	int idx = ( binary[BINARY_IDX_FLAGS] >> BINARY_IDX_FLAGS_EP_IDX ) & 0xff;
+	if( idx != 0 ) {
+		board[IDX_EP_IDX] = 1L << idx;
+	}
+
+	board[IDX_MOVE_NUM] = ( binary[BINARY_IDX_FLAGS] >> BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+	board[IDX_MULTIPLIER] = binary[BINARY_IDX_MULTIPLIER];
 }
 
 void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
+
+	memset(binary, 0, sizeof(unsigned long) * 9 );
 
     // slå sammen alle like pieces sine longs
     binary[BINARY_IDX_PAWNS]     = board[IDX_WHITE_PAWNS]   | board[IDX_BLACK_PAWNS];
@@ -2896,6 +2943,8 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
     binary[BINARY_IDX_WHITE_PCS] = board[IDX_WHITE_PIECES];
 
     unsigned long castling = 0;
+
+
     if( board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE ){
         binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_BLACK_KING_SIDE;
     }
@@ -2912,6 +2961,8 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
         binary[BINARY_IDX_FLAGS] |= BINARY_WHITES_TURN;
     }
 
+
+
     if( board[IDX_EP_IDX] ){
         // count leading bits
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
@@ -2919,6 +2970,7 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
     }
 
     binary[BINARY_IDX_FLAGS] |= (board[IDX_MOVE_NUM] << BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+
     binary[BINARY_IDX_MULTIPLIER] = board[IDX_MULTIPLIER];
 
 }
@@ -3457,17 +3509,12 @@ void compressBitBoard( unsigned long board[] ){
     positionCounter++;
 
 	if( outFile != NULL ){
-		//char line[120];
-		//sprintf( line, "%s%d%s%c%lum%lu\n",compressedBoard , KQkq , epSquare, board[IDX_TURN] == WHITE_MASK ? 'w':'b', board[IDX_MOVE_NUM], board[IDX_MULTIPLIER]);
-        //char *line = "rebqkber8pn4en13eN12e8PReBQKBNR15-b5m1\n";
         memcpy(outFileBuff+outFileBuffOffset,compressedBoard,positionCounter);
-		//sprintf( outFileBuff + outFileBuffOffset, "%s\n", compressedBoard );
 		outFileBuffOffset += positionCounter;
 		buffWrites++;
 		if( outFileBuffOffset > 1023*1024 ){
 		    fileWrites++;
             fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
-            //fputs( outFileBuff, outFile);
             outFileBuffOffset = 0;
 		}
 
