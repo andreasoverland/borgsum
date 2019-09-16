@@ -255,7 +255,7 @@ int main( int argc, char **argv){
 		if( strcmp( argv[a], "-infile") == 0 ){
 			a++;
 
-			inFile = fopen( argv[a], "r");
+			inFile = fopen( argv[a], "rb");
 			if (inFile == NULL) {
 				printf("** ERORR : File not found '%s' **\r\n", argv[a]);
 				exit(EXIT_FAILURE);
@@ -330,7 +330,7 @@ int main( int argc, char **argv){
 
 	char * line = NULL;
 	size_t len = 0;
-	ssize_t read;
+	int read;
 
 	struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
@@ -338,13 +338,14 @@ int main( int argc, char **argv){
     while( 1 ) {
 
     	if( inFile != NULL ){
-
-			read = getline(&line, &len, inFile);
-			if( read < 10 ){
+    		unsigned long binary[9];
+			read = fread(binary, sizeof(unsigned long),9, inFile);
+			if( read < 9 ){
+				printf("breaking mofo %d\n\n", read );
 				break;
 			}
 
-			cfenToBitBoard( board, line );
+			binaryToBitBoard( binary, board );
     	}
 
     	dig(board);
@@ -2835,13 +2836,6 @@ void printBitBoard(unsigned long board[]) {
 
 }
 
-/*
-0..63 = board
-65 = Turn
-67..71 castling
-73 calculate to depth
-rn..kbnrpppqpppp...........p........P.bP........PPPP.PP.RNB.KBNR w KQkq 4 1
-*/
 
 void fenToBitBoard( unsigned long board[], char fen[] ){
 
@@ -2960,7 +2954,6 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
     if( board[IDX_TURN] == WHITE_MASK ){
         binary[BINARY_IDX_FLAGS] |= BINARY_WHITES_TURN;
     }
-
 
 
     if( board[IDX_EP_IDX] ){
