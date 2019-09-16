@@ -59,6 +59,29 @@ const int IDX_MULTIPLIER     = 24;
 
 const int NUM_BYTES          = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
+const int BINARY_IDX_WHITE_PCS  = 0;
+const int BINARY_IDX_PAWNS      = 1;
+const int BINARY_IDX_ROOKS      = 2;
+const int BINARY_IDX_KNIGHTS    = 3;
+const int BINARY_IDX_BISHOPS    = 4;
+const int BINARY_IDX_QUEENS     = 5;
+const int BINARY_IDX_KINGS      = 6;
+const int BINARY_IDX_FLAGS      = 7;
+const int BINARY_IDX_MULTIPLIER = 8;
+
+// const int BINARY_IDX_CASTLING   = 7;
+// const int BINARY_IDX_EP_IDX     = 8;
+// const int BINARY_IDX_COLOR_TURN = 10;
+
+const int BINARY_CASTLING_WHITE_KING_SIDE = 1;
+const int BINARY_CASTLING_WHITE_QUEEN_SIDE = 2;
+const int BINARY_CASTLING_BLACK_KING_SIDE = 4;
+const int BINARY_CASTLING_BLACK_QUEEN_SIDE = 8;
+
+const int BINARY_WHITES_TURN = 16; // 16th bit set = white, not set = black
+const int BINARY_IDX_FLAGS_EP_IDX = 5; // left shift really
+const int BINARY_IDX_FLAGS_MOVE_NUM_IDX = 16;
+
 const int A1 = 7;
 const int B1 = 6;
 const int C1 = 5;
@@ -136,4 +159,5 @@ const unsigned long FH = 0x0101010101010101;
 const int LOG_TYPE_NONE = 0;
 const int LOG_TYPE_DIAGRAM = 1;
 const int LOG_TYPE_FEN = 2;
-const int LOG_TYPE_BINARY = 3;
+const int LOG_TYPE_CFEN = 3;
+const int LOG_TYPE_BINARY = 4;

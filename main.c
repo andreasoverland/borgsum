@@ -107,6 +107,7 @@ void printCompactBoard(unsigned long board[]);
 
 void compressBitBoard( unsigned long board[] );
 
+void bitBoardToBinary(unsigned long board[], unsigned long binary[] );
 
 /*** LEVEL ***/
 /*** LEVEL ***/
@@ -136,8 +137,6 @@ unsigned long makeNewBoardInvocations = 0;
 unsigned long isSquaresThreatenedByColorInvocations = 0;
 unsigned long influenceMapForSquareInvocations = 0;
 unsigned long moveLinearInvocations = 0;
-
-
 
 int maxNumMoves = 0;
 
@@ -300,6 +299,9 @@ int main( int argc, char **argv){
                 LOG_TYPE = LOG_TYPE_DIAGRAM;
             }
             else if( strcmp( argv[a], "cfen" ) == 0 ){
+                LOG_TYPE = LOG_TYPE_CFEN;
+            }
+            else if( strcmp( argv[a], "binary" ) == 0 ){
                 LOG_TYPE = LOG_TYPE_BINARY;
             }
 
@@ -318,7 +320,7 @@ int main( int argc, char **argv){
         printf("./chessengine -diagram %s -maxlevel %d\n", line, MAX_LEVEL   );
     }
 
-    if( LOG_TYPE != LOG_TYPE_BINARY ) {
+    if( LOG_TYPE != LOG_TYPE_CFEN ) {
         printBitBoard(board);
     }
 
@@ -328,7 +330,6 @@ int main( int argc, char **argv){
 
 	struct timespec ts1, ts2;
     clock_gettime(CLOCK_REALTIME, &ts1);
-
 
     while( 1 ) {
 
@@ -367,11 +368,11 @@ int main( int argc, char **argv){
 
 	int l = 14;
 
-    if( workUnitId != NULL && LOG_TYPE != LOG_TYPE_BINARY ){
+    if( workUnitId != NULL && LOG_TYPE != LOG_TYPE_CFEN ){
         printf("# WORKUNITID: %s\r\n", workUnitId);
     }
 
-    if( LOG_TYPE != LOG_TYPE_BINARY ){
+    if( LOG_TYPE != LOG_TYPE_CFEN ){
 
         long total = printStats();
         printf("\n# Total valid moves found : %lu \n" ,total);
@@ -386,6 +387,7 @@ int main( int argc, char **argv){
             fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
             //fputs( outFileBuff, outFile);
             outFileBuffOffset = 0;
+            fileWrites++;
         }
 		fclose(outFile);
     }
@@ -465,9 +467,28 @@ void dig(unsigned long board[]) {
         	}
         }
     }
-    else if( LOG_TYPE == LOG_TYPE_BINARY ){
+    else if( LOG_TYPE == LOG_TYPE_CFEN ){
         if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
             compressBitBoard( board );
+        }
+    }
+    else if( LOG_TYPE == LOG_TYPE_BINARY && outFile != NULL ){
+        if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
+
+            unsigned long binary[9];
+            bitBoardToBinary( board, binary );
+
+            memcpy(outFileBuff+outFileBuffOffset,binary,8*9);
+            //sprintf( outFileBuff + outFileBuffOffset, "%s\n", compressedBoard );
+            outFileBuffOffset += 8*9;
+            buffWrites++;
+            if( outFileBuffOffset > 1023*1024 ){
+                fileWrites++;
+                fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
+                //fputs( outFileBuff, outFile);
+                outFileBuffOffset = 0;
+            }
+
         }
     }
 
@@ -2840,6 +2861,46 @@ void fenToBitBoard( unsigned long board[], char fen[] ){
 
 }
 
+void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
+
+    // slå sammen alle like pieces sine longs
+    binary[BINARY_IDX_PAWNS]     = board[IDX_WHITE_PAWNS]   | board[IDX_BLACK_PAWNS];
+    binary[BINARY_IDX_ROOKS]     = board[IDX_WHITE_ROOKS]   | board[IDX_BLACK_ROOKS];
+    binary[BINARY_IDX_KNIGHTS]   = board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS];
+    binary[BINARY_IDX_BISHOPS]   = board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS];
+    binary[BINARY_IDX_QUEENS]    = board[IDX_WHITE_QUEENS]  | board[IDX_BLACK_QUEENS];
+    binary[BINARY_IDX_KINGS]     = board[IDX_WHITE_KING]    | board[IDX_BLACK_KING];
+    binary[BINARY_IDX_WHITE_PCS] = board[IDX_WHITE_PIECES];
+
+    unsigned long castling = 0;
+    if( board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE ){
+        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_BLACK_KING_SIDE;
+    }
+    if( board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE ){
+        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_BLACK_QUEEN_SIDE;
+    }
+    if( board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE ){
+        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_WHITE_KING_SIDE;
+    }
+    if( board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE ){
+        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_WHITE_QUEEN_SIDE;
+    }
+    if( board[IDX_TURN] == WHITE_MASK ){
+        binary[BINARY_IDX_FLAGS] |= BINARY_WHITES_TURN;
+    }
+
+    if( board[IDX_EP_IDX] ){
+        // count leading bits
+        int idx = __builtin_ctzll(board[IDX_EP_IDX]);
+        binary[BINARY_IDX_FLAGS] |= (idx << BINARY_IDX_FLAGS_EP_IDX);
+    }
+
+    binary[BINARY_IDX_FLAGS] |= (board[IDX_MOVE_NUM] << BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+    binary[BINARY_IDX_MULTIPLIER] = board[IDX_MULTIPLIER];
+
+}
+
+
 void cfenToBitBoard(unsigned long board[], char cfen[]) {
 
     // "rnbqkbnr5pe2p13ep7eP2eP8e4Pe2PRNBQKBNR15-b3m1"
@@ -3223,7 +3284,7 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
 } // diagramToBitBoard
 
-// used when writing binary log for sorting, uniqueing and such
+
 void compressBitBoard( unsigned long board[] ){
 
     char compressedBoard[] = "................................................................\0";
