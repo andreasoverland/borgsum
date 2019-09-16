@@ -108,6 +108,7 @@ void printCompactBoard(unsigned long board[]);
 void compressBitBoard( unsigned long board[] );
 
 void bitBoardToBinary(unsigned long board[], unsigned long binary[] );
+void binaryToBitBoard(unsigned long binary[], unsigned long board[] );
 
 /*** LEVEL ***/
 /*** LEVEL ***/
@@ -2859,6 +2860,28 @@ void fenToBitBoard( unsigned long board[], char fen[] ){
     // neste dingser
     //   - gjør som diagram-parsing
 
+}
+
+void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
+    unsigned long whitePieces = binary[IDX_WHITE_PIECES];;
+    board[IDX_WHITE_PIECES]  = whitePieces;
+    
+    board[IDX_WHITE_PAWNS]   = binary[BINARY_IDX_PAWNS]   & whitePieces;
+    board[IDX_WHITE_ROOKS]   = binary[BINARY_IDX_ROOKS]   & whitePieces;
+    board[IDX_WHITE_KNIGHTS] = binary[BINARY_IDX_KNIGHTS] & whitePieces;
+    board[IDX_WHITE_BISHOPS] = binary[BINARY_IDX_BISHOPS] & whitePieces;
+    board[IDX_WHITE_QUEENS]  = binary[BINARY_IDX_QUEENS]  & whitePieces;
+    board[IDX_WHITE_KING]    = binary[BINARY_IDX_KINGS]   & whitePieces;
+
+    unsigned long notWhitePieces = ~whitePieces;
+
+    board[IDX_BLACK_PAWNS]   = binary[BINARY_IDX_PAWNS]   & notWhitePieces;
+    board[IDX_BLACK_ROOKS]   = binary[BINARY_IDX_ROOKS]   & notWhitePieces;
+    board[IDX_BLACK_KNIGHTS] = binary[BINARY_IDX_KNIGHTS] & notWhitePieces;
+    board[IDX_BLACK_BISHOPS] = binary[BINARY_IDX_BISHOPS] & notWhitePieces;
+    board[IDX_BLACK_QUEENS]  = binary[BINARY_IDX_QUEENS]  & notWhitePieces;
+    board[IDX_BLACK_KING]    = binary[BINARY_IDX_KINGS]   & notWhitePieces;
+    
 }
 
 void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
