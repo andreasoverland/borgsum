@@ -26,7 +26,7 @@ const fs = require('fs');
 //  2256721 : 140 , 1174248Kb,  8387Kb/sec
 //  4520146 : 142,  2275524Kb, 16025Kb/sec **
 //  5337391 : 168 , 2525568Kb, 15033Kb/sec
-// 10000000 : Not finished reading linesn after 18 minNumMasterLines
+// 10000000 : Not finished reading lines after 18 min
 
 let minNumMasterLines = 4000000;
 let masterLineFiles = fs.readdirSync(".");
@@ -59,25 +59,26 @@ console.log( "Number of unique lines found:", uniqueLines );
 function makeKeyArray( line ){
 	let a = [];
 	a.push( line.substring(0,8) );
-	a.push( line.substring(8,16) );
-	a.push( line.substring(16) );
+	a.push( line.substring(8) );
 	return a;
 }
 
 
 
 function readNextMasterLinesFromNextFile(){
-	let size = 40*minNumMasterLines;
+	let size = 10*minNumMasterLines;
 	let file = fs.openSync(masterLineFileName,"r");
 
+	let readNumber = 0;
 	let readBuffer = Buffer.alloc(size);
 
 	// always read from beginning (there should be no used lines in a newly opened file)
 	let position = 0;
 	let numRead = fs.readSync( file, readBuffer, 0 , size, position );
+	console.log("bytes numread key lines", numRead);
 
 	while( uniqueLines < minNumMasterLines ){
-
+		readNumber++;
 		let strBuf = readBuffer.toString("UTF-8");
 		let lines = strBuf.trim().split("\n");
 
@@ -96,27 +97,21 @@ function readNextMasterLinesFromNextFile(){
 
 		for (let i = 0; i < lines.length; i++) {
 
-			// TODO: Split the line in 5 byte chunks, and make binary tree with 4 levels
+
+			// TODO: split with indexOf m instead of making split split the line, maybe faster
 
 			let p = lines[i].split("m");
 			let keys = makeKeyArray( p[0] );
-
-			if( minLineLength > p[0].length ){
-				minLineLength = p[0].length;
-			}
 
 			if( map[ keys[0] ] === undefined ){
 				map[ keys[0] ] = {};
 			}
 			if( map[ keys[0] ][ keys[1] ] === undefined ){
-				map[ keys[0] ][ keys[1] ] = {};
-			}
-			if( map[ keys[0] ][ keys[1] ][ keys[2] ] === undefined ){
-				map[ keys[0] ][ keys[1] ][ keys[2] ] =  parseInt(p[1]);
+				map[ keys[0] ][ keys[1] ] = parseInt(p[1]);
 				uniqueLines++;
 			}
 			else {
-				map[ keys[0] ][ keys[1] ][ keys[2] ] += parseInt(p[1]);
+				map[ keys[0] ][ keys[1] ] += parseInt(p[1]);
 			}
 
 		}
@@ -125,6 +120,7 @@ function readNextMasterLinesFromNextFile(){
 
 		readBuffer = Buffer.alloc(size);
 		numRead = fs.readSync(file, readBuffer, 0, size, position );
+		console.log("bytes numread key lines", numRead, readNumber );
 
 		if( numRead <= 0 && masterLineFiles.length > 0){
 			// simply delete the current master file. it is empty by now.@
@@ -162,6 +158,7 @@ function readNextMasterLinesFromNextFile(){
 	let copySize = 1024*1024;
 	let copyFile = fs.openSync(masterLineFileName+".copy","w");
 	let copyPosition = 0;
+	readBuffer.
 	readBuffer = Buffer.alloc(copySize);
 	numRead = fs.readSync( file, readBuffer, 0, copySize, position );
 	while( numRead > 0) {
@@ -174,6 +171,7 @@ function readNextMasterLinesFromNextFile(){
 	fs.closeSync( copyFile );
 	fs.renameSync( masterLineFileName+".copy", masterLineFileName );
 
+	console.log("Key reading done");
 }
 
 
@@ -182,9 +180,7 @@ function writeMap(){
 	let buff = "";
 	Object.keys(map).forEach( k1 => {
 		Object.keys(map[k1]).forEach( k2 => {
-			Object.keys(map[k1][k2]).forEach( k3 => {
-				buff += (k1 + k2 + k3 + "m" + (map[k1][k2][k3]) + "\n");
-			});
+				buff += (k1 + k2 + "m" + (map[k1][k2]) + "\n");
 		});
 	});
 
@@ -241,9 +237,8 @@ function scanAndMarkLinesInFile( filename ) {
 			let k = makeKeyArray( p[0] );
 
 			if ( map[k[0]] !== undefined &&
-				 map[k[0]][k[1]] !== undefined &&
-				 map[k[0]][k[1]][k[2]] !== undefined ) {
-					 map[k[0]][k[1]][k[2]] += parseInt(p[1]);
+				 	 map[k[0]][k[1]] !== undefined ) {
+					 map[k[0]][k[1]] += parseInt(p[1]);
 			}
 			else {
 				numLinesWritten++;
