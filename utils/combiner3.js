@@ -13,108 +13,69 @@ const fs = require('fs');
 // binary combiner
 
 //let minNumMasterLines = 4000000;
-let minNumMasterLines = 1000000;
+let minNumMasterLines = 1000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
 let map = {};
 let scanLineFiles = fs.readdirSync(".");
 
-let masterLineFileName = masterLineFiles.shift();
+let masterLineFileName = "mates.out"; masterLineFiles.shift();
 
 let moreMasterLinesAvailable = true;
 let numLinesRead = 0;
 let uniqueLines = 0;
 
-fs.writeFileSync("../combined.txt", Buffer.from( "", "utf-8") );
+fs.writeFileSync("combined.bin", Buffer.from("") );
+
 
 //while( moreMasterLinesAvailable ){
 	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
 
 	//scanAllFilesForMasterLines(); // bigtime
-	//writeMap();
+	writeMap();
 	console.log( new Date() +  " : Scan done "  );
 //}
 
-console.log( "Total number of lines read:", numLinesRead );
-console.log( "Number of unique lines found:", uniqueLines );
+//console.log( "Total number of lines read:", numLinesRead );
+//console.log( "Number of unique lines found:", uniqueLines );
 
 
 function readNextMasterLinesFromNextFile(){
-	let size = 9*minNumMasterLines;
+	let size = 9*8*minNumMasterLines;
 	let file = fs.openSync(masterLineFileName,"r");
 
 	let readNumber = 0;
 	let readBuffer = Buffer.alloc(size);
 
 	// always read from beginning (there should be no used lines in a newly opened file)
+	// TODO: use file-size to determine size for read, in case filesize - position < size
+
 	let position = 0;
 	let numRead = fs.readSync( file, readBuffer, 0 , size, position );
+
 	console.log("bytes numread key lines", numRead);
+	console.time("adding keys to map");
 
-	//while( uniqueLines < minNumMasterLines ){
-		readNumber++;
+	for( var i=0;i<minNumMasterLines;i++){
+		let board = readBuffer.slice( i*9*8, i*9*8+9*8 );
+		let key = board.slice(0,8*8);
 
-
-
-/*
-		numLinesRead += lines.length;
-
-		for (let i = 0; i < lines.length; i++) {
-
-
-			// TODO: split with indexOf m instead of making split split the line, maybe faster
-
-			let p = lines[i].split("m");
-
-
-			if( map[ p[0] ] === undefined ){
-				map[ p[0] ] = parseInt(p[1]);
-								uniqueLines++;
-			}
-			else {
-				map[ p[0] ] += parseInt(p[1]);
-			}
-
+		if( map[key] === undefined ){
+			map[key] = board.readBigUInt64LE(8*8);
 		}
-
-		position += numRead;
-
-		readBuffer = Buffer.alloc(size);
-		numRead = fs.readSync(file, readBuffer, 0, size, position );
-		console.log("bytes numread key lines", numRead, readNumber );
-
-		if( numRead <= 0 && masterLineFiles.length > 0){
-			// simply delete the current master file. it is empty by now.@
-			// close the file
-			fs.closeSync( file );
-			// delete the file
-			fs.unlinkSync( masterLineFileName );
-			// set position to 0
-			position = 0;
-			// open next masterLineFile
-			masterLineFileName = masterLineFiles.shift();
-			file = fs.openSync(masterLineFileName,"r");
-			// continue reading there
-			readBuffer = Buffer.alloc(size);
-			numRead = fs.readSync(file, readBuffer, 0, size, position );
-
+		else {
+			map[key] += board.readBigUInt64LE(8*8);
 		}
-		else if ( numRead <= 0 && masterLineFiles.length === 0 ){
-			// simply delete the current master file. it is empty by now.
-			// close the file
-			fs.closeSync( file );
-			// delete the file
-			fs.unlinkSync( masterLineFileName );
+	}
 
-			console.log("***** No more master lines available.");
-			moreMasterLinesAvailable = false;
 
-			// return from a job well done
-			return;
-		}*/
-	//}
+	console.timeEnd("adding keys to map" );
+
+	console.log("Num keys in map:" ,  Object.keys(map).length)
+
+
 
 /*
 	// skriv til ny fil
@@ -140,14 +101,28 @@ function readNextMasterLinesFromNextFile(){
 
 function writeMap(){
 
-	let buff = "";
-	Object.keys(map).forEach( k1 => {
-		Object.keys(map[k1]).forEach( k2 => {
-				buff += (k1 + k2 + "m" + (map[k1][k2]) + "\n");
-		});
+	Object.keys(map).forEach( keyBuff => {
+		let writeBuff = Buffer.alloc(9*8);
+		writeBuff.fill( keyBuff, 0, 8*8 );
+		writeBuff.writeBigUInt64LE( map[keyBuff],8*8 );
+		console.log( writeBuff.readBigUInt64LE(0) );
+		console.log( writeBuff.readBigUInt64LE(1) );
+		console.log( writeBuff.readBigUInt64LE(2) );
+		console.log( writeBuff.readBigUInt64LE(3) );
+
+		console.log( writeBuff.readBigUInt64LE(4) );
+		console.log( writeBuff.readBigUInt64LE(5) );
+		console.log( writeBuff.readBigUInt64LE(6) );
+		console.log( writeBuff.readBigUInt64LE(7) );
+
+		console.log( writeBuff.readBigUInt64LE(8) );
+		console.log( writeBuff.readBigUInt64LE(9) );
+
+		console.log("----");
+		fs.writeFileSync("combined.bin", writeBuff, {flag: 'a'});
 	});
 
-	fs.writeFileSync("../combined.txt", Buffer.from( buff, "utf-8"), {flag: 'a'});
+
 	map = {};
 
 }

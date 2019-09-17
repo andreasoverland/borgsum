@@ -143,11 +143,16 @@ int maxNumMoves = 0;
 
 char *workUnitId = NULL;
 FILE *outFile = NULL;
+FILE *matesOutFile = NULL;
 FILE *inFile = NULL;
 
 int outFileBuffOffset = 0;
 const int outFileBuffSize = 1024*1024;
 char outFileBuff[outFileBuffSize];
+
+int matesOutFileBuffOffset = 0;
+char matesOutFileBuff[outFileBuffSize];
+
 
 int buffWrites = 0;
 int fileWrites = 0;
@@ -266,6 +271,7 @@ int main( int argc, char **argv){
 		if( strcmp( argv[a], "-outfile") == 0 ){
 			a++;
 			outFile = fopen( argv[a], "wb");
+			matesOutFile = fopen( "mates.out", "wb" );
 
         }
 
@@ -395,6 +401,14 @@ int main( int argc, char **argv){
             fileWrites++;
         }
 		fclose(outFile);
+
+
+        if( matesOutFileBuffOffset != 0 ){
+            fwrite(matesOutFileBuff , 1 , matesOutFileBuffOffset , matesOutFile );
+            //fputs( outFileBuff, outFile);
+            matesOutFileBuffOffset = 0;
+        }
+        fclose( matesOutFile );
     }
 
     printf("buffWrites: %d, fileWrites: %d\n", buffWrites, fileWrites);
@@ -484,14 +498,23 @@ void dig(unsigned long board[]) {
             bitBoardToBinary( board, binary );
 
             memcpy(outFileBuff+outFileBuffOffset,binary,8*9);
-            //sprintf( outFileBuff + outFileBuffOffset, "%s\n", compressedBoard );
             outFileBuffOffset += 8*9;
             buffWrites++;
+
             if( outFileBuffOffset > 1023*1024 ){
                 fileWrites++;
                 fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
-                //fputs( outFileBuff, outFile);
                 outFileBuffOffset = 0;
+            }
+
+            if( board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED ){
+                memcpy(matesOutFileBuff+matesOutFileBuffOffset,binary,8*9);
+                matesOutFileBuffOffset += 8*9;
+                if( matesOutFileBuffOffset > 1023*1024 ){
+                    fwrite(matesOutFileBuff , 1 , matesOutFileBuffOffset , matesOutFile );
+                    //fputs( outFileBuff, outFile);
+                    matesOutFileBuffOffset = 0;
+                }
             }
 
         }
