@@ -64,7 +64,6 @@ function makeKeyArray( line ){
 }
 
 
-
 function readNextMasterLinesFromNextFile(){
 	let size = 10*minNumMasterLines;
 	let file = fs.openSync(masterLineFileName,"r");

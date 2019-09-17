@@ -9,25 +9,25 @@ Eva solfrid øverland, Fredrik chistian Øverdand, andreas dcehvggfvgfgvhrfhgf �
 
 const fs = require('fs');
 
-
 // binary combiner
 
 //let minNumMasterLines = 4000000;
-let minNumMasterLines = 1000;
+let minNumMasterLines = 10000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
-let map = {};
+
+let masterBoards = Buffer.alloc(minNumMasterLines*72);
+
 let scanLineFiles = fs.readdirSync(".");
 
-let masterLineFileName = "mates.out"; masterLineFiles.shift();
+let masterLineFileName = "lvl3.bin";// masterLineFiles.shift();
 
 let moreMasterLinesAvailable = true;
 let numLinesRead = 0;
 let uniqueLines = 0;
 
 fs.writeFileSync("combined.bin", Buffer.from("") );
-
 
 //while( moreMasterLinesAvailable ){
 	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
@@ -41,8 +41,8 @@ fs.writeFileSync("combined.bin", Buffer.from("") );
 //console.log( "Total number of lines read:", numLinesRead );
 //console.log( "Number of unique lines found:", uniqueLines );
 
-
 function readNextMasterLinesFromNextFile(){
+
 	let size = 9*8*minNumMasterLines;
 	let file = fs.openSync(masterLineFileName,"r");
 
@@ -53,29 +53,65 @@ function readNextMasterLinesFromNextFile(){
 	// TODO: use file-size to determine size for read, in case filesize - position < size
 
 	let position = 0;
-	let numRead = fs.readSync( file, readBuffer, 0 , size, position );
+	let numRead = fs.readSync( file, masterBoards, 0 , size, position );
 
-	console.log("bytes numread key lines", numRead);
-	console.time("adding keys to map");
+	console.log("bytes read ", numRead);
 
-	for( var i=0;i<minNumMasterLines;i++){
-		let board = readBuffer.slice( i*9*8, i*9*8+9*8 );
-		let key = board.slice(0,8*8);
+	let theMap = {};
 
-		if( map[key] === undefined ){
-			map[key] = board.readBigUInt64LE(8*8);
+	// scan igjennom for å finne duplikater
+	for( let i = 0; i < numRead  ; i+=72){
+		let master = Buffer.alloc(72);
+		masterBoards.copy( master,0 ,i,i+72 );
+		let key = master.slice(0,64);
+		console.log(key.readBigUInt64LE(7).toString(36));
+		let masterMul = master.readBigUInt64LE( 64 );
+		if( theMap[key] === undefined ){
+			theMap[key] = masterMul;
 		}
 		else {
-			map[key] += board.readBigUInt64LE(8*8);
+			theMap[key] += masterMul;
+			masterBoards.writeBigUInt64LE( 0n,i+64 );
 		}
-	}
+
+		if( (i/72) % 1000	 === 0 ){
+			console.log((i/72));
+		}
+  }
+
+	let totalLines = 0n;
+	let uniqueLines = 0n;
+
+	Object.keys( theMap ).forEach( k => {
+		let board = Buffer.alloc(72);
+		let key = Buffer.from( k );
+		key.copy(board,0,0,64);
+		key.writeBigUInt64LE(theMap[key],64);
+		totalLines += theMap[k];
+		uniqueLines ++;
+	});
 
 
-	console.timeEnd("adding keys to map" );
+/*
+		let origMul = scan.readBigUInt64LE( 64 );
+		console.log( origMul );
+		let idx = (i+1)*72;
+		while( idx >= 0 && idx < size && masterBoards.readBigUInt64LE( idx+64 ) !== 0n ){
+			let mul = masterBoards.readBigUInt64LE( idx+64 );
+			let whites1 = scan.readBigUInt64LE( 0 );
+			let whites2 = masterBoards.readBigUInt64LE( idx );
+			console.log( s + " " + mul );
+			// masterBoards.writeBigUInt64LE(  0n, idx+64 );
+			scan.writeBigUInt64LE( mul + origMul );
 
-	console.log("Num keys in map:" ,  Object.keys(map).length)
+			idx = masterBoards.indexOf( scan, idx+72 );
+			numDuplicates++;
+		}
+*/
 
 
+	console.log( "uniqueLines:", uniqueLines );
+	console.log( "totalLines:", totalLines );
 
 /*
 	// skriv til ny fil
@@ -101,29 +137,7 @@ function readNextMasterLinesFromNextFile(){
 
 function writeMap(){
 
-	Object.keys(map).forEach( keyBuff => {
-		let writeBuff = Buffer.alloc(9*8);
-		writeBuff.fill( keyBuff, 0, 8*8 );
-		writeBuff.writeBigUInt64LE( map[keyBuff],8*8 );
-		console.log( writeBuff.readBigUInt64LE(0) );
-		console.log( writeBuff.readBigUInt64LE(1) );
-		console.log( writeBuff.readBigUInt64LE(2) );
-		console.log( writeBuff.readBigUInt64LE(3) );
 
-		console.log( writeBuff.readBigUInt64LE(4) );
-		console.log( writeBuff.readBigUInt64LE(5) );
-		console.log( writeBuff.readBigUInt64LE(6) );
-		console.log( writeBuff.readBigUInt64LE(7) );
-
-		console.log( writeBuff.readBigUInt64LE(8) );
-		console.log( writeBuff.readBigUInt64LE(9) );
-
-		console.log("----");
-		fs.writeFileSync("combined.bin", writeBuff, {flag: 'a'});
-	});
-
-
-	map = {};
 
 }
 
