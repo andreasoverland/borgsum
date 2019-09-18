@@ -14,6 +14,7 @@ const fs = require('fs');
 
 //let minNumMasterLines = 4000000;
 let minNumMasterLines = 5000000;
+//let minNumMasterLines = 1000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
@@ -49,7 +50,7 @@ function makeKeyString( buffer ){
 	numKeys ++;
 	let key = "";
 	for( var i=0;i<8;i++){
-		key += buffer.readBigUInt64LE(i*8).toString(36) + ":";
+		key += buffer.readBigUInt64LE(i*8).toString(16) + ":";
 	}
 	return key;
 }
@@ -76,7 +77,7 @@ function readNextMasterLinesFromNextFile(){
 	for( let i = 0; i < numRead  ; i+=72){
 		let master = Buffer.alloc(72);
 		masterBoards.copy( master,0 ,i,i+72 );
-		let keyBuffer = master.slice(0,64);
+
 		let key = makeKeyString( master );
 
 		let whitePieces = master.readBigUInt64LE( 0 );
@@ -91,20 +92,40 @@ function readNextMasterLinesFromNextFile(){
 		}
 		else {
 			theMap[key] += masterMul;
-			masterBoards.writeBigUInt64LE( 0n,i+64 );
 		}
+		masterBoards.writeBigUInt64LE( 0n,i+64 );
 
-		if( (i/72) % 100000	 === 0 ){
+		if( (i/72) % (minNumMasterLines/10) === 0 ){
 			console.log((i/72));
 		}
   }
 
 	let totalLines = 0n;
 
+	try {
+		fs.unlinkSync("combined.bin");
+	}
+	catch( w ){
+		// yeah whatever
+	}
+
+	let writeBuff = Buffer.alloc( 72 * uniqueLines );
+
+	let i = 0;
 	Object.keys( theMap ).forEach( k => {
 		totalLines += theMap[k];
-		//uniqueLines ++;
+		let buff = Buffer.alloc(72);
+		let parts = k.split(":");
+		for( let i = 0;i<8;i++){
+			buff.writeBigUInt64LE( BigInt( "0x"+parts[i] ), 8*i );
+		}
+		buff.writeBigUInt64LE( theMap[k],64 );
+		buff.copy( writeBuff, i*72, 0, 72 );
+		i++;
+
 	});
+
+	fs.writeFileSync("combined.bin", writeBuff, {flag:'a'} );
 
 
 /*
