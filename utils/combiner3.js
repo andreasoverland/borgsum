@@ -13,8 +13,9 @@ const fs = require('fs');
 // binary combiner
 
 //let minNumMasterLines = 4000000;
-let minNumMasterLines = 5000000;
+let minNumMasterLines   = 10000;
 //let minNumMasterLines = 1000;
+
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
@@ -61,7 +62,7 @@ function readNextMasterLinesFromNextFile(){
 	let file = fs.openSync(masterLineFileName,"r");
 
 	let readNumber = 0;
-	let readBuffer = Buffer.alloc(size);
+
 
 	// always read from beginning (there should be no used lines in a newly opened file)
 	// TODO: use file-size to determine size for read, in case filesize - position < size
@@ -98,19 +99,15 @@ function readNextMasterLinesFromNextFile(){
 		if( (i/72) % (minNumMasterLines/10) === 0 ){
 			console.log((i/72));
 		}
-  }
+    }
+
+
 
 	let totalLines = 0n;
 
-	try {
-		fs.unlinkSync("combined.bin");
-	}
-	catch( w ){
-		// yeah whatever
-	}
-
 	let writeBuff = Buffer.alloc( 72 * uniqueLines );
 
+	// The keys in "theMap" are the keys we want to scan all files with. But first, we want to remove them from file[0]
 	let i = 0;
 	Object.keys( theMap ).forEach( k => {
 		totalLines += theMap[k];
@@ -122,29 +119,36 @@ function readNextMasterLinesFromNextFile(){
 		buff.writeBigUInt64LE( theMap[k],64 );
 		buff.copy( writeBuff, i*72, 0, 72 );
 		i++;
-
 	});
 
-	fs.writeFileSync("combined.bin", writeBuff, {flag:'a'} );
+	// simply copy from numRead -> end into new file
 
+	position += numRead;
+	let writePosition = 0;
+	let copyBuffer = Buffer.alloc(size);
+	let copyFile = fs.openSync(masterLineFileName+".new","w");
+	numRead = fs.readSync( file, copyBuffer, 0 , size, position );
+	console.log( "read " + numRead + " bytes from position " + position );
+	position += numRead;
+	while( numRead > 0 ){
+		fs.writeSync( copyFile, copyBuffer, 0, numRead, writePosition );
+		writePosition += numRead;
+		numRead = fs.readSync( file, copyBuffer, 0 , size, position );
+		console.log( "read " + numRead + " bytes from position " + position );
+		position += numRead;
+	}
 
+	fs.closeSync(file);
+	fs.closeSync(copyFile);
 /*
-		let origMul = scan.readBigUInt64LE( 64 );
-		console.log( origMul );
-		let idx = (i+1)*72;
-		while( idx >= 0 && idx < size && masterBoards.readBigUInt64LE( idx+64 ) !== 0n ){
-			let mul = masterBoards.readBigUInt64LE( idx+64 );
-			let whites1 = scan.readBigUInt64LE( 0 );
-			let whites2 = masterBoards.readBigUInt64LE( idx );
-			console.log( s + " " + mul );
-			// masterBoards.writeBigUInt64LE(  0n, idx+64 );
-			scan.writeBigUInt64LE( mul + origMul );
-
-			idx = masterBoards.indexOf( scan, idx+72 );
-			numDuplicates++;
-		}
+	try {
+		fs.unlinkSync("combined.bin");
+	}
+	catch( w ){
+		// yeah whatever
+	}
+	fs.writeFileSync("combined.bin", writeBuff, {flag:'a'} );
 */
-
 
 	console.log( "uniqueLines:", uniqueLines );
 	console.log( "totalLines:", totalLines );
