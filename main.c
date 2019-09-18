@@ -184,7 +184,7 @@ int main( int argc, char **argv){
 
 
 
-    /*char *initialBoard = "\
+/*    char *initialBoard = "\
                       r . . . k . . r\
                       p . p p q p b .\
                       b n . . p n p .\
@@ -193,8 +193,8 @@ int main( int argc, char **argv){
                       . . N . . Q . p\
                       P P P B B P P P\
                       R . . . K . . R\
-                      w KQkq -";*/
-
+                      w KQkq -";
+*/
     /*
     char *initialBoard = "\
                       . . . . k . . .\
@@ -2917,18 +2917,22 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
 	board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] | board[IDX_BLACK_PIECES];
 
 	unsigned long castling = 0;
-	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_BLACK_KING_SIDE ) {
-		board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+	unsigned long flags = binary[BINARY_IDX_FLAGS];
+
+	if( flags & BINARY_CASTLING_BLACK_KING_SIDE ) {
+		castling |= MASK_CASTLING_BLACK_KING_SIDE;
 	}
-	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_BLACK_QUEEN_SIDE ) {
-		board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE ;
+	if( flags & BINARY_CASTLING_BLACK_QUEEN_SIDE ) {
+		castling |= MASK_CASTLING_BLACK_QUEEN_SIDE ;
 	}
-	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_WHITE_KING_SIDE ) {
-		board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+	if( flags & BINARY_CASTLING_WHITE_KING_SIDE ) {
+		castling |= MASK_CASTLING_WHITE_KING_SIDE;
 	}
-	if( binary[BINARY_IDX_FLAGS] & BINARY_CASTLING_WHITE_QUEEN_SIDE  ){
-		board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+	if( flags & BINARY_CASTLING_WHITE_QUEEN_SIDE  ){
+		castling |= MASK_CASTLING_WHITE_QUEEN_SIDE;
 	}
+
+	board[IDX_CASTLING] = castling;
 
 	if( binary[BINARY_IDX_FLAGS] & BINARY_WHITES_TURN ) {
 		board[IDX_TURN] = WHITE_MASK;
@@ -2943,6 +2947,7 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
 	}
 
 	board[IDX_MOVE_NUM] = ( binary[BINARY_IDX_FLAGS] >> BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+
 	board[IDX_MULTIPLIER] = binary[BINARY_IDX_MULTIPLIER];
 }
 
@@ -2951,42 +2956,37 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
 	memset(binary, 0, sizeof(unsigned long) * 9 );
 
     // slå sammen alle like pieces sine longs
+    binary[BINARY_IDX_WHITE_PCS] = board[IDX_WHITE_PIECES];
     binary[BINARY_IDX_PAWNS]     = board[IDX_WHITE_PAWNS]   | board[IDX_BLACK_PAWNS];
     binary[BINARY_IDX_ROOKS]     = board[IDX_WHITE_ROOKS]   | board[IDX_BLACK_ROOKS];
     binary[BINARY_IDX_KNIGHTS]   = board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS];
     binary[BINARY_IDX_BISHOPS]   = board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS];
     binary[BINARY_IDX_QUEENS]    = board[IDX_WHITE_QUEENS]  | board[IDX_BLACK_QUEENS];
     binary[BINARY_IDX_KINGS]     = board[IDX_WHITE_KING]    | board[IDX_BLACK_KING];
-    binary[BINARY_IDX_WHITE_PCS] = board[IDX_WHITE_PIECES];
 
-    unsigned long castling = 0;
+    unsigned long flags = 0;
 
+    unsigned long castling = board[IDX_CASTLING];
 
-    if( board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE ){
-        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_BLACK_KING_SIDE;
-    }
-    if( board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE ){
-        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_BLACK_QUEEN_SIDE;
-    }
-    if( board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE ){
-        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_WHITE_KING_SIDE;
-    }
-    if( board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE ){
-        binary[BINARY_IDX_FLAGS] |= BINARY_CASTLING_WHITE_QUEEN_SIDE;
-    }
+    flags  = (MASK_CASTLING_BLACK_KING_SIDE  & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_KING_SIDE ? BINARY_CASTLING_BLACK_KING_SIDE : 0 ;
+    flags |= (MASK_CASTLING_BLACK_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_QUEEN_SIDE ? BINARY_CASTLING_BLACK_QUEEN_SIDE : 0 ;
+    flags |= (MASK_CASTLING_WHITE_KING_SIDE  & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_KING_SIDE ? BINARY_CASTLING_WHITE_KING_SIDE : 0 ;
+    flags |= (MASK_CASTLING_WHITE_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_QUEEN_SIDE ? BINARY_CASTLING_WHITE_QUEEN_SIDE : 0 ;
+
     if( board[IDX_TURN] == WHITE_MASK ){
-        binary[BINARY_IDX_FLAGS] |= BINARY_WHITES_TURN;
+        flags |= BINARY_WHITES_TURN;
     }
 
 
-    if( board[IDX_EP_IDX] ){
+    if( board[IDX_EP_IDX] != 0 ){
         // count leading bits
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
-        binary[BINARY_IDX_FLAGS] |= (idx << BINARY_IDX_FLAGS_EP_IDX);
+        flags |= (idx << BINARY_IDX_FLAGS_EP_IDX);
     }
 
-    binary[BINARY_IDX_FLAGS] |= (board[IDX_MOVE_NUM] << BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+    flags |= (board[IDX_MOVE_NUM] << BINARY_IDX_FLAGS_MOVE_NUM_IDX);
 
+    binary[BINARY_IDX_FLAGS] = flags;
     binary[BINARY_IDX_MULTIPLIER] = board[IDX_MULTIPLIER];
 
 }

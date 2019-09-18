@@ -5,38 +5,7 @@
 Eva solfrid øverland, Fredrik chistian Øverdand, andreas dcehvggfvgfgvhrfhgf øverland , ines christiane øveerland, sara franses glaser.
 
 */
-/** possibly problem with binary representation
 
-
-level 5 : 52 times
-rnbqkbnr
-pppppppp
-........
-........
-........
-..P.....
-PP.PPPPP
-RNBQKBNR 15-b5m1
-
-rnbqkbnr
-pppppppp
-........
-........
-........
-..N.....
-PPPPPPPP
-R.BQKBNR 15-b5m1
-
-rnbqkbnr
-pppppppp
-........
-........
-........
-.....N..
-PPPPPPPP
-RNBQKB.R 15-b5m1
-
-*/
 
 
 const fs = require('fs');
@@ -53,17 +22,20 @@ let masterBoards = Buffer.alloc(minNumMasterLines*72);
 
 let scanLineFiles = fs.readdirSync(".");
 
-let masterLineFileName = "level5_binary.bin";// masterLineFiles.shift();
+let masterLineFileName = "level5.bin";// masterLineFiles.shift();
 
 let moreMasterLinesAvailable = true;
 let numLinesRead = 0;
 let uniqueLines = 0;
+let numKeys = 0;
 
 //fs.writeFileSync("combined.bin", Buffer.from("") );
 
 //while( moreMasterLinesAvailable ){
 	//console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
+
+	console.log( "Num keys:" + numKeys );
 
 	//scanAllFilesForMasterLines(); // bigtime
 	writeMap();
@@ -74,9 +46,10 @@ let uniqueLines = 0;
 //console.log( "Number of unique lines found:", uniqueLines );
 
 function makeKeyString( buffer ){
+	numKeys ++;
 	let key = "";
 	for( var i=0;i<8;i++){
-		key += buffer.readBigUInt64LE(i*8).toString(16) + ":";
+		key += buffer.readBigUInt64LE(i*8).toString(36) + ":";
 	}
 	return key;
 }
@@ -95,7 +68,7 @@ function readNextMasterLinesFromNextFile(){
 	let position = 0;
 	let numRead = fs.readSync( file, masterBoards, 0 , size, position );
 
-//	console.log("bytes read ", numRead);
+	console.log("bytes read ", numRead);
 
 	let theMap = {};
 
@@ -104,16 +77,17 @@ function readNextMasterLinesFromNextFile(){
 		let master = Buffer.alloc(72);
 		masterBoards.copy( master,0 ,i,i+72 );
 		let keyBuffer = master.slice(0,64);
-		let key = makeKeyString( keyBuffer );
+		let key = makeKeyString( master );
 
 		let whitePieces = master.readBigUInt64LE( 0 );
 		let masterMul = master.readBigUInt64LE( 64 );
-		console.log( key + masterMul );
+		// console.log( key + masterMul );
 		if( masterMul === 0 || whitePieces === 0){
 			continue;
 		}
 		if( theMap[key] === undefined ){
 			theMap[key] = masterMul;
+			uniqueLines++;
 		}
 		else {
 			theMap[key] += masterMul;
@@ -121,17 +95,15 @@ function readNextMasterLinesFromNextFile(){
 		}
 
 		if( (i/72) % 100000	 === 0 ){
-		//	console.log((i/72));
+			console.log((i/72));
 		}
   }
 
 	let totalLines = 0n;
-	let uniqueLines = 0n;
 
 	Object.keys( theMap ).forEach( k => {
 		totalLines += theMap[k];
-		uniqueLines ++;
-
+		//uniqueLines ++;
 	});
 
 
@@ -153,8 +125,8 @@ function readNextMasterLinesFromNextFile(){
 */
 
 
-//	console.log( "uniqueLines:", uniqueLines );
-//	console.log( "totalLines:", totalLines );
+	console.log( "uniqueLines:", uniqueLines );
+	console.log( "totalLines:", totalLines );
 
 /*
 	// skriv til ny fil
