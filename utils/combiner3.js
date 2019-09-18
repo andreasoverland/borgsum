@@ -2,17 +2,49 @@
 
 /*
 
-
 Eva solfrid øverland, Fredrik chistian Øverdand, andreas dcehvggfvgfgvhrfhgf øverland , ines christiane øveerland, sara franses glaser.
 
 */
+/** possibly problem with binary representation
+
+
+level 5 : 52 times
+rnbqkbnr
+pppppppp
+........
+........
+........
+..P.....
+PP.PPPPP
+RNBQKBNR 15-b5m1
+
+rnbqkbnr
+pppppppp
+........
+........
+........
+..N.....
+PPPPPPPP
+R.BQKBNR 15-b5m1
+
+rnbqkbnr
+pppppppp
+........
+........
+........
+.....N..
+PPPPPPPP
+RNBQKB.R 15-b5m1
+
+*/
+
 
 const fs = require('fs');
 
 // binary combiner
 
 //let minNumMasterLines = 4000000;
-let minNumMasterLines = 10000;
+let minNumMasterLines = 5000000;
 let masterLineFiles = fs.readdirSync(".");
 
 let numLinesReadAndChecked = 0;
@@ -21,25 +53,33 @@ let masterBoards = Buffer.alloc(minNumMasterLines*72);
 
 let scanLineFiles = fs.readdirSync(".");
 
-let masterLineFileName = "lvl3.bin";// masterLineFiles.shift();
+let masterLineFileName = "level5_binary.bin";// masterLineFiles.shift();
 
 let moreMasterLinesAvailable = true;
 let numLinesRead = 0;
 let uniqueLines = 0;
 
-fs.writeFileSync("combined.bin", Buffer.from("") );
+//fs.writeFileSync("combined.bin", Buffer.from("") );
 
 //while( moreMasterLinesAvailable ){
-	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
+	//console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
 	readNextMasterLinesFromNextFile();
 
 	//scanAllFilesForMasterLines(); // bigtime
 	writeMap();
-	console.log( new Date() +  " : Scan done "  );
+	//console.log( new Date() +  " : Scan done "  );
 //}
 
 //console.log( "Total number of lines read:", numLinesRead );
 //console.log( "Number of unique lines found:", uniqueLines );
+
+function makeKeyString( buffer ){
+	let key = "";
+	for( var i=0;i<8;i++){
+		key += buffer.readBigUInt64LE(i*8).toString(16) + ":";
+	}
+	return key;
+}
 
 function readNextMasterLinesFromNextFile(){
 
@@ -55,7 +95,7 @@ function readNextMasterLinesFromNextFile(){
 	let position = 0;
 	let numRead = fs.readSync( file, masterBoards, 0 , size, position );
 
-	console.log("bytes read ", numRead);
+//	console.log("bytes read ", numRead);
 
 	let theMap = {};
 
@@ -63,9 +103,15 @@ function readNextMasterLinesFromNextFile(){
 	for( let i = 0; i < numRead  ; i+=72){
 		let master = Buffer.alloc(72);
 		masterBoards.copy( master,0 ,i,i+72 );
-		let key = master.slice(0,64);
-		console.log(key.readBigUInt64LE(7).toString(36));
+		let keyBuffer = master.slice(0,64);
+		let key = makeKeyString( keyBuffer );
+
+		let whitePieces = master.readBigUInt64LE( 0 );
 		let masterMul = master.readBigUInt64LE( 64 );
+		console.log( key + masterMul );
+		if( masterMul === 0 || whitePieces === 0){
+			continue;
+		}
 		if( theMap[key] === undefined ){
 			theMap[key] = masterMul;
 		}
@@ -74,8 +120,8 @@ function readNextMasterLinesFromNextFile(){
 			masterBoards.writeBigUInt64LE( 0n,i+64 );
 		}
 
-		if( (i/72) % 1000	 === 0 ){
-			console.log((i/72));
+		if( (i/72) % 100000	 === 0 ){
+		//	console.log((i/72));
 		}
   }
 
@@ -83,12 +129,9 @@ function readNextMasterLinesFromNextFile(){
 	let uniqueLines = 0n;
 
 	Object.keys( theMap ).forEach( k => {
-		let board = Buffer.alloc(72);
-		let key = Buffer.from( k );
-		key.copy(board,0,0,64);
-		key.writeBigUInt64LE(theMap[key],64);
 		totalLines += theMap[k];
 		uniqueLines ++;
+
 	});
 
 
@@ -110,8 +153,8 @@ function readNextMasterLinesFromNextFile(){
 */
 
 
-	console.log( "uniqueLines:", uniqueLines );
-	console.log( "totalLines:", totalLines );
+//	console.log( "uniqueLines:", uniqueLines );
+//	console.log( "totalLines:", totalLines );
 
 /*
 	// skriv til ny fil
@@ -131,7 +174,7 @@ function readNextMasterLinesFromNextFile(){
 	fs.closeSync( copyFile );
 	fs.renameSync( masterLineFileName+".copy", masterLineFileName );
 */
-	console.log("Key reading done");
+//	console.log("Key reading done");
 }
 
 
@@ -140,7 +183,6 @@ function writeMap(){
 
 
 }
-
 
 function scanAllFilesForMasterLines(){
 	scanLineFiles = fs.readdirSync(".");
