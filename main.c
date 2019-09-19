@@ -344,9 +344,9 @@ int main( int argc, char **argv){
     while( 1 ) {
 
     	if( inFile != NULL ){
-    		unsigned long binary[9];
-			read = fread(binary, sizeof(unsigned long),9, inFile);
-			if( read < 9 ){
+    		unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
+			read = fread(binary, sizeof(unsigned long),BINARY_BOARD_NUM_ELEMENTS, inFile);
+			if( read < BINARY_BOARD_NUM_ELEMENTS ){
 				printf("breaking mofo %d\n\n", read );
 				break;
 			}
@@ -396,7 +396,6 @@ int main( int argc, char **argv){
     if( outFile != NULL ){
         if( outFileBuffOffset != 0 ){
             fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
-            //fputs( outFileBuff, outFile);
             outFileBuffOffset = 0;
             fileWrites++;
         }
@@ -405,7 +404,6 @@ int main( int argc, char **argv){
 
         if( matesOutFileBuffOffset != 0 ){
             fwrite(matesOutFileBuff , 1 , matesOutFileBuffOffset , matesOutFile );
-            //fputs( outFileBuff, outFile);
             matesOutFileBuffOffset = 0;
         }
         fclose( matesOutFile );
@@ -494,11 +492,11 @@ void dig(unsigned long board[]) {
     else if( LOG_TYPE == LOG_TYPE_BINARY && outFile != NULL ){
         if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
 
-            unsigned long binary[9];
+            unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
             bitBoardToBinary( board, binary );
-            /*
-            memcpy(outFileBuff+outFileBuffOffset,binary,8*9);
-            outFileBuffOffset += 8*9;
+
+            memcpy(outFileBuff+outFileBuffOffset,binary,8*BINARY_BOARD_NUM_ELEMENTS);
+            outFileBuffOffset += 8*BINARY_BOARD_NUM_ELEMENTS;
             buffWrites++;
 
             if( outFileBuffOffset > 1023*1024 ){
@@ -506,10 +504,10 @@ void dig(unsigned long board[]) {
                 fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
                 outFileBuffOffset = 0;
             }
-            */
+
             if( board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED ){
-                memcpy(matesOutFileBuff+matesOutFileBuffOffset,binary,8*9);
-                matesOutFileBuffOffset += 8*9;
+                memcpy(matesOutFileBuff+matesOutFileBuffOffset,binary,8*BINARY_BOARD_NUM_ELEMENTS);
+                matesOutFileBuffOffset += 8*BINARY_BOARD_NUM_ELEMENTS;
                 if( matesOutFileBuffOffset > 1023*1024 ){
                     fwrite(matesOutFileBuff , 1 , matesOutFileBuffOffset , matesOutFile );
                     //fputs( outFileBuff, outFile);
@@ -2895,7 +2893,7 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
     board[IDX_WHITE_KNIGHTS] = binary[BINARY_IDX_KNIGHTS] & whitePieces;
     board[IDX_WHITE_BISHOPS] = binary[BINARY_IDX_BISHOPS] & whitePieces;
     board[IDX_WHITE_QUEENS]  = binary[BINARY_IDX_QUEENS]  & whitePieces;
-    board[IDX_WHITE_KING]    = binary[BINARY_IDX_KINGS]   & whitePieces;
+    board[IDX_WHITE_KING]    =  1L << ((binary[BINARY_IDX_FLAGS] >> BINARY_IDX_FLAGS_WHITE_KING_SHIFT) & 0xFF);
 
     unsigned long notWhitePieces = ~whitePieces;
 
@@ -2905,7 +2903,7 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
     board[IDX_BLACK_KNIGHTS] = binary[BINARY_IDX_KNIGHTS] & notWhitePieces;
     board[IDX_BLACK_BISHOPS] = binary[BINARY_IDX_BISHOPS] & notWhitePieces;
     board[IDX_BLACK_QUEENS]  = binary[BINARY_IDX_QUEENS]  & notWhitePieces;
-    board[IDX_BLACK_KING]    = binary[BINARY_IDX_KINGS]   & notWhitePieces;
+    board[IDX_BLACK_KING]    =  1L << ((binary[BINARY_IDX_FLAGS] >> BINARY_IDX_FLAGS_BLACK_KING_SHIFT) & 0xFF);
 
 	board[IDX_BLACK_PIECES]  = 	board[IDX_BLACK_PAWNS]   |
 								board[IDX_BLACK_ROOKS]   |
@@ -2953,7 +2951,7 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
 
 void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
 
-	memset(binary, 0, sizeof(unsigned long) * 9 );
+	memset(binary, 0, sizeof(unsigned long) * BINARY_BOARD_NUM_ELEMENTS );
 
     // slå sammen alle like pieces sine longs
     binary[BINARY_IDX_WHITE_PCS] = board[IDX_WHITE_PIECES];
@@ -2962,7 +2960,6 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
     binary[BINARY_IDX_KNIGHTS]   = board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS];
     binary[BINARY_IDX_BISHOPS]   = board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS];
     binary[BINARY_IDX_QUEENS]    = board[IDX_WHITE_QUEENS]  | board[IDX_BLACK_QUEENS];
-    binary[BINARY_IDX_KINGS]     = board[IDX_WHITE_KING]    | board[IDX_BLACK_KING];// TODO, move king indexes into flags
 
     unsigned long flags = 0;
 
@@ -2977,7 +2974,6 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
         flags |= BINARY_WHITES_TURN;
     }
 
-
     if( board[IDX_EP_IDX] != 0 ){
         // count leading bits
         int idx = __builtin_ctzll(board[IDX_EP_IDX]);
@@ -2985,6 +2981,12 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
     }
 
     flags |= (board[IDX_MOVE_NUM] << BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+
+    unsigned long whiteKingIndex = __builtin_ctzll(board[IDX_WHITE_KING]);
+    flags |= (whiteKingIndex << BINARY_IDX_FLAGS_WHITE_KING_SHIFT);
+
+    unsigned long blackKingIndex = __builtin_ctzll(board[IDX_WHITE_KING]);
+    flags |= (blackKingIndex << BINARY_IDX_FLAGS_BLACK_KING_SHIFT);
 
     binary[BINARY_IDX_FLAGS] = flags;
     binary[BINARY_IDX_MULTIPLIER] = board[IDX_MULTIPLIER];

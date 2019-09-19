@@ -59,19 +59,16 @@ const int IDX_MULTIPLIER     = 24;
 
 const int NUM_BYTES          = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
+// BINARY BOARD CONVERSION for file input/output
+
 const int BINARY_IDX_WHITE_PCS  = 0;
 const int BINARY_IDX_PAWNS      = 1;
 const int BINARY_IDX_ROOKS      = 2;
 const int BINARY_IDX_KNIGHTS    = 3;
 const int BINARY_IDX_BISHOPS    = 4;
 const int BINARY_IDX_QUEENS     = 5;
-const int BINARY_IDX_KINGS      = 6;
-const int BINARY_IDX_FLAGS      = 7;
-const int BINARY_IDX_MULTIPLIER = 8;
-
-// const int BINARY_IDX_CASTLING   = 7;
-// const int BINARY_IDX_EP_IDX     = 8;
-// const int BINARY_IDX_COLOR_TURN = 10;
+const int BINARY_IDX_FLAGS      = 6;
+const int BINARY_IDX_MULTIPLIER = 7;
 
 const int BINARY_CASTLING_WHITE_KING_SIDE = 1;
 const int BINARY_CASTLING_WHITE_QUEEN_SIDE = 2;
@@ -79,8 +76,13 @@ const int BINARY_CASTLING_BLACK_KING_SIDE = 4;
 const int BINARY_CASTLING_BLACK_QUEEN_SIDE = 8;
 
 const int BINARY_WHITES_TURN = 16; // 16th bit set = white, not set = black
-const int BINARY_IDX_FLAGS_EP_IDX = 5; // left shift really
+const int BINARY_IDX_FLAGS_EP_IDX = 8; // left shift really
 const int BINARY_IDX_FLAGS_MOVE_NUM_IDX = 16;
+const int BINARY_IDX_FLAGS_WHITE_KING_SHIFT = 24;
+const int BINARY_IDX_FLAGS_BLACK_KING_SHIFT = 32;
+
+const int BINARY_BOARD_NUM_ELEMENTS   = 8;
+const int BINARY_BOARD_SIZE           = 64;
 
 const int A1 = 7;
 const int B1 = 6;
