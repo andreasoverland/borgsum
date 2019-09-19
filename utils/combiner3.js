@@ -13,6 +13,7 @@ const fs = require('fs');
 
 //let minNumMasterLines = 4000000;
 let minNumMasterLines = 10000;
+let numScanLines = 10000;
 //let minNumMasterLines = 1000;
 
 let allFiles = fs.readdirSync(".");
@@ -22,7 +23,7 @@ let numLinesReadAndChecked = 0;
 
 let masterBoards = Buffer.alloc(minNumMasterLines * 72);
 
-let scanLineFiles = fs.readdirSync(".");
+let scanLineFiles = allFiles.filter( f => f.endsWith(".bin") );
 
 let masterLineFileName = "level5.bin";// masterLineFiles.shift();
 
@@ -31,7 +32,13 @@ let numLinesRead = 0;
 let uniqueLines = 0;
 let numKeys = 0;
 
-//fs.writeFileSync("combined.bin", Buffer.from("") );
+try {
+	fs.unlinkSync("combined.out");
+}
+catch( w ){
+	// yeah whatever
+}
+
 
 //while( moreMasterLinesAvailable ){
 //console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
@@ -100,23 +107,8 @@ function readNextMasterLinesFromNextFile() {
 	}
 
 
-	let totalLines = 0n;
 
-	let writeBuff = Buffer.alloc(72 * uniqueLines);
 
-	// The keys in "theMap" are the keys we want to scan all files with. But first, we want to remove them from file[0]
-	let i = 0;
-	Object.keys(theMap).forEach(k => {
-		totalLines += theMap[k];
-		let buff = Buffer.alloc(72);
-		let parts = k.split(":");
-		for (let i = 0; i < 8; i++) {
-			buff.writeBigUInt64LE(BigInt("0x" + parts[i]), 8 * i);
-		}
-		buff.writeBigUInt64LE(theMap[k], 64);
-		buff.copy(writeBuff, i * 72, 0, 72);
-		i++;
-	});
 
 	// simply copy from numRead -> end into new file
 
@@ -135,22 +127,11 @@ function readNextMasterLinesFromNextFile() {
 		position += numRead;
 	}
 
-
-
 	fs.closeSync(file);
 	fs.closeSync(copyFile);
 
 	fs.renameSync( masterLineFileName+".new", masterLineFileName );
 
-	/*
-		try {
-			fs.unlinkSync("combined.bin");
-		}
-		catch( w ){
-			// yeah whatever
-		}
-		fs.writeFileSync("combined.bin", writeBuff, {flag:'a'} );
-	*/
 
 	console.log("uniqueLines:", uniqueLines);
 	console.log("totalLines:", totalLines);
@@ -179,74 +160,68 @@ function readNextMasterLinesFromNextFile() {
 
 function writeMap() {
 
+	let writeBuff = Buffer.alloc(72 * uniqueLines);
+
+	// The keys in "theMap" are the keys we want to scan all files with. But first, we want to remove them from file[0]
+	let i = 0;
+	Object.keys(theMap).forEach(k => {
+		totalLines += theMap[k];
+		let buff = Buffer.alloc(72);
+		let parts = k.split(":");
+		for (let i = 0; i < 8; i++) {
+			buff.writeBigUInt64LE(BigInt("0x" + parts[i]), 8 * i);
+		}
+		buff.writeBigUInt64LE(theMap[k], 64);
+		buff.copy(writeBuff, i * 72, 0, 72);
+		i++;
+	});
+
+	fs.writeFileSync("combined.bin", writeBuff, {flag:'a'} );
 
 }
 
 function scanAllFilesForMasterLines() {
-	scanLineFiles = fs.readdirSync(".");
+	scanLineFiles = fs.readdirSync(".").filter( f => f.endsWith(".bin") );
 	for (let i = 0; i < scanLineFiles.length; i++) {
 		scanAndMarkLinesInFile(scanLineFiles[i]);
 	}
 }
-
 
 function scanAndMarkLinesInFile(filename) {
 
 	let file = fs.openSync(filename, "r");
 	let newFile = fs.openSync(filename + ".new", "w");
 
-	let size = 1000000;
+	let size = numScanLines*72;
 	let position = 0;
-	let buffer = Buffer.alloc(size);
-	let numRead = fs.readSync(file, buffer, 0, size, position);
+	let readBuffer = Buffer.alloc(size);
+	let numRead = fs.readSync(file, readBuffer, 0, size, position);
 
 	let numLinesWritten = 0;
 
-	let buff = "";
+	let writeBuffer = Buffer.alloc(size);
 	let numLinesInBuff = 0;
 
 	while (numRead > 0) {
 
-		let strBuf = buffer.toString("UTF-8");
-		let lines = strBuf.trim().split("\n");
-
-		while (lines[lines.length - 1].startsWith("\0")) {
-			lines.pop();
-		}
-
-		if (numRead === size && strBuf[numRead - 1] !== '\n') {
-			let lastLine = lines.pop();
-			let lengthOfLastLine = lastLine.length;
-			numRead -= lengthOfLastLine; // for next read
-		}
-
-		numLinesReadAndChecked += lines.length;
-
-		for (let i = 0; i < lines.length; i++) {
-
-			let p = lines[i].split("m");
-
-			let k = makeKeyArray(p[0]);
-
-			if (map[k[0]] !== undefined &&
-				map[k[0]][k[1]] !== undefined) {
-				map[k[0]][k[1]] += parseInt(p[1]);
-			} else {
-				numLinesWritten++;
+		for( let i = 0; i<numRead;i+=72){
+			let scanLine = readBuffer.slice( i, i+72);
+			let key = makeKeyString(scanLine);
+			if( theMap[key] !== undefined ){
+				theMap[key] += scanLine.readBigUInt64LE(64);
+			}
+			else {
+				scanLine.copy( writeBuffer, numLinesInBuff*72, 0, 72 );
 				numLinesInBuff++;
-				buff += lines[i] + "\n";
-				if (numLinesInBuff > 100000) {
-					fs.writeFileSync(newFile, buff);
-					buff = "";
-					numLinesInBuff = 0;
-				}
+			}
+
+			if(numLinesInBuff == numScanLines){
+				// write to new file
 			}
 		}
 
-		position += numRead;
-
-		buffer = Buffer.alloc(size);
-		numRead = fs.readSync(file, buffer, 0, size, position);
+		readBuffer = Buffer.alloc(size);
+		numRead = fs.readSync(file, readBuffer, 0, size, position);
 	}
 
 	if (numLinesInBuff > 0) {
