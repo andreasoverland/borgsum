@@ -12,8 +12,8 @@ const fs = require('fs');
 // binary combiner
 
 //let minNumMasterLines = 4000000;
-let minNumMasterLines = 5000000;
-let numScanLines = 10000;
+let minNumMasterLines = 3000000;
+let numScanLines = 3000000;
 //let minNumMasterLines = 1000;
 
 let allFiles = fs.readdirSync(".");
@@ -25,7 +25,7 @@ let masterBoards = Buffer.alloc(minNumMasterLines * 64);
 
 let scanLineFiles = allFiles.filter( f => f.endsWith(".bin") );
 
-let masterLineFileName = "level5.bin";// masterLineFiles.shift();
+let masterLineFileName =  masterLineFiles[0];
 
 let moreMasterLinesAvailable = true;
 let numLinesRead = 0;
@@ -43,16 +43,22 @@ catch( w ){
 }
 
 
-//while( moreMasterLinesAvailable ){
-//console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
-readNextMasterLinesFromNextFile();
+while( moreMasterLinesAvailable ){
+	console.log( new Date() +  " : Reading " + minNumMasterLines + " master lines from " + masterLineFileName );
+	readNextMasterLinesFromNextFile();
 
-console.log("Num keys:" + numKeys);
+	console.log("Num keys:" + numKeys);
 
-//scanAllFilesForMasterLines(); // bigtime
-writeMap();
-//console.log( new Date() +  " : Scan done "  );
-//}
+	scanAllFilesForMasterLines(); // bigtime
+	writeMap();
+	console.log( new Date() +  " : Scan done "  );
+
+	masterLineFiles = fs.readdirSync(".").filter( f => f.endsWith(".bin") );
+	if( masterLineFiles.length === 0 ){
+		break;
+	}
+	masterLineFileName = masterLineFiles[0];
+}
 
 //console.log( "Total number of lines read:", numLinesRead );
 //console.log( "Number of unique lines found:", uniqueLines );
@@ -78,8 +84,6 @@ function readNextMasterLinesFromNextFile() {
 
 	let position = 0;
 	let numRead = fs.readSync(file, masterBoards, 0, size, position);
-
-	console.log("bytes read ", numRead);
 
 	// scan igjennom for å finne duplikater
 	for (let i = 0; i < numRead; i += 64) {
@@ -114,13 +118,13 @@ function readNextMasterLinesFromNextFile() {
 	let copyBuffer = Buffer.alloc(size);
 	let copyFile = fs.openSync(masterLineFileName + ".new", "w");
 	numRead = fs.readSync(file, copyBuffer, 0, size, position);
-	console.log("read " + numRead + " bytes from position " + position);
+
 	position += numRead;
 	while (numRead > 0) {
 		fs.writeSync(copyFile, copyBuffer, 0, numRead, writePosition);
 		writePosition += numRead;
 		numRead = fs.readSync(file, copyBuffer, 0, size, position);
-		console.log("read " + numRead + " bytes from position " + position);
+
 		position += numRead;
 	}
 
@@ -129,16 +133,17 @@ function readNextMasterLinesFromNextFile() {
 
 	fs.renameSync( masterLineFileName+".new", masterLineFileName );
 
-
 	console.log("uniqueLines:", uniqueLines);
 	console.log("totalLines:", totalLines);
+
+
 
 }
 
 
 function writeMap() {
 
-	let writeBuff = Buffer.alloc(64 * uniqueLines);
+	let writeBuff = Buffer.alloc(64 * Object.keys(theMap).length );
 
 	// The keys in "theMap" are the keys we want to scan all files with. But first, we want to remove them from file[0]
 	let i = 0;
@@ -153,15 +158,20 @@ function writeMap() {
 		buff.copy(writeBuff, i * 64, 0, 64);
 		i++;
 	});
+	theMap = {};
 
-	fs.writeFileSync("combined.bin", writeBuff, {flag:'a'} );
-
+	fs.writeFileSync("combined.out", writeBuff, {flag:'a'} );
 }
 
 function scanAllFilesForMasterLines() {
 	scanLineFiles = fs.readdirSync(".").filter( f => f.endsWith(".bin") );
-	for (let i = 0; i < scanLineFiles.length; i++) {
-		scanAndMarkLinesInFile(scanLineFiles[i]);
+	if( scanLineFiles === 0 ){
+		moreMasterLinesAvailable = false;
+	}
+	else {
+		for (let i = 0; i < scanLineFiles.length; i++) {
+			scanAndMarkLinesInFile(scanLineFiles[i]);
+		}
 	}
 }
 
@@ -173,15 +183,18 @@ function scanAndMarkLinesInFile(filename) {
 	let size = numScanLines*64;
 	let position = 0;
 	let readBuffer = Buffer.alloc(size);
-	let numRead = fs.readSync(file, readBuffer, 0, size, position);
 
 	let numLinesWritten = 0;
 
 	let writeBuffer = Buffer.alloc(size);
 	let numLinesInBuff = 0;
+	let writeFilePosition = 0;
+
+	let numRead = fs.readSync(file, readBuffer, 0, size, position);
+
 
 	while (numRead > 0) {
-
+		position += numRead;
 		for( let i = 0; i<numRead;i+=64){
 			let scanLine = readBuffer.slice( i, i+64);
 			let key = makeKeyString(scanLine);
@@ -195,16 +208,21 @@ function scanAndMarkLinesInFile(filename) {
 
 			if(numLinesInBuff == numScanLines){
 				// write to reduced version of current file
-				fs.writeSync(newFile, writeBuffer,0,size,)
+				fs.writeSync(newFile, writeBuffer,0,numLinesInBuff*64, writeFilePosition);
+				writeFilePosition += size;
+				numLinesWritten +=  numLinesInBuff;
+				numLinesInBuff = 0;
 			}
 		}
 
-		readBuffer = Buffer.alloc(size);
+		readBuffer.fill(0);
 		numRead = fs.readSync(file, readBuffer, 0, size, position);
 	}
 
 	if (numLinesInBuff > 0) {
-		fs.writeSync(newFile, writeBuffer,0,numLinesInBuff*64);
+		numLinesWritten +=  numLinesInBuff;
+		fs.writeSync(newFile, writeBuffer,0,numLinesInBuff*64,writeFilePosition);
+		numLinesInBuff = 0;
 	}
 
 	fs.closeSync(file);
@@ -212,11 +230,11 @@ function scanAndMarkLinesInFile(filename) {
 
 	if (numLinesWritten === 0) {
 		// the file has no more lines of interest. delete it
-
 		fs.unlinkSync(filename + ".new");
 		fs.unlinkSync(filename);
 	} else {
 		fs.renameSync(filename + ".new", filename);
 	}
+
 
 }
