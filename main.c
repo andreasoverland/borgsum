@@ -209,9 +209,6 @@ int main( int argc, char **argv){
 	*/
 
 
-
-
-
     unsigned long board[NUM_BYTES];
 
     diagramToBitBoard( board, initialBoard);
@@ -330,9 +327,6 @@ int main( int argc, char **argv){
         printf("./chessengine -diagram %s -maxlevel %d\n", line, MAX_LEVEL   );
     }
 
-    if( LOG_TYPE != LOG_TYPE_CFEN ) {
-        printBitBoard(board);
-    }
 
 	char * line = NULL;
 	size_t len = 0;
@@ -347,11 +341,12 @@ int main( int argc, char **argv){
     		unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
 			read = fread(binary, sizeof(unsigned long),BINARY_BOARD_NUM_ELEMENTS, inFile);
 			if( read < BINARY_BOARD_NUM_ELEMENTS ){
-				printf("breaking mofo %d\n\n", read );
+				//printf("breaking on last line perhaps %d\n\n", read );
 				break;
 			}
 
 			binaryToBitBoard( binary, board );
+			//printBitBoard(board);
     	}
 
     	dig(board);
@@ -363,7 +358,7 @@ int main( int argc, char **argv){
 	}
 
 
-    clock_gettime(CLOCK_REALTIME, &ts2);
+	clock_gettime(CLOCK_REALTIME, &ts2);
     if (ts2.tv_nsec < ts1.tv_nsec) {
         ts2.tv_nsec += 1000000000;
         ts2.tv_sec--;
@@ -409,7 +404,7 @@ int main( int argc, char **argv){
         fclose( matesOutFile );
     }
 
-    printf("buffWrites: %d, fileWrites: %d\n", buffWrites, fileWrites);
+    // printf("buffWrites: %d, fileWrites: %d\n", buffWrites, fileWrites);
 
     return 0;
 } // end main
@@ -2897,7 +2892,6 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
 
     unsigned long notWhitePieces = ~whitePieces;
 
-
     board[IDX_BLACK_PAWNS]   = binary[BINARY_IDX_PAWNS]   & notWhitePieces;
     board[IDX_BLACK_ROOKS]   = binary[BINARY_IDX_ROOKS]   & notWhitePieces;
     board[IDX_BLACK_KNIGHTS] = binary[BINARY_IDX_KNIGHTS] & notWhitePieces;
@@ -2944,7 +2938,7 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[] ){
 		board[IDX_EP_IDX] = 1L << idx;
 	}
 
-	board[IDX_MOVE_NUM] = ( binary[BINARY_IDX_FLAGS] >> BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+	board[IDX_MOVE_NUM] = ( binary[BINARY_IDX_FLAGS] >> BINARY_IDX_FLAGS_MOVE_NUM_IDX) & 0xff;
 
 	board[IDX_MULTIPLIER] = binary[BINARY_IDX_MULTIPLIER];
 }
@@ -2985,7 +2979,7 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
     unsigned long whiteKingIndex = __builtin_ctzll(board[IDX_WHITE_KING]);
     flags |= (whiteKingIndex << BINARY_IDX_FLAGS_WHITE_KING_SHIFT);
 
-    unsigned long blackKingIndex = __builtin_ctzll(board[IDX_WHITE_KING]);
+    unsigned long blackKingIndex = __builtin_ctzll(board[IDX_BLACK_KING]);
     flags |= (blackKingIndex << BINARY_IDX_FLAGS_BLACK_KING_SHIFT);
 
     binary[BINARY_IDX_FLAGS] = flags;
