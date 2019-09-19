@@ -496,7 +496,7 @@ void dig(unsigned long board[]) {
 
             unsigned long binary[9];
             bitBoardToBinary( board, binary );
-
+            /*
             memcpy(outFileBuff+outFileBuffOffset,binary,8*9);
             outFileBuffOffset += 8*9;
             buffWrites++;
@@ -506,8 +506,8 @@ void dig(unsigned long board[]) {
                 fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
                 outFileBuffOffset = 0;
             }
-
-            if( board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED ){
+            */
+            if( board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED ){
                 memcpy(matesOutFileBuff+matesOutFileBuffOffset,binary,8*9);
                 matesOutFileBuffOffset += 8*9;
                 if( matesOutFileBuffOffset > 1023*1024 ){
@@ -2962,7 +2962,7 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
     binary[BINARY_IDX_KNIGHTS]   = board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS];
     binary[BINARY_IDX_BISHOPS]   = board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS];
     binary[BINARY_IDX_QUEENS]    = board[IDX_WHITE_QUEENS]  | board[IDX_BLACK_QUEENS];
-    binary[BINARY_IDX_KINGS]     = board[IDX_WHITE_KING]    | board[IDX_BLACK_KING];
+    binary[BINARY_IDX_KINGS]     = board[IDX_WHITE_KING]    | board[IDX_BLACK_KING];// TODO, move king indexes into flags
 
     unsigned long flags = 0;
 
