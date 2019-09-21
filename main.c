@@ -109,6 +109,8 @@ void compressBitBoard( unsigned long board[] );
 
 void bitBoardToBinary(unsigned long board[], unsigned long binary[] );
 void binaryToBitBoard(unsigned long binary[], unsigned long board[] );
+void bitBoardToCompactBinary( unsigned char compactBinary[], unsigned long board[] );
+
 
 /*** LEVEL ***/
 /*** LEVEL ***/
@@ -2984,6 +2986,20 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
 
     binary[BINARY_IDX_FLAGS] = flags;
     binary[BINARY_IDX_MULTIPLIER] = board[IDX_MULTIPLIER];
+
+}
+
+void bitBoardToCompactBinary( unsigned char compactBinary[], unsigned long board[] ){
+
+	// bit layout
+	// 0..5 = length of this array in bytes
+    // 6..47 = 41 bits of flags, which includes ply, king indices, ep index, castling rights and turn
+    // 48..53 = which pieces are in the array, but always in the order pawns, rooks, knights, bishops and queens.
+    // 54..57 = num bytes used for multiplicator field
+    // 58..N = multiplier
+    // max 5 times 5 bits run-length N
+    // N time piece indices
+
 
 }
 
