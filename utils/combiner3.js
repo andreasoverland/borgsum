@@ -66,7 +66,7 @@ while( moreMasterLinesAvailable ){
 function makeKeyString(buffer) {
 	numKeys++;
 	let key = "";
-	for (var i = 0; i < 8; i++) {
+	for (var i = 0; i < 7; i++) {
 		key += buffer.readBigUInt64LE(i * 8).toString(16) + ":";
 	}
 	return key;
@@ -151,7 +151,7 @@ function writeMap() {
 		totalLines += theMap[k];
 		let buff = Buffer.alloc(64);
 		let parts = k.split(":");
-		for (let i = 0; i < 8; i++) {
+		for (let i = 0; i < 7; i++) {
 			buff.writeBigUInt64LE(BigInt("0x" + parts[i]), 8 * i);
 		}
 		buff.writeBigUInt64LE(theMap[k], 56);
@@ -162,6 +162,8 @@ function writeMap() {
 
 	fs.writeFileSync("combined.out", writeBuff, {flag:'a'} );
 }
+
+
 
 function scanAllFilesForMasterLines() {
 	scanLineFiles = fs.readdirSync(".").filter( f => f.endsWith(".bin") );

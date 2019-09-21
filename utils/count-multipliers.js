@@ -1,28 +1,25 @@
 #!/usr/local/bin/node
+const fs = require('fs');
+let size = 6400000;
+let position = 0;
+let file = fs.openSync("level7.bin", "r");
+let buff = Buffer.alloc(size);
+let numRead = fs.readSync(file, buff, 0, size, position);
 
+let count = 0n;
+let uniqueCount = 0n;
+while( numRead > 0 ){
+	position += numRead;
+	for( let i = 0;i<numRead/64;i++){
+		uniqueCount++;
+		count += buff.readBigUInt64LE(i*64+56);
 
-var lineReader = require('readline').createInterface({
-	input: require('fs').createReadStream( "combined.txt" )
-});
-
-let numDifferentBoards = 0;
-let numBoards = 0;
-
-lineReader.on('line', function (line) {
-	if( line.trim() === "" ){
-		return;
 	}
+	numRead = fs.readSync(file, buff, 0, size, position);
+}
 
-	let l = line.trim().split("m");
-	let multiplier = parseInt(l[1]);
-	numDifferentBoards++;
-	numBoards+= multiplier;
+console.log( "unique:", uniqueCount );
+console.log( "totel count:", count );
 
-});
 
-lineReader.on('close', ()=>{
-
-	console.log( "Num unique boards :",numDifferentBoards);
-	console.log( "Num boards        :",numBoards);
-
-});
+fs.closeSync(file);
