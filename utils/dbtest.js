@@ -38,7 +38,7 @@ async function asyncFunction() {
 
 		conn = await pool.getConnection();
 		let size = boardSize * numScanLines;
-		let file = fs.openSync( "../results/level5.bin", "r" );
+		let file = fs.openSync( "../results/level6.bin", "r" );
 		let readPosition =0;
 
 		let numRead = fs.readSync(file, masterBoards, 0, size, readPosition );
@@ -103,5 +103,3 @@ function makeKeyArray(buffer) {
 }
 
 asyncFunction();
-
-
