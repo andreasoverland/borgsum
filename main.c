@@ -109,8 +109,8 @@ void compressBitBoard( unsigned long board[] );
 
 void bitBoardToBinary(unsigned long board[], unsigned long binary[] );
 void binaryToBitBoard(unsigned long binary[], unsigned long board[] );
-void bitBoardToCompactBinary( unsigned char compactBinary[], unsigned long board[] );
-
+void bitBoardToCompactBinary( unsigned long board[], unsigned char compactBinary[] );
+void compactBinaryToBitBoard( unsigned char compactBinary[], unsigned long board[] );
 
 /*** LEVEL ***/
 /*** LEVEL ***/
@@ -218,7 +218,7 @@ int main( int argc, char **argv){
 
     unsigned char compactBinaryBoard[42];
 
-    bitBoardToCompactBinary( compactBinaryBoard, board );
+    bitBoardToCompactBinary(board, compactBinaryBoard);
 
 
 
@@ -520,7 +520,7 @@ void dig(unsigned long board[]) {
         }
         else if( LOG_TYPE == LOG_TYPE_COMP_BINARY ){
             unsigned char binary[42];
-            bitBoardToCompactBinary( binary, board );
+            bitBoardToCompactBinary( board, binary );
 
             memcpy(outFileBuff+outFileBuffOffset,binary,42);
             outFileBuffOffset += 42;
@@ -3019,7 +3019,7 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
 
 }
 
-void bitBoardToCompactBinary( unsigned char compactBinary[], unsigned long board[] ){
+void bitBoardToCompactBinary( unsigned long board[], unsigned char compactBinary[] ){
 
 	// byte layout
     //      0 - current turn pieces map ( so for starting position, it will be white's pieces)
