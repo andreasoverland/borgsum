@@ -160,6 +160,26 @@ int buffWrites = 0;
 int fileWrites = 0;
 
 int main( int argc, char **argv){
+/*
+    int  var;
+    int  *ptr;
+    int  **pptr;
+
+    var = 3000;
+
+    // take the address of var
+    ptr = &var;
+
+    // take the address of ptr using address of operator &
+    pptr = &ptr;
+
+    // take the value using pptr
+    printf("Value of var = %d\n", var );
+    printf("Value available at *ptr = %d\n", *ptr );
+    printf("Value available at **pptr = %d\n", **pptr);
+
+    return 0;
+*/
 
     // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
@@ -214,6 +234,12 @@ int main( int argc, char **argv){
     unsigned long board[NUM_BYTES];
 
     diagramToBitBoard( board, initialBoard);
+
+    unsigned char compactBinaryBoard[42];
+
+    bitBoardToCompactBinary( compactBinaryBoard, board );
+
+    return 0;
 
     if( argc > 1 ){
         if( strcmp(argv[1],"SLEEP") == 0 ){
@@ -2991,15 +3017,36 @@ void bitBoardToBinary(unsigned long board[], unsigned long binary[] ){
 
 void bitBoardToCompactBinary( unsigned char compactBinary[], unsigned long board[] ){
 
-	// bit layout
-	// 0..5 = length of this array in bytes
-    // 6..47 = 41 bits of flags, which includes ply, king indices, ep index, castling rights and turn
-    // 48..53 = which pieces are in the array, but always in the order pawns, rooks, knights, bishops and queens.
-    // 54..57 = num bytes used for multiplicator field
-    // 58..N = multiplier
-    // max 5 times 5 bits run-length N
-    // N time piece indices
+	// byte layout
+    //      0 - current turn pieces map ( so for starting position, it will be white's pieces)
+    //      8 - ply
+    //      9 - castling & ep. index
+    //     10 - PKN map
+    //     18 - PQB map
+    //     26 - KQR map
+    //     34 - multi
+    //     42 bytes total.
 
+    memset(compactBinary, 0, sizeof(unsigned char) * 42 );
+
+    unsigned long *pieces =  (unsigned long *)&compactBinary[0];
+
+    printf("test 1: %ld\n", *pieces );
+
+    compactBinary[0] = 1;
+    compactBinary[1] = 2;
+    compactBinary[2] = 3;
+    compactBinary[3] = 4;
+    compactBinary[4] = 5;
+    compactBinary[5] = 6;
+    compactBinary[6] = 7;
+    compactBinary[7] = 8;
+
+    printf("test 2: %ld\n", *pieces );
+
+    *pieces = 42;
+
+    printf("test 2: %d %d %d\n", compactBinary[0], compactBinary[1], compactBinary[2] );
 
 }
 
