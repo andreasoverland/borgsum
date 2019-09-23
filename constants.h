@@ -163,3 +163,4 @@ const int LOG_TYPE_DIAGRAM = 1;
 const int LOG_TYPE_FEN = 2;
 const int LOG_TYPE_CFEN = 3;
 const int LOG_TYPE_BINARY = 4;
+const int LOG_TYPE_COMP_BINARY = 5;

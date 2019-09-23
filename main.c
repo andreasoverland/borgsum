@@ -160,26 +160,7 @@ int buffWrites = 0;
 int fileWrites = 0;
 
 int main( int argc, char **argv){
-/*
-    int  var;
-    int  *ptr;
-    int  **pptr;
 
-    var = 3000;
-
-    // take the address of var
-    ptr = &var;
-
-    // take the address of ptr using address of operator &
-    pptr = &ptr;
-
-    // take the value using pptr
-    printf("Value of var = %d\n", var );
-    printf("Value available at *ptr = %d\n", *ptr );
-    printf("Value available at **pptr = %d\n", **pptr);
-
-    return 0;
-*/
 
     // "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
@@ -239,7 +220,8 @@ int main( int argc, char **argv){
 
     bitBoardToCompactBinary( compactBinaryBoard, board );
 
-    return 0;
+
+
 
     if( argc > 1 ){
         if( strcmp(argv[1],"SLEEP") == 0 ){
@@ -267,10 +249,8 @@ int main( int argc, char **argv){
             printf("-cfen \"string\"     Uses a Compact FEN as starting position\r\n");
             printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
             printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
-            printf("-logtype TYPE      Either binary, cfen or diagram. Will print out each new board found, raw binary, diagram or (compact)fen format.\r\n");
+            printf("-logtype TYPE      Either cbin, binary, cfen or diagram. Will print out each new board found, compact binary, raw binary, diagram or compact fen format.\r\n");
             printf("                   If omitted, only the statistics will be printed at the end of the run.\r\n");
-            printf("-mul N             Multiplier number. Only used as pass-on value for logging and collating results\r\n");
-            printf("                   when calculating results for a board that exists N times in a set.\r\n");
             printf("SLEEP              The program will sleep for 60 seconds. Useful when running as a distributed client.\r\n");
 
             printf("\r\n\r\nandreasoverland@gmail.com\r\n\r\n");
@@ -339,6 +319,9 @@ int main( int argc, char **argv){
             else if( strcmp( argv[a], "binary" ) == 0 ){
                 LOG_TYPE = LOG_TYPE_BINARY;
             }
+            else if( strcmp( argv[a], "cbin" ) == 0){
+                LOG_TYPE = LOG_TYPE_COMP_BINARY;
+            }
 
         }
         if( strcmp( argv[a], "-mul") == 0 ) {
@@ -366,15 +349,13 @@ int main( int argc, char **argv){
     while( 1 ) {
 
     	if( inFile != NULL ){
+    	    // TODO: read bigger chunks, also, make is possible to specify input format
     		unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
 			read = fread(binary, sizeof(unsigned long),BINARY_BOARD_NUM_ELEMENTS, inFile);
 			if( read < BINARY_BOARD_NUM_ELEMENTS ){
-				//printf("breaking on last line perhaps %d\n\n", read );
 				break;
 			}
 
-			binaryToBitBoard( binary, board );
-			//printBitBoard(board);
     	}
 
     	dig(board);
@@ -417,22 +398,22 @@ int main( int argc, char **argv){
     }
 
     if( outFile != NULL ){
-        if( outFileBuffOffset != 0 ){
-            fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
-            outFileBuffOffset = 0;
-            fileWrites++;
-        }
-		fclose(outFile);
 
-
-        if( matesOutFileBuffOffset != 0 ){
-            fwrite(matesOutFileBuff , 1 , matesOutFileBuffOffset , matesOutFile );
-            matesOutFileBuffOffset = 0;
+        if( LOG_TYPE == LOG_TYPE_BINARY || LOG_TYPE == LOG_TYPE_COMP_BINARY ) {
+            if (outFileBuffOffset != 0) {
+                fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
+                outFileBuffOffset = 0;
+                fileWrites++;
+            }
+            fclose(outFile);
+            if (matesOutFileBuffOffset != 0) {
+                fwrite(matesOutFileBuff, 1, matesOutFileBuffOffset, matesOutFile);
+                matesOutFileBuffOffset = 0;
+            }
+            fclose(matesOutFile);
         }
-        fclose( matesOutFile );
     }
 
-    // printf("buffWrites: %d, fileWrites: %d\n", buffWrites, fileWrites);
 
     return 0;
 } // end main
@@ -512,9 +493,8 @@ void dig(unsigned long board[]) {
             compressBitBoard( board );
         }
     }
-    else if( LOG_TYPE == LOG_TYPE_BINARY && outFile != NULL ){
-        if( board[IDX_MOVE_NUM] == MAX_LEVEL) {
-
+    else if( outFile != NULL && board[IDX_MOVE_NUM] == MAX_LEVEL ){
+        if( LOG_TYPE == LOG_TYPE_BINARY ){
             unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
             bitBoardToBinary( board, binary );
 
@@ -537,8 +517,32 @@ void dig(unsigned long board[]) {
                     matesOutFileBuffOffset = 0;
                 }
             }
-
         }
+        else if( LOG_TYPE == LOG_TYPE_COMP_BINARY ){
+            unsigned char binary[42];
+            bitBoardToCompactBinary( binary, board );
+
+            memcpy(outFileBuff+outFileBuffOffset,binary,42);
+            outFileBuffOffset += 42;
+            buffWrites++;
+
+            if( outFileBuffOffset > 1023*1024 ){
+                fileWrites++;
+                fwrite(outFileBuff , 1 , outFileBuffOffset , outFile );
+                outFileBuffOffset = 0;
+            }
+
+            if( board[IDX_MOVE_NUM] == MAX_LEVEL && board[IDX_CHECK_STATUS] & MASK_KING_IS_MATED ){
+                memcpy(matesOutFileBuff+matesOutFileBuffOffset,binary,42);
+                matesOutFileBuffOffset += 42;
+                if( matesOutFileBuffOffset > 1023*1024 ){
+                    fwrite(matesOutFileBuff , 1 , matesOutFileBuffOffset , matesOutFile );
+                    //fputs( outFileBuff, outFile);
+                    matesOutFileBuffOffset = 0;
+                }
+            }
+        }
+
     }
 
     count(board);
@@ -3027,26 +3031,50 @@ void bitBoardToCompactBinary( unsigned char compactBinary[], unsigned long board
     //     34 - multi
     //     42 bytes total.
 
-    memset(compactBinary, 0, sizeof(unsigned char) * 42 );
-
     unsigned long *pieces =  (unsigned long *)&compactBinary[0];
+    if( board[IDX_TURN] == WHITE_MASK ) {
+        *pieces = board[IDX_WHITE_PIECES];
+    }
+    else {
+        *pieces = board[IDX_BLACK_PIECES];
+    }
 
-    printf("test 1: %ld\n", *pieces );
+    unsigned char flags = 0;
 
-    compactBinary[0] = 1;
-    compactBinary[1] = 2;
-    compactBinary[2] = 3;
-    compactBinary[3] = 4;
-    compactBinary[4] = 5;
-    compactBinary[5] = 6;
-    compactBinary[6] = 7;
-    compactBinary[7] = 8;
+    unsigned long castling = board[IDX_CASTLING];
 
-    printf("test 2: %ld\n", *pieces );
+    flags  = (MASK_CASTLING_BLACK_KING_SIDE  & castling ) == MASK_CASTLING_BLACK_KING_SIDE ? BINARY_CASTLING_BLACK_KING_SIDE : 0 ;
+    flags |= (MASK_CASTLING_BLACK_QUEEN_SIDE & castling ) == MASK_CASTLING_BLACK_QUEEN_SIDE ? BINARY_CASTLING_BLACK_QUEEN_SIDE : 0 ;
+    flags |= (MASK_CASTLING_WHITE_KING_SIDE  & castling ) == MASK_CASTLING_WHITE_KING_SIDE ? BINARY_CASTLING_WHITE_KING_SIDE : 0 ;
+    flags |= (MASK_CASTLING_WHITE_QUEEN_SIDE & castling ) == MASK_CASTLING_WHITE_QUEEN_SIDE ? BINARY_CASTLING_WHITE_QUEEN_SIDE : 0 ;
 
-    *pieces = 42;
 
-    printf("test 2: %d %d %d\n", compactBinary[0], compactBinary[1], compactBinary[2] );
+    compactBinary[8] = board[IDX_MOVE_NUM];
+
+    if( board[IDX_EP_IDX] != 0 ){
+        // count leading bits
+        int idx = __builtin_ctzll(board[IDX_EP_IDX]);
+        idx &= 7;
+        idx ++;
+        flags |= (idx << 4);
+    }
+
+    compactBinary[9] = flags;
+
+    unsigned long *pknMap =  (unsigned long *)&compactBinary[10];
+    unsigned long *pqbMap =  (unsigned long *)&compactBinary[18];
+    unsigned long *kqrMap =  (unsigned long *)&compactBinary[26];
+    unsigned long *multi  =  (unsigned long *)&compactBinary[34];
+    
+    *pknMap = board[IDX_WHITE_PAWNS] | board[IDX_WHITE_KING]   | board[IDX_WHITE_KNIGHTS]
+            | board[IDX_BLACK_PAWNS] | board[IDX_BLACK_KING]   | board[IDX_BLACK_KNIGHTS];
+    *pqbMap = board[IDX_WHITE_PAWNS] | board[IDX_WHITE_QUEENS] | board[IDX_WHITE_BISHOPS]
+            | board[IDX_BLACK_PAWNS] | board[IDX_BLACK_QUEENS] | board[IDX_BLACK_BISHOPS];
+    *kqrMap = board[IDX_WHITE_KING]  | board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS]
+            | board[IDX_BLACK_KING]  | board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS];
+
+    *multi = board[IDX_MULTIPLIER];
+
 
 }
 
