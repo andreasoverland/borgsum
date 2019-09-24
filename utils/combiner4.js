@@ -24,7 +24,7 @@ let writePosition = 0;
 
 let masterLineFileName = "level6.bin";
 
-let boardSize = 64;
+let boardSize = 33;
 let numScanLines = 100000;
 let maxMapSize = 1000000;
 console.time("allocing");

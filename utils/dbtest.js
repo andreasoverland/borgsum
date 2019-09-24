@@ -1,24 +1,20 @@
 /*
 
-create table boards (
+create table nboards (
  b0 bigint zerofill not null,
  b1 bigint zerofill not null,
  b2 bigint zerofill not null,
- b3 bigint zerofill not null,
- b4 bigint zerofill not null,
- b5 bigint zerofill not null,
- b6 bigint zerofill not null,
  mul bigint zerofill not null
 );
 
-alter table boards add primary key(b0,b1,b2,b3,b4,b5,b6)
+alter table nboards add primary key(b0,b1,b2);
 
  */
 const mariadb = require('mariadb');
 const fs = require('fs');
 
 
-let boardSize = 64;
+let boardSize = 33;
 let numScanLines = 100000;
 let masterBoards = Buffer.alloc(numScanLines * boardSize);
 
@@ -26,7 +22,7 @@ const pool = mariadb.createPool({
 	host: 'localhost',
 	user:'borgsum',
 	password: 'password',
-	connectionLimit: 5,
+	connectionLimit: 1,
 	database:'chess'
 });
 
@@ -37,42 +33,37 @@ async function asyncFunction() {
 	try {
 
 		conn = await pool.getConnection();
+		/*let masterMul = 5;
+		let update = "insert into nboards (b0,b1,b2,mul) value(1,1,1,"+masterMul+") ON DUPLICATE KEY UPDATE mul = mul +" + masterMul;
+		await conn.query(update);*/
+
+		
 		let size = boardSize * numScanLines;
-		let file = fs.openSync( "../results/level6.bin", "r" );
+		let file = fs.openSync( "../results/level6.nbin", "r" );
 		let readPosition =0;
 
 		let numRead = fs.readSync(file, masterBoards, 0, size, readPosition );
 
 		console.log( "read " + numRead + " from readPosition " + readPosition);
 		while( numRead > 0) {
+			await conn.beginTransaction();
 			readPosition += numRead;
 
-			for( let i = 0;i<numRead; i+=64) {
-				let master = Buffer.alloc(64);
-				masterBoards.copy(master, 0, i, i + 64);
+			for( let i = 0;i<numRead; i+=33) {
+				let master = Buffer.alloc(33);
+				masterBoards.copy(master, 0, i, i + 33);
 
-				let masterMul = master.readBigUInt64LE(56);
+				let masterMul = master.readBigUInt64LE(25);
 				totalMul += masterMul;
+				
 				let keys = makeKeyArray(master);
-				let query = "SELECT * from boards where(b0 = " + keys[0] + " AND b1=" + keys[1] + " AND b2=" + keys[2] + " AND b3=" + keys[3] + " AND b4=" + keys[4] + " AND b5=" + keys[5] + " AND b6=" + keys[6] + " )";
-				// console.log( query );
 
-				const rows = await conn.query(query);
-				if( rows.length === 0 ){
-					let insert = "insert into boards value(" + keys[0] + "," + keys[1] + "," + keys[2] + "," + keys[3] + "," + keys[4] + "," + keys[5] + "," + keys[6] + "," + masterMul + ")";
-					await conn.query(insert);
-				} else {
-					let oldMul = rows[0].mul;
-					masterMul += BigInt( oldMul );
-					let update = "insert into boards value(" + keys[0] + "," + keys[1] + "," + keys[2] + "," + keys[3] + "," + keys[4] + "," + keys[5] + "," + keys[6] + "," + masterMul + ") ON DUPLICATE KEY UPDATE mul = " + masterMul;
-					await conn.query(update);
-				}
-
-				// console.log(rows);
-				//const res = await conn.query("INSERT INTO boards value (?,?,?,?,?,?,?,?)", [2,1,2,4,5,6,7,8274]);
-				//console.log(res); // { affectedRows: 1, insertId: 1, warningStatus: 0 }
+				let update = "insert into nboards value(" + keys[0] + "," + keys[1] + "," + keys[2] + "," + masterMul + ") ON DUPLICATE KEY UPDATE mul = mul +" + masterMul;
+				await conn.query(update);
 
 			}
+
+			await conn.commit();
 
 			numRead = fs.readSync(file, masterBoards, 0, size, readPosition);
 			console.log( "read " + numRead + " from readPosition " + readPosition);
@@ -96,10 +87,14 @@ async function asyncFunction() {
 
 function makeKeyArray(buffer) {
 	let key = [];
-	for (let i = 0; i < 7; i++) {
+	for (let i = 0; i < 3; i++) {
 		key.push( buffer.readBigUInt64LE(i * 8) );
 	}
 	return key;
+}
+
+function errorHandler( err, res ){
+	console.log( err, res );
 }
 
 asyncFunction();

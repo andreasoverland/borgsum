@@ -4,3 +4,4 @@ chessengine
 .idea/
 *.o
 test/*.*
+results

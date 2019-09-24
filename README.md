@@ -96,3 +96,14 @@ Todo
 - MÅL: lag et redusert workset på level 7 for å nå level 10 på default setup
 - lage outputfile med counters, for å dele opp filene i mindre biter
 - utfordring er å ta duplikater fra feks level_6_mul_4.txt og level_6_mul_5.txt og slå de sammen i neste workunit
+
+
+### 2019.09.24 - hexdump trick
+
+For cbin
+hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.cbin
+
+For nbin
+
+hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.nbin
+

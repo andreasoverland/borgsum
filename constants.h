@@ -84,6 +84,34 @@ const int BINARY_IDX_FLAGS_BLACK_KING_SHIFT = 32;
 const int BINARY_BOARD_NUM_ELEMENTS   = 8;
 const int BINARY_BOARD_SIZE           = 64;
 
+// COMPACT BINARY BOARD CONVERSION for file in/out
+const int COMP_BINARY_BYTE_SIZE      = 41;
+
+
+// NIBBLE BINARY BOARD CONVERSION
+const int NIBBLE_EMPTY = 0;
+
+const int NIBBLE_WHITE_PAWN = 1;
+const int NIBBLE_WHITE_ROOK_CAN_CASTLE = 2;
+const int NIBBLE_WHITE_KNIGHT = 3;
+const int NIBBLE_WHITE_BISHOP = 4;
+const int NIBBLE_WHITE_QUEEN = 5;
+const int NIBBLE_WHITE_KING = 6;
+const int NIBBLE_WHITE_ROOK_CAN_NOT_CASTLE = 7;
+
+const int NIBBLE_BLACK_PAWN = 8;
+const int NIBBLE_BLACK_ROOK_CAN_CASTLE = 9;
+const int NIBBLE_BLACK_KNIGHT = 10;
+const int NIBBLE_BLACK_BISHOP = 11;
+const int NIBBLE_BLACK_QUEEN = 12;
+const int NIBBLE_BLACK_KING = 13;
+const int NIBBLE_BLACK_ROOK_CAN_NOT_CASTLE = 14;
+
+const int NIBBLE_EP_POSITION = 15;
+
+const int NIBBLE_BINARY_BYTE_SIZE = 33;
+
+
 const int A1 = 7;
 const int B1 = 6;
 const int C1 = 5;
@@ -164,3 +192,4 @@ const int LOG_TYPE_FEN = 2;
 const int LOG_TYPE_CFEN = 3;
 const int LOG_TYPE_BINARY = 4;
 const int LOG_TYPE_COMP_BINARY = 5;
+const int LOG_TYPE_NIBBLE_BINARY = 6;
