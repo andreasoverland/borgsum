@@ -63,14 +63,14 @@ The branch bitboards is now merged into master, including the nice client featur
 The master branch is ok now. But I would like the input arguments for the client to be easier to use, also to add a "log=true/false" option.
 Plan:
 - argument for board should be both board, turn , castling, en passant square and move num : done
-		  
+
 - add argument names
   - diagram : done
   - fen
   - maxlevel : done
   - workunitid : done
   - log = fen/diagram (if omitted, only statistics are logged at the end) : done
- 
+
 
 ### 2019.07.17 10:00 - Status all of the above done.
 
@@ -100,10 +100,11 @@ Todo
 
 ### 2019.09.24 - hexdump trick
 
+ ls -1|xargs -n 1 -I x mv x x.nbin
+
 For cbin
 hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.cbin
 
 For nbin
 
 hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.nbin
-
