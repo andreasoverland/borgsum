@@ -174,16 +174,7 @@ int main(int argc, char **argv) {
 
 	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
-	char *initialBoard = "\
-						 r n b q k b n r\
-						 p p p p p p p p\
-						 . . . . . . . .\
-						 . . . . . . . .\
-						 . . . . . . . .\
-						 . . . . . . . .\
-						 P P P P P P P P\
-						 R N B Q K B N R\
-						 w KQkq -";
+	char *initialBoard = "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR w KQkq -";
 
 	//*
 
@@ -193,7 +184,7 @@ int main(int argc, char **argv) {
 
 	// Position 4
 	// r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1
-	// "r..q.rk. pP.p..pp Q....n.. bbp.p... Np...... .B...NBn pPPP.PPP R...K..R b kq - 0"
+	//char *initialBoard = "r..q.rk. pP.p..pp Q....n.. bbp.p... Np...... .B...NBn pPPP.PPP R...K..R b kq - 1";
 
 
 
@@ -208,7 +199,7 @@ int main(int argc, char **argv) {
                       R . . . K . . R\
                       w KQkq -";
 */
-	/*
+/*
 	char *initialBoard = "\
 					  . . . . k . . .\
 					  . . . . . . . .\
@@ -218,17 +209,13 @@ int main(int argc, char **argv) {
 					  . . . . . . . .\
 					  . . . . . . . .\
 					  . . . . . . K .\
-					  b - c3";
-	*/
+					  b - c3 11";
+*/
 
 
 	unsigned long board[NUM_BYTES];
 
 	diagramToBitBoard(board, initialBoard);
-
-	unsigned char compactBinaryBoard[COMP_BINARY_BYTE_SIZE];
-
-	bitBoardToCompactBinary(board, compactBinaryBoard);
 
 
 	if (argc > 1) {
@@ -356,14 +343,16 @@ int main(int argc, char **argv) {
 
 	struct timespec ts1, ts2;
 	clock_gettime(CLOCK_REALTIME, &ts1);
-
+	int boardNum = 0;
 	while (1) {
 
 		if (inFile != NULL) {
 			// TODO: read bigger chunks, also, make is possible to specify input format
-			unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
-			read = fread(binary, sizeof(unsigned long), BINARY_BOARD_NUM_ELEMENTS, inFile);
-			if (read < BINARY_BOARD_NUM_ELEMENTS) {
+			unsigned char binary[NIBBLE_BINARY_BYTE_SIZE];
+			read = fread(binary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile);
+			nibbleBinaryToBitBoard( binary, board );
+
+			if (read < NIBBLE_BINARY_BYTE_SIZE) {
 				break;
 			}
 
@@ -3126,13 +3115,27 @@ void bitBoardToNibbleBinary(unsigned long board[], unsigned char nibbleBinary[])
 	unsigned long castling = board[IDX_CASTLING];
 	unsigned long castlingRooksMap = 0;
 
-	castlingRooksMap = (MASK_CASTLING_BLACK_KING_SIDE & castling) == MASK_CASTLING_BLACK_KING_SIDE ? H8_MASK : 0;
+	castlingRooksMap  = (MASK_CASTLING_BLACK_KING_SIDE  & castling) == MASK_CASTLING_BLACK_KING_SIDE  ? H8_MASK : 0;
 	castlingRooksMap |= (MASK_CASTLING_BLACK_QUEEN_SIDE & castling) == MASK_CASTLING_BLACK_QUEEN_SIDE ? A8_MASK : 0;
-	castlingRooksMap |= (MASK_CASTLING_WHITE_KING_SIDE & castling) == MASK_CASTLING_WHITE_KING_SIDE ? H1_MASK : 0;
+	castlingRooksMap |= (MASK_CASTLING_WHITE_KING_SIDE  & castling) == MASK_CASTLING_WHITE_KING_SIDE  ? H1_MASK : 0;
 	castlingRooksMap |= (MASK_CASTLING_WHITE_QUEEN_SIDE & castling) == MASK_CASTLING_WHITE_QUEEN_SIDE ? A1_MASK : 0;
 
-	unsigned long *allPiecesAndEp = (unsigned long *) &nibbleBinary[0];
-	*allPiecesAndEp = board[IDX_ALL_PIECES] | board[IDX_EP_IDX];
+	unsigned long *allPieces = (unsigned long *) &nibbleBinary[0];
+	*allPieces = board[IDX_ALL_PIECES];
+
+	unsigned long epMask = board[IDX_EP_IDX];
+
+	if( epMask != 0 ){
+		// replace pawn +/8 from EP_IDX with
+		if( (board[IDX_EP_IDX] & R3) ){
+			epMask = board[IDX_EP_IDX] << 8;
+		}
+		else {
+			epMask = board[IDX_EP_IDX] >> 8;
+		}
+
+	}
+
 
 	int numPieces = 16;
 	int nibbleShift = 0;
@@ -3189,18 +3192,20 @@ void bitBoardToNibbleBinary(unsigned long board[], unsigned char nibbleBinary[])
 		else if ((mask & board[IDX_BLACK_KING]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_KING << nibbleShift;
 		}
-		else if (mask == board[IDX_EP_IDX] ) {
-			nibbleBinary[numPieces >> 1] |= NIBBLE_EP_POSITION << nibbleShift;
 
+		if ( mask == epMask) {
+			nibbleBinary[numPieces >> 1] |= NIBBLE_EP_PAWN << nibbleShift;
 		}
 
-		if( (*allPiecesAndEp & mask) != 0 ){
+		if( ((*allPieces | epMask) & mask) != 0 ){
 			numPieces++;
 		}
 
 		nibbleShift = (numPieces % 2) << 2;
 		mask <<= 1;
 	}
+
+
 
 	nibbleBinary[24] = board[IDX_MOVE_NUM] & 0xff;
 
@@ -3213,6 +3218,125 @@ void nibbleBinaryToBitBoard(unsigned char nibbleBinary[], unsigned long board[])
 	// TODO: dette.
 	// fint å fått kombinert noen resultater og startet derfra.
 	// level N here we comes.
+
+	memset(board, 0, NUM_BYTES*8 );
+
+	unsigned long *allPiecesAndEp = (unsigned long *) &nibbleBinary[0]; // 8 bytes allpiece
+
+
+	unsigned long mask = 1L;
+	int pieceNum = 0;
+	int nibbleShift = 0;
+	for( int i=0;i<64;i++){
+		if( (mask & *allPiecesAndEp) == mask ){
+			int piece = ((nibbleBinary[8 + (pieceNum >> 1)]) >> nibbleShift) & 0xF;
+
+			switch( piece ){
+				
+				case NIBBLE_WHITE_PAWN:
+					board[IDX_WHITE_PAWNS] |= mask;
+					break;
+				case NIBBLE_WHITE_ROOK_CAN_CASTLE:
+					board[IDX_WHITE_ROOKS] |= mask;
+					if( mask == A1_MASK ){
+						board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+					}
+					else if ( mask == H1_MASK ){
+						board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+					}
+					break;
+				case NIBBLE_WHITE_ROOK_CAN_NOT_CASTLE:
+					board[IDX_WHITE_ROOKS] |= mask;
+					break;
+				case NIBBLE_WHITE_KNIGHT:
+					board[IDX_WHITE_KNIGHTS] |= mask;
+					break;
+				case NIBBLE_WHITE_BISHOP:
+					board[IDX_WHITE_BISHOPS] |= mask;
+					break;
+				case NIBBLE_WHITE_QUEEN:
+					board[IDX_WHITE_QUEENS] |= mask;
+					break;
+				case NIBBLE_WHITE_KING:
+					board[IDX_WHITE_KING] |= mask;
+					break;
+
+
+				case NIBBLE_BLACK_PAWN:
+					board[IDX_BLACK_PAWNS] |= mask;
+					break;
+				case NIBBLE_BLACK_ROOK_CAN_CASTLE:
+					board[IDX_BLACK_ROOKS] |= mask;
+					if( mask == A8_MASK ){
+						board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
+					}
+					else if ( mask == H8_MASK ){
+						board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+					}
+					break;
+				case NIBBLE_BLACK_ROOK_CAN_NOT_CASTLE:
+					board[IDX_BLACK_ROOKS] |= mask;
+					break;
+				case NIBBLE_BLACK_KNIGHT:
+					board[IDX_BLACK_KNIGHTS] |= mask;
+					break;
+				case NIBBLE_BLACK_BISHOP:
+					board[IDX_BLACK_BISHOPS] |= mask;
+					break;
+				case NIBBLE_BLACK_QUEEN:
+					board[IDX_BLACK_QUEENS] |= mask;
+					break;
+				case NIBBLE_BLACK_KING:
+					board[IDX_BLACK_KING] |= mask;
+					break;
+
+				case NIBBLE_EP_PAWN:
+					if( (mask & R4) == mask ){
+						board[IDX_WHITE_PAWNS] |= mask;
+						board[IDX_EP_IDX] = mask >> 8;
+					}
+					else if ( (mask & R5) == mask ){
+						board[IDX_BLACK_PAWNS] |= mask;
+						board[IDX_EP_IDX] = mask << 8;
+					}
+					break;
+			}
+
+			pieceNum++;
+			nibbleShift = (pieceNum % 2) << 2;
+
+		}
+
+
+		mask <<= 1L;
+	}
+
+	board[IDX_WHITE_PIECES] = board[IDX_WHITE_PAWNS] |
+							  board[IDX_WHITE_ROOKS] |
+							  board[IDX_WHITE_KNIGHTS] |
+							  board[IDX_WHITE_BISHOPS] |
+							  board[IDX_WHITE_QUEENS] |
+							  board[IDX_WHITE_KING];
+
+
+	board[IDX_BLACK_PIECES] = board[IDX_BLACK_PAWNS] |
+							  board[IDX_BLACK_ROOKS] |
+							  board[IDX_BLACK_KNIGHTS] |
+							  board[IDX_BLACK_BISHOPS] |
+							  board[IDX_BLACK_QUEENS] |
+							  board[IDX_BLACK_KING];
+
+	board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES]|board[IDX_BLACK_PIECES];
+
+	board[IDX_MOVE_NUM] = nibbleBinary[24];
+
+	unsigned long *multi = (unsigned long *) &nibbleBinary[25];
+	board[IDX_MULTIPLIER] = *multi;
+
+	board[IDX_TURN] = (nibbleBinary[24] % 2) == 0 ? WHITE_MASK : BLACK_MASK;
+
+
+
 }
 
 

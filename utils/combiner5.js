@@ -15,37 +15,42 @@ try {
 	fs.unlinkSync("combined.nbin.out");
 }
 catch( w ){}
-
-let numBoardsToRead = 200000;
+let startTime = new Date();
+// use : split -b66000000 
+let numBoardsToRead = 2000000;
 let boardSize = 33;
 let readBuff = Buffer.alloc( numBoardsToRead * boardSize );
 let writeBuffer = Buffer.alloc( numBoardsToRead * boardSize );
 let totalBoardsWrittenToMap = 0;
 
 
-let map = {};
+
 
 let fileNames = fs.readdirSync(".").filter( f => f.endsWith(".nbin") );
 
 fileNames.forEach( reduceSingleFile );
 
-
+/*
 while( fileNames.length > 0 ){
+	let map = {};
+
 	loadFileAsMap( fileNames.shift() , map );
 
 	let numKeys =  Object.keys(map).length;
 	console.log( "Keys in map : ", numKeys );
 
 	for( let i=0;i<fileNames.length;i++){
-	//for( let i=0;i<4;i++){
 		reduceFile( fileNames[i], map );
 	}
 	console.log( "Done scanning files. Writing map to tile");
 	appendMapToFile( "combined.nbin.out", map );
-	map = {};
+	
 }
+*/
 
 console.log( "totalBoardsWrittenToMap :",totalBoardsWrittenToMap);
+let endTime = new Date();
+console.log( "Spent " + ((endTime.getTime() - startTime.getTime())/1000) + " seconds" );
 
 function writeMapToFile( fileName, map ){
 	let numBoards =  Object.keys(map).length;
@@ -53,17 +58,7 @@ function writeMapToFile( fileName, map ){
 
 	let i = 0;
 	Object.keys(map).forEach( k => {
-		let key = BigInt( k );
-		let k2 = key & 0xFFFFFFFFFFFFFFFFn;
-		key >>= 64n;
-		let k1 = key & 0xFFFFFFFFFFFFFFFFn;
-		key >>= 64n;
-		let k0 = key & 0xFFFFFFFFFFFFFFFFn;
-		key >>= 64n;
-		writeBuffer.writeBigUInt64LE( k0, 0 + i*boardSize);
-		writeBuffer.writeBigUInt64LE( k1, 8 + i*boardSize);
-		writeBuffer.writeBigUInt64LE( k2, 16 + i*boardSize);
-		writeBuffer.writeUInt8( 5, 24 + i*boardSize);
+		fillBufferFromKey( writeBuffer, k, i*boardSize );
 		writeBuffer.writeBigUInt64LE( map[k], 25 + i*boardSize);
 		i++;
 	});
@@ -71,7 +66,7 @@ function writeMapToFile( fileName, map ){
 	let mapFile = fs.openSync( fileName ,"w" );
 	fs.writeSync( mapFile, writeBuffer, 0, i*33, 0 );
 	fs.closeSync( mapFile );
-
+	
 }
 
 function appendMapToFile( fileName, map ){
@@ -80,17 +75,7 @@ function appendMapToFile( fileName, map ){
 
 	let i = 0;
 	Object.keys(map).forEach( k => {
-		let key = BigInt( k );
-		let k2 = key & 0xFFFFFFFFFFFFFFFFn;
-		key >>= 64n;
-		let k1 = key & 0xFFFFFFFFFFFFFFFFn;
-		key >>= 64n;
-		let k0 = key & 0xFFFFFFFFFFFFFFFFn;
-		key >>= 64n;
-		writeBuffer.writeBigUInt64LE( k0, 0 + i*boardSize);
-		writeBuffer.writeBigUInt64LE( k1, 8 + i*boardSize);
-		writeBuffer.writeBigUInt64LE( k2, 16 + i*boardSize);
-		writeBuffer.writeUInt8( 6, 24 + i*boardSize);
+		fillBufferFromKey( writeBuffer, k, i*boardSize )
 		writeBuffer.writeBigUInt64LE( map[k], 25 + i*boardSize);
 		i++;
 	});
@@ -103,33 +88,51 @@ function appendMapToFile( fileName, map ){
 
 }
 
+function makeKey( buff ){
+	let key = buff.readBigUInt64LE(0);
+	key <<= 64n;
+	key |= buff.readBigUInt64LE(8);
+	key <<= 64n;
+	key |= buff.readBigUInt64LE(16);
+	key <<= 8n;
+	key |= BigInt( buff.readUInt8(24) );
+	return key;
+}
 
+function fillBufferFromKey( buffer, k, offSet){
+	let key = BigInt( k );
+
+	let moveNum = key & 0xFFn;
+	key >>= 8n;
+	
+	let k2 = key & 0xFFFFFFFFFFFFFFFFn;
+	key >>= 64n;
+	let k1 = key & 0xFFFFFFFFFFFFFFFFn;
+	key >>= 64n;
+	let k0 = key & 0xFFFFFFFFFFFFFFFFn;
+
+	buffer.writeBigUInt64LE( k0, 0 + offSet);
+	buffer.writeBigUInt64LE( k1, 8 + offSet);
+	buffer.writeBigUInt64LE( k2, 16 + offSet);
+	buffer.writeUInt8( Number(moveNum), 24 + offSet);
+}
+
+// Assumes that the file has unique boards
 function loadFileAsMap( fileName, theMap ){
 	console.log( "Loading map from " + fileName );
 	let file = fs.openSync( fileName, "r" );
 
 	let numRead = fs.readSync( file, readBuff, 0, numBoardsToRead*boardSize, 0 );
-	let total = 0;
-	let unique = 0;
 	for( let i=0;i<numRead/33;i++){
 		total++;
 		let board = readBuff.slice(i*33,(i+1)*33);
-		let key = (board.readBigUInt64LE(0) << 128n)| (board.readBigUInt64LE(8) << 64n) | board.readBigUInt64LE(16);
-		// key <<= 8n;
-
+		let key = makeKey(board);
 		let mul = board.readBigUInt64LE(25);
-
 		if( mul === 0n ){
 			continue;
 		}
-
-		if( theMap[key] === undefined ) {
-			theMap[key] = mul;
-			unique++;
-		}
-		else {
-			theMap[key] += mul;
-		}
+		theMap[key] = mul;
+		unique++;
 	}
 	//console.log( "Mapped " + unique + " unique, in " + total + " total.");
 	fs.closeSync( file );
@@ -144,16 +147,17 @@ function reduceFile( fileName, theMap ){
 	let numRead = fs.readSync( file, readBuff, 0, numBoardsToRead*boardSize, 0 );
 	for( let i=0;i<numRead/33;i++){
 
-		let board = readBuff.slice(i*33,(i+1)*33);
-		let key = (board.readBigUInt64LE(0) << 128n)| (board.readBigUInt64LE(8) << 64n) | board.readBigUInt64LE(16);
+		let board = readBuff.slice(i*boardSize,(i+1)*boardSize);
+		let key = makeKey( board );
 		let mul = board.readBigUInt64LE(25);
+
 		if( mul === 0n ){
 			continue;
 		}
 		if( theMap[key] === undefined ) {
 			// write board to buff to keep
-			board.copy( writeBuffer, writePos, 0, 33 );
-			writePos += 33;
+			board.copy( writeBuffer, writePos, 0, boardSize );
+			writePos += boardSize;
 		}
 		else {
 			theMap[key] += mul;
@@ -165,8 +169,8 @@ function reduceFile( fileName, theMap ){
 	fs.writeSync( writeFile, writeBuffer, 0, writePos, 0 );
 	fs.closeSync( writeFile );
 
-
-}
+	
+}	
 
 
 function reduceSingleFile( fileName ){
@@ -175,30 +179,25 @@ function reduceSingleFile( fileName ){
 
 	let numRead = fs.readSync( file, readBuff, 0, numBoardsToRead*boardSize, 0 );
 	let theMap = {};
-	let total = 0;
-	let unique = 0;
-	for( let i=0;i<numRead/33;i++){
-		total++;
-		let board = readBuff.slice(i*33,(i+1)*33);
-		let key = (board.readBigUInt64LE(0) << 128n)| (board.readBigUInt64LE(8) << 64n) | board.readBigUInt64LE(16);
-		// key <<= 8n;
 
+	for( let i=0;i<numRead/boardSize;i++){
+		let board = readBuff.slice(i*boardSize,(i+1)*boardSize);
+		let key = makeKey( board );
 		let mul = board.readBigUInt64LE(25);
-
 		if( mul === 0n ){
 			continue;
 		}
 
 		if( theMap[key] === undefined ) {
 			theMap[key] = mul;
-			unique++;
+			
 		}
 		else {
 			theMap[key] += mul;
 		}
 	}
-	//console.log( "Mapped " + unique + " unique, in " + total + " total.");
 	fs.closeSync( file );
 
 	writeMapToFile( fileName, theMap );
+	theMap = {};
 }

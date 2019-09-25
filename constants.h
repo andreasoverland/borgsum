@@ -107,9 +107,10 @@ const int NIBBLE_BLACK_QUEEN = 12;
 const int NIBBLE_BLACK_KING = 13;
 const int NIBBLE_BLACK_ROOK_CAN_NOT_CASTLE = 14;
 
-const int NIBBLE_EP_POSITION = 15;
+const int NIBBLE_EP_PAWN = 15;
 
 const int NIBBLE_BINARY_BYTE_SIZE = 33;
+
 
 
 const int A1 = 7;
