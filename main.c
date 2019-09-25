@@ -209,16 +209,16 @@ int main(int argc, char **argv) {
                       w KQkq -";
 */
 	/*
-    char *initialBoard = "\
-                      . . . . k . . .\
-                      . . . . . . . .\
-                      . . . . . . . .\
-                      . . . . . . . .\
-                      . . P p . . . .\
-                      . . . . . . . .\
-                      . . . . . . . .\
-                      . . . . . . K .\
-	                  b - c3";
+	char *initialBoard = "\
+					  . . . . k . . .\
+					  . . . . . . . .\
+					  . . . . . . . .\
+					  . . . . . . . .\
+					  . . P p . . . .\
+					  . . . . . . . .\
+					  . . . . . . . .\
+					  . . . . . . K .\
+					  b - c3";
 	*/
 
 
@@ -237,7 +237,8 @@ int main(int argc, char **argv) {
 			fflush(stdout);
 			sleep(60);
 			return 0;
-		} else if (strcmp(argv[1], "-h") == 0) {
+		}
+		else if (strcmp(argv[1], "-h") == 0) {
 			printf("** Borgsum Chess Engine (fast, but stupid version) **\r\n");
 			printf("Usage:\r\n");
 			printf("chessengine [arguments]\r\n");
@@ -316,15 +317,20 @@ int main(int argc, char **argv) {
 			a++;
 			if (strcmp(argv[a], "fen") == 0) {
 				LOG_TYPE = LOG_TYPE_FEN;
-			} else if (strcmp(argv[a], "diagram") == 0) {
+			}
+			else if (strcmp(argv[a], "diagram") == 0) {
 				LOG_TYPE = LOG_TYPE_DIAGRAM;
-			} else if (strcmp(argv[a], "cfen") == 0) {
+			}
+			else if (strcmp(argv[a], "cfen") == 0) {
 				LOG_TYPE = LOG_TYPE_CFEN;
-			} else if (strcmp(argv[a], "binary") == 0) {
+			}
+			else if (strcmp(argv[a], "binary") == 0) {
 				LOG_TYPE = LOG_TYPE_BINARY;
-			} else if (strcmp(argv[a], "cbin") == 0) {
+			}
+			else if (strcmp(argv[a], "cbin") == 0) {
 				LOG_TYPE = LOG_TYPE_COMP_BINARY;
-			} else if (strcmp(argv[a], "nbin") == 0) {
+			}
+			else if (strcmp(argv[a], "nbin") == 0) {
 				LOG_TYPE = LOG_TYPE_NIBBLE_BINARY;
 			}
 
@@ -487,15 +493,18 @@ void dig(unsigned long board[]) {
 				char line[120];
 				sprintDiagram(line, board);
 				fputs(line, outFile);
-			} else {
+			}
+			else {
 				printDiagram(board);
 			}
 		}
-	} else if (LOG_TYPE == LOG_TYPE_CFEN) {
+	}
+	else if (LOG_TYPE == LOG_TYPE_CFEN) {
 		if (board[IDX_MOVE_NUM] == MAX_LEVEL) {
 			compressBitBoard(board);
 		}
-	} else if (outFile != NULL && board[IDX_MOVE_NUM] == MAX_LEVEL) {
+	}
+	else if (outFile != NULL && board[IDX_MOVE_NUM] == MAX_LEVEL) {
 		if (LOG_TYPE == LOG_TYPE_BINARY) {
 			unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
 			bitBoardToBinary(board, binary);
@@ -519,7 +528,8 @@ void dig(unsigned long board[]) {
 					matesOutFileBuffOffset = 0;
 				}
 			}
-		} else if (LOG_TYPE == LOG_TYPE_COMP_BINARY) {
+		}
+		else if (LOG_TYPE == LOG_TYPE_COMP_BINARY) {
 			unsigned char binary[COMP_BINARY_BYTE_SIZE];
 			bitBoardToCompactBinary(board, binary);
 
@@ -542,7 +552,8 @@ void dig(unsigned long board[]) {
 					matesOutFileBuffOffset = 0;
 				}
 			}
-		} else if (LOG_TYPE == LOG_TYPE_NIBBLE_BINARY) {
+		}
+		else if (LOG_TYPE == LOG_TYPE_NIBBLE_BINARY) {
 			unsigned char binary[NIBBLE_BINARY_BYTE_SIZE];
 			bitBoardToNibbleBinary(board, binary);
 
@@ -587,7 +598,8 @@ int findAllPossibleMoves2(unsigned long originalBoard[]) {
 		numMovesFound += moveWhiteKnights(originalBoard);
 		numMovesFound += moveWhiteKing(originalBoard);
 
-	} else {
+	}
+	else {
 
 		numMovesFound += moveBlackPawns(originalBoard);
 		numMovesFound += moveBlackRooksOrQueens(originalBoard, IDX_BLACK_QUEENS);
@@ -831,7 +843,8 @@ int moveWhitePawns(unsigned long b[]) {
 				move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
 				numPawnMoves += 4;
 				makeWhiteBitPromos(move, moveToMap);
-			} else {
+			}
+			else {
 				calculateBlackKingCheckStatus2(move, moveToMap);
 				numPawnMoves++;
 				dig(move);
@@ -896,7 +909,8 @@ int moveWhitePawns(unsigned long b[]) {
 						move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO | MASK_LAST_MOVE_WAS_CAPTURE;
 						numPawnMoves += 4;
 						makeWhiteBitPromos(move, moveToMap);
-					} else {
+					}
+					else {
 						calculateBlackKingCheckStatus2(move, moveToMap);
 						numPawnMoves++;
 						dig(move);
@@ -993,7 +1007,8 @@ int moveBlackPawns(unsigned long b[]) {
 				numPawnMoves += 4;
 				move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO;
 				makeBlackBitPromos(move, moveToMap);
-			} else {
+			}
+			else {
 				calculateWhiteKingCheckStatus2(move, moveToMap);
 				numPawnMoves++;
 				dig(move);
@@ -1064,7 +1079,8 @@ int moveBlackPawns(unsigned long b[]) {
 						move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_PROMO | MASK_LAST_MOVE_WAS_CAPTURE;
 						numPawnMoves += 4;
 						makeBlackBitPromos(move, moveToMap);
-					} else {
+					}
+					else {
 						calculateWhiteKingCheckStatus2(move, moveToMap);
 						numPawnMoves++;
 						dig(move);
@@ -2233,7 +2249,8 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 
 		if (__builtin_popcountll(test) == 1) {
 			threat |= allPieces & QB_ATTACK_MAPS[idx];
-		} else {
+		}
+		else {
 
 			unsigned long allPiecesExceptQB = allPieces & ~qb;
 
@@ -2247,13 +2264,15 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_2[idx]) == 1) {
 					threat |= allPieces & QB_ATTACK_MAPS_2[idx];
-				} else {
+				}
+				else {
 					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 					int test = __builtin_ctzll(qb & QB_ATTACK_MAPS_2[idx]);
 					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
 					if ((allPieces & QB_ATTACK_MAPS_2[idx]) == (qb & QB_ATTACK_MAPS_2[idx])) {
 						threat |= 1L << test;
-					} else {
+					}
+					else {
 						int apnq = __builtin_ctzll(allPiecesExceptQB & QB_ATTACK_MAPS_2[idx]);
 						if (test < apnq) {
 							threat |= 1L << test;
@@ -2268,13 +2287,15 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_3[idx]) == 1) {
 					threat |= allPieces & QB_ATTACK_MAPS_3[idx];
-				} else {
+				}
+				else {
 					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 					int test = __builtin_ctzll(qb & QB_ATTACK_MAPS_3[idx]);
 					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
 					if ((allPieces & QB_ATTACK_MAPS_3[idx]) == (qb & QB_ATTACK_MAPS_3[idx])) {
 						threat |= 1L << test;
-					} else {
+					}
+					else {
 						int apnq = __builtin_ctzll(allPiecesExceptQB & QB_ATTACK_MAPS_3[idx]);
 						if (test < apnq) {
 							threat |= 1L << test;
@@ -2290,12 +2311,14 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_1[idx]) == 1) {
 					threat |= qb & QB_ATTACK_MAPS_1[idx];
-				} else {
+				}
+				else {
 					int test = __builtin_clzll(qb & QB_ATTACK_MAPS_1[idx]);
 
 					if ((allPieces & QB_ATTACK_MAPS_1[idx]) == (qb & QB_ATTACK_MAPS_1[idx])) {
 						threat |= 1L << (63 - test);
-					} else {
+					}
+					else {
 						// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 						int apnq = __builtin_clzll(allPiecesExceptQB & QB_ATTACK_MAPS_1[idx]);
 						if (test < apnq) {
@@ -2309,7 +2332,8 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_4[idx]) == 1) {
 					threat |= allPieces & QB_ATTACK_MAPS_4[idx];
-				} else {
+				}
+				else {
 					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 					int apnq = __builtin_clzll(allPiecesExceptQB & QB_ATTACK_MAPS_4[idx]);
 					int test = __builtin_clzll(qb & QB_ATTACK_MAPS_4[idx]);
@@ -2334,7 +2358,8 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 		unsigned long test = allPieces & QR_ATTACK_MAPS[idx];
 		if (__builtin_popcountll(test) == 1) {
 			threat |= test;
-		} else {
+		}
+		else {
 			// quadrant testing
 			// QR_ATTACK_MAPS_1[] = right
 			// QR_ATTACK_MAPS_2[] = down
@@ -2347,10 +2372,12 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 				if (__builtin_popcountll(qr & QR_ATTACK_MAPS_1[idx]) == 1 &&
 					__builtin_popcountll(allPieces & QR_ATTACK_MAPS_1[idx]) == 1) {
 					threat |= qr & QR_ATTACK_MAPS_1[idx];
-				} else if (__builtin_popcountll(qr & QR_ATTACK_MAPS_2[idx]) == 1 &&
-						   __builtin_popcountll(allPieces & QR_ATTACK_MAPS_2[idx]) == 1) {
+				}
+				else if (__builtin_popcountll(qr & QR_ATTACK_MAPS_2[idx]) == 1 &&
+						 __builtin_popcountll(allPieces & QR_ATTACK_MAPS_2[idx]) == 1) {
 					threat |= qr & QR_ATTACK_MAPS_2[idx];
-				} else {
+				}
+				else {
 
 					if ((qr & QR_ATTACK_MAPS_2[idx]) > ((QR_ATTACK_MAPS_2[idx] & allPiecesExceptQR))) {
 						long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_2[idx])));
@@ -2398,7 +2425,8 @@ unsigned long calculateBlackKingCheckStatus2(unsigned long board[], unsigned lon
 			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DISCOVERED;
 			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DOUBLE;
 		}
-	} else {
+	}
+	else {
 		board[IDX_CHECK_STATUS] = 0;
 
 	}
@@ -2434,7 +2462,8 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 
 		if (__builtin_popcountll(test) == 1) {
 			threat |= allPieces & QB_ATTACK_MAPS[idx];
-		} else {
+		}
+		else {
 
 			unsigned long allPiecesExceptQB = allPieces & ~qb;
 
@@ -2448,13 +2477,15 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_2[idx]) == 1) {
 					threat |= allPieces & QB_ATTACK_MAPS_2[idx];
-				} else {
+				}
+				else {
 					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 					int test = __builtin_ctzll(qb & QB_ATTACK_MAPS_2[idx]);
 					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
 					if ((allPieces & QB_ATTACK_MAPS_2[idx]) == (qb & QB_ATTACK_MAPS_2[idx])) {
 						threat |= 1L << test;
-					} else {
+					}
+					else {
 						int apnq = __builtin_ctzll(allPiecesExceptQB & QB_ATTACK_MAPS_2[idx]);
 						if (test < apnq) {
 							threat |= 1L << test;
@@ -2469,13 +2500,15 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_3[idx]) == 1) {
 					threat |= allPieces & QB_ATTACK_MAPS_3[idx];
-				} else {
+				}
+				else {
 					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 					int test = __builtin_ctzll(qb & QB_ATTACK_MAPS_3[idx]);
 					// hvis de eneste brikkene på linka er Q eller B, ta den første som threat.
 					if ((allPieces & QB_ATTACK_MAPS_3[idx]) == (qb & QB_ATTACK_MAPS_3[idx])) {
 						threat |= 1L << test;
-					} else {
+					}
+					else {
 						int apnq = __builtin_ctzll(allPiecesExceptQB & QB_ATTACK_MAPS_3[idx]);
 						if (test < apnq) {
 							threat |= 1L << test;
@@ -2491,12 +2524,14 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 				/// Det ligger minst en Q eller B i den vektoren. Sjekk om den ligger alene.
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_1[idx]) == 1) {
 					threat |= qb & QB_ATTACK_MAPS_1[idx];
-				} else {
+				}
+				else {
 					int test = __builtin_clzll(qb & QB_ATTACK_MAPS_1[idx]);
 
 					if ((allPieces & QB_ATTACK_MAPS_1[idx]) == (qb & QB_ATTACK_MAPS_1[idx])) {
 						threat |= 1L << (63 - test);
-					} else {
+					}
+					else {
 						// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 						int apnq = __builtin_clzll(allPiecesExceptQB & QB_ATTACK_MAPS_1[idx]);
 						if (test < apnq) {
@@ -2511,7 +2546,8 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 				if (__builtin_popcountll(allPieces & QB_ATTACK_MAPS_4[idx]) == 1) {
 					threat |= allPieces & QB_ATTACK_MAPS_4[idx];
 
-				} else {
+				}
+				else {
 					// det ligger fler enn en brikke på QB_ATTACK_MAPS_1, sjekk om den nærmeste brikken er en Q eller B
 					int apnq = __builtin_clzll(allPiecesExceptQB & QB_ATTACK_MAPS_4[idx]);
 					int test = __builtin_clzll(qb & QB_ATTACK_MAPS_4[idx]);
@@ -2536,7 +2572,8 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 		unsigned long test = allPieces & QR_ATTACK_MAPS[idx];
 		if (__builtin_popcountll(test) == 1) {
 			threat |= test;
-		} else {
+		}
+		else {
 			// quadrant testing
 			// QR_ATTACK_MAPS_1[] = right
 			// QR_ATTACK_MAPS_2[] = down
@@ -2547,10 +2584,12 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 			if (__builtin_popcountll(qr & QR_ATTACK_MAPS_1[idx]) == 1 &&
 				__builtin_popcountll(allPieces & QR_ATTACK_MAPS_1[idx]) == 1) {
 				threat |= qr & QR_ATTACK_MAPS_1[idx];
-			} else if (__builtin_popcountll(qr & QR_ATTACK_MAPS_2[idx]) == 1 &&
-					   __builtin_popcountll(allPieces & QR_ATTACK_MAPS_2[idx]) == 1) {
+			}
+			else if (__builtin_popcountll(qr & QR_ATTACK_MAPS_2[idx]) == 1 &&
+					 __builtin_popcountll(allPieces & QR_ATTACK_MAPS_2[idx]) == 1) {
 				threat |= qr & QR_ATTACK_MAPS_2[idx];
-			} else {
+			}
+			else {
 
 				if ((qr & QR_ATTACK_MAPS_2[idx]) > ((QR_ATTACK_MAPS_2[idx] & allPiecesExceptQR))) {
 					long testThreat = 1L << (63 - __builtin_clzll((qr & QR_ATTACK_MAPS_2[idx])));
@@ -2596,7 +2635,8 @@ unsigned long calculateWhiteKingCheckStatus2(unsigned long board[], unsigned lon
 			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DISCOVERED;
 			board[IDX_CHECK_STATUS] |= MASK_CHECK_TYPE_DOUBLE;
 		}
-	} else {
+	}
+	else {
 		board[IDX_CHECK_STATUS] = 0;
 	}
 
@@ -2722,7 +2762,8 @@ void sprintDiagram(char *target, unsigned long board[]) {
 	int moveCursor = 0;
 	if (board[IDX_CASTLING] == 0) {
 		castling[moveCursor++] = '-';
-	} else {
+	}
+	else {
 		if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) == MASK_CASTLING_WHITE_KING_SIDE) {
 			castling[moveCursor++] = 'K';
 		}
@@ -2760,10 +2801,10 @@ void printDiagram(unsigned long board[]) {
 	char str[200];
 	sprintDiagram(str, board);
 	/*if( strcmp( str, "\"rnbqkbnr pppppppp ........ ........ ........ ......P. PPPPPP.P RNBQKBNR b KQkq - 5\"") == 0 ){
-        printf("# possile diff:\n");
-        printf("# %s\r\n# ",str);
-        compressBitBoard(board);
-    }*/
+		printf("# possile diff:\n");
+		printf("# %s\r\n# ",str);
+		compressBitBoard(board);
+	}*/
 
 	printf("%% %s\n", str);
 
@@ -2971,7 +3012,8 @@ void binaryToBitBoard(unsigned long binary[], unsigned long board[]) {
 
 	if (binary[BINARY_IDX_FLAGS] & BINARY_WHITES_TURN) {
 		board[IDX_TURN] = WHITE_MASK;
-	} else {
+	}
+	else {
 		board[IDX_TURN] = BLACK_MASK;
 	}
 
@@ -3053,10 +3095,10 @@ void bitBoardToCompactBinary(unsigned long board[], unsigned char compactBinary[
 	unsigned long castling = board[IDX_CASTLING];
 	unsigned long castlingRooksMap = 0;
 
-	castlingRooksMap = (MASK_CASTLING_BLACK_KING_SIDE & castling) == MASK_CASTLING_BLACK_KING_SIDE ? H8 : 0;
-	castlingRooksMap |= (MASK_CASTLING_BLACK_QUEEN_SIDE & castling) == MASK_CASTLING_BLACK_QUEEN_SIDE ? A8 : 0;
-	castlingRooksMap |= (MASK_CASTLING_WHITE_KING_SIDE & castling) == MASK_CASTLING_WHITE_KING_SIDE ? H1 : 0;
-	castlingRooksMap |= (MASK_CASTLING_WHITE_QUEEN_SIDE & castling) == MASK_CASTLING_WHITE_QUEEN_SIDE ? A1 : 0;
+	castlingRooksMap = (MASK_CASTLING_BLACK_KING_SIDE & castling) == MASK_CASTLING_BLACK_KING_SIDE ? H8_MASK : 0;
+	castlingRooksMap |= (MASK_CASTLING_BLACK_QUEEN_SIDE & castling) == MASK_CASTLING_BLACK_QUEEN_SIDE ? A8_MASK : 0;
+	castlingRooksMap |= (MASK_CASTLING_WHITE_KING_SIDE & castling) == MASK_CASTLING_WHITE_KING_SIDE ? H1_MASK : 0;
+	castlingRooksMap |= (MASK_CASTLING_WHITE_QUEEN_SIDE & castling) == MASK_CASTLING_WHITE_QUEEN_SIDE ? A1_MASK : 0;
 
 	unsigned long *KNRMap = (unsigned long *) &compactBinary[8];
 	unsigned long *NQBRcMap = (unsigned long *) &compactBinary[16];
@@ -3084,76 +3126,83 @@ void bitBoardToNibbleBinary(unsigned long board[], unsigned char nibbleBinary[])
 	unsigned long castling = board[IDX_CASTLING];
 	unsigned long castlingRooksMap = 0;
 
-	castlingRooksMap =  (MASK_CASTLING_BLACK_KING_SIDE  & castling) == MASK_CASTLING_BLACK_KING_SIDE  ? H8_MASK : 0;
+	castlingRooksMap = (MASK_CASTLING_BLACK_KING_SIDE & castling) == MASK_CASTLING_BLACK_KING_SIDE ? H8_MASK : 0;
 	castlingRooksMap |= (MASK_CASTLING_BLACK_QUEEN_SIDE & castling) == MASK_CASTLING_BLACK_QUEEN_SIDE ? A8_MASK : 0;
-	castlingRooksMap |= (MASK_CASTLING_WHITE_KING_SIDE  & castling) == MASK_CASTLING_WHITE_KING_SIDE  ? H1_MASK : 0;
+	castlingRooksMap |= (MASK_CASTLING_WHITE_KING_SIDE & castling) == MASK_CASTLING_WHITE_KING_SIDE ? H1_MASK : 0;
 	castlingRooksMap |= (MASK_CASTLING_WHITE_QUEEN_SIDE & castling) == MASK_CASTLING_WHITE_QUEEN_SIDE ? A1_MASK : 0;
 
 	unsigned long *allPiecesAndEp = (unsigned long *) &nibbleBinary[0];
-	*allPiecesAndEp = board[IDX_ALL_PIECES] |board[IDX_EP_IDX];
-
-
+	*allPiecesAndEp = board[IDX_ALL_PIECES] | board[IDX_EP_IDX];
 
 	int numPieces = 16;
 	int nibbleShift = 0;
 
+	long mask = 1L;
+
 	for (int i = 0; i < 64; i++) {
-		long mask = 1L << i;
+
 		// find which piece
 
 		if ((mask & board[IDX_WHITE_PAWNS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_WHITE_PAWN << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_WHITE_ROOKS]) == mask) {
+		}
+		else if ((mask & board[IDX_WHITE_ROOKS]) == mask) {
 			if ((castlingRooksMap & mask) == mask) {
 				nibbleBinary[numPieces >> 1] |= (NIBBLE_WHITE_ROOK_CAN_CASTLE << nibbleShift);
-			} else {
+			}
+			else {
 				nibbleBinary[numPieces >> 1] |= (NIBBLE_WHITE_ROOK_CAN_NOT_CASTLE << nibbleShift);
 			}
-			numPieces++;
-		} else if ((mask & board[IDX_WHITE_KNIGHTS]) == mask) {
+		}
+		else if ((mask & board[IDX_WHITE_KNIGHTS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_WHITE_KNIGHT << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_WHITE_BISHOPS]) == mask) {
+		}
+		else if ((mask & board[IDX_WHITE_BISHOPS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_WHITE_BISHOP << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_WHITE_QUEENS]) == mask) {
+		}
+		else if ((mask & board[IDX_WHITE_QUEENS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_WHITE_QUEEN << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_WHITE_KING]) == mask) {
+		}
+		else if ((mask & board[IDX_WHITE_KING]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_WHITE_KING << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_BLACK_PAWNS]) == mask) {
+		}
+		else if ((mask & board[IDX_BLACK_PAWNS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_PAWN << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_BLACK_ROOKS]) == mask) {
+		}
+		else if ((mask & board[IDX_BLACK_ROOKS]) == mask) {
 			if ((castlingRooksMap & mask) == mask) {
 				nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_ROOK_CAN_CASTLE << nibbleShift;
-			} else {
+			}
+			else {
 				nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_ROOK_CAN_NOT_CASTLE << nibbleShift;
 			}
-			numPieces++;
-		} else if ((mask & board[IDX_BLACK_KNIGHTS]) == mask) {
+		}
+		else if ((mask & board[IDX_BLACK_KNIGHTS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_KNIGHT << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_BLACK_BISHOPS]) == mask) {
+		}
+		else if ((mask & board[IDX_BLACK_BISHOPS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_BISHOP << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_BLACK_QUEENS]) == mask) {
+		}
+		else if ((mask & board[IDX_BLACK_QUEENS]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_QUEEN << nibbleShift;
-			numPieces++;
-		} else if ((mask & board[IDX_BLACK_KING]) == mask) {
+		}
+		else if ((mask & board[IDX_BLACK_KING]) == mask) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_BLACK_KING << nibbleShift;
-			numPieces++;
-		} else if (mask == board[IDX_EP_IDX]) {
+		}
+		else if (mask == board[IDX_EP_IDX] ) {
 			nibbleBinary[numPieces >> 1] |= NIBBLE_EP_POSITION << nibbleShift;
+
+		}
+
+		if( (*allPiecesAndEp & mask) != 0 ){
 			numPieces++;
 		}
+
 		nibbleShift = (numPieces % 2) << 2;
+		mask <<= 1;
 	}
 
 	nibbleBinary[24] = board[IDX_MOVE_NUM] & 0xff;
-
 
 	unsigned long *multi = (unsigned long *) &nibbleBinary[25];
 	*multi = board[IDX_MULTIPLIER];
@@ -3307,7 +3356,8 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
 	// en passant position if any, else just a -
 	if (cfen[parsePos] == '-') {
 		parsePos++;
-	} else {
+	}
+	else {
 		if (cfen[parsePos] >= 'a' && cfen[parsePos] <= 'h') {
 			int rank = (cfen[parsePos + 1] - 49);
 			if (rank == 2 || rank == 5) {
@@ -3328,7 +3378,8 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
 	if (cfen[parsePos] == 'w') {
 		board[IDX_TURN] = WHITE_MASK;
 		parsePos++;
-	} else if (cfen[parsePos] == 'b') {
+	}
+	else if (cfen[parsePos] == 'b') {
 		board[IDX_TURN] = BLACK_MASK;
 		parsePos++;
 	}
@@ -3362,7 +3413,8 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
 				board[IDX_MULTIPLIER] *= 10;
 				board[IDX_MULTIPLIER] += (cfen[parsePos + 1] - 48);
 				parsePos++;
-			} else {
+			}
+			else {
 				parsingMultiplier = 0;
 			}
 		}
@@ -3499,10 +3551,12 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 		if (arg == 0) {
 			if (strcmp(ptr, "w") == 0) {
 				board[IDX_TURN] = WHITE_MASK;
-			} else if (strcmp(ptr, "b") == 0) {
+			}
+			else if (strcmp(ptr, "b") == 0) {
 				board[IDX_TURN] = BLACK_MASK;
 			}
-		} else if (arg == 1) {
+		}
+		else if (arg == 1) {
 			if (strchr(ptr, 'K') != NULL) {
 				board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
 			}
@@ -3518,7 +3572,8 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 			if (strchr(ptr, 'q') != NULL) {
 				board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
 			}
-		} else if (arg == 2) {
+		}
+		else if (arg == 2) {
 
 			if (ptr[0] >= 'a' && ptr[0] <= 'h') {
 				int rank = (ptr[1] - 49);
@@ -3526,7 +3581,8 @@ void diagramToBitBoard(unsigned long board[], char diagram[]) {
 					board[IDX_EP_IDX] = 1L << (7 - (ptr[0] - 97) + (rank << 3));
 				}
 			}
-		} else if (arg == 3) {
+		}
+		else if (arg == 3) {
 			board[IDX_MOVE_NUM] = atoi(ptr);
 		}
 
@@ -3552,29 +3608,41 @@ void compressBitBoard(unsigned long board[]) {
 
 		if (board[IDX_BLACK_PAWNS] & idx) {
 			currentPiece = 'p';
-		} else if (board[IDX_BLACK_ROOKS] & idx) {
+		}
+		else if (board[IDX_BLACK_ROOKS] & idx) {
 			currentPiece = 'r';
-		} else if (board[IDX_BLACK_KNIGHTS] & idx) {
+		}
+		else if (board[IDX_BLACK_KNIGHTS] & idx) {
 			currentPiece = 'n';
-		} else if (board[IDX_BLACK_BISHOPS] & idx) {
+		}
+		else if (board[IDX_BLACK_BISHOPS] & idx) {
 			currentPiece = 'b';
-		} else if (board[IDX_BLACK_QUEENS] & idx) {
+		}
+		else if (board[IDX_BLACK_QUEENS] & idx) {
 			currentPiece = 'q';
-		} else if (board[IDX_BLACK_KING] & idx) {
+		}
+		else if (board[IDX_BLACK_KING] & idx) {
 			currentPiece = 'k';
-		} else if (board[IDX_WHITE_PAWNS] & idx) {
+		}
+		else if (board[IDX_WHITE_PAWNS] & idx) {
 			currentPiece = 'P';
-		} else if (board[IDX_WHITE_ROOKS] & idx) {
+		}
+		else if (board[IDX_WHITE_ROOKS] & idx) {
 			currentPiece = 'R';
-		} else if (board[IDX_WHITE_KNIGHTS] & idx) {
+		}
+		else if (board[IDX_WHITE_KNIGHTS] & idx) {
 			currentPiece = 'N';
-		} else if (board[IDX_WHITE_BISHOPS] & idx) {
+		}
+		else if (board[IDX_WHITE_BISHOPS] & idx) {
 			currentPiece = 'B';
-		} else if (board[IDX_WHITE_QUEENS] & idx) {
+		}
+		else if (board[IDX_WHITE_QUEENS] & idx) {
 			currentPiece = 'Q';
-		} else if (board[IDX_WHITE_KING] & idx) {
+		}
+		else if (board[IDX_WHITE_KING] & idx) {
 			currentPiece = 'K';
-		} else {
+		}
+		else {
 			currentPiece = 'e';
 		}
 
@@ -3591,7 +3659,8 @@ void compressBitBoard(unsigned long board[]) {
 			compressedBoard[positionCounter] = lastPiece;
 			positionCounter++;
 			lastPiece = currentPiece;
-		} else {
+		}
+		else {
 			repeatCount++;
 			lastPiece = currentPiece;
 		}
@@ -3611,7 +3680,8 @@ void compressBitBoard(unsigned long board[]) {
 
 		compressedBoard[positionCounter] = lastPiece;
 		positionCounter++;
-	} else if (repeatCount == 1) {
+	}
+	else if (repeatCount == 1) {
 		compressedBoard[positionCounter] = lastPiece;
 		positionCounter++;
 	}
@@ -3682,7 +3752,8 @@ void compressBitBoard(unsigned long board[]) {
 			outFileBuffOffset = 0;
 		}
 
-	} else {
+	}
+	else {
 		printf("%s\n", compressedBoard);
 	}
 
