@@ -24,8 +24,6 @@ let writeBuffer = Buffer.alloc( numBoardsToRead * boardSize );
 let totalBoardsWrittenToMap = 0;
 
 
-
-
 let fileNames = fs.readdirSync(".").filter( f => f.endsWith(".nbin") );
 
 fileNames.forEach( reduceSingleFile );
@@ -124,7 +122,6 @@ function loadFileAsMap( fileName, theMap ){
 
 	let numRead = fs.readSync( file, readBuff, 0, numBoardsToRead*boardSize, 0 );
 	for( let i=0;i<numRead/33;i++){
-		total++;
 		let board = readBuff.slice(i*33,(i+1)*33);
 		let key = makeKey(board);
 		let mul = board.readBigUInt64LE(25);
@@ -132,7 +129,6 @@ function loadFileAsMap( fileName, theMap ){
 			continue;
 		}
 		theMap[key] = mul;
-		unique++;
 	}
 	//console.log( "Mapped " + unique + " unique, in " + total + " total.");
 	fs.closeSync( file );
