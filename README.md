@@ -12,6 +12,12 @@ Super Simple Chess Engine
 
 Preparing workbatches
 
+1. ./chessengine -maxlevel 5 -logtype cfen -outfile results/level_5.cfen
+2. sort results/level_5.cfen -o results/level_5_sorted.cfen
+3. uniq -c results/level_5_sorted.cfen > results/level_5_sorted_counted.cfen
+4. cat results/level_5_sorted_counted.cfen | sed $'s/m/\ /g'| awk '{printf("%sm%i\n",$2,$1*$3)};END{}' > results/level_5_sorted_counted_multiplied.cfen
+
+
 tail level_6_mul_9.txt.sorted | awk '{printf("%s %s\n",$2,$1);}END{}'
 
 cat level-5-unique-sorted.txt |awk '{printf("./chessengine -maxlevel 6 -logtype cfen >> results/level_6/level_6_%s.txt\n",$2,$1);}END{}' > run_level_6.sh

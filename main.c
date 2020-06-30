@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
 			printf("Usage:\r\n");
 			printf("chessengine [arguments]\r\n");
 			printf("Arguments:\r\n");
-			printf("No arguments       The chessengine will run once with the Kiwi Pete setup, to a level of 5 deep, then print statistics.\r\n");
+			printf("No arguments       The chessengine will run once with the standard starting position, to a level of 5 deep, then print statistics.\r\n");
 			printf("-diagram \"string\"  A human readable form of the board enclosed in \"'s\r\n");
 			printf("                   Examples:\r\n");
 			printf("                   \"rnbqkbnr .ppppppp ........ p....... ........ .......P PPPPPPP. RNBQKBNR w KQkq a6 2\"\r\n");
@@ -238,8 +238,8 @@ int main(int argc, char **argv) {
 			printf("                   \"r....r.. p..pqpbk bn..pnN. ..pP.... .p..P... ..N..Q.p PPPBBPPP R....R.K w - b5 6\"\r\n");
 			printf("                   Each row, beginning with black pieces on a8, then followed by turn w or b, followed by\r\n");
 			printf("                   castling rights in any combo of KQkq, or - for none, followed by en passant square if the last move\r\n");
-			printf("                   was a pawn being moved to squares.The an passant square is the attackable square behind the moved pawn.\r\n");
-			printf("                    The last number is the move number, or ply really. \r\n");
+			printf("                   was a pawn being moved to squares. The en passant square is the attackable square behind the moved pawn.\r\n");
+			printf("                   The last number is the move number, or ply really. \r\n");
 			printf("                   Spaces are ignored, and dots are treated as empty squares. \r\n");
 			printf("-cfen \"string\"     Uses a Compact FEN as starting position\r\n");
 			printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
@@ -399,7 +399,7 @@ int main(int argc, char **argv) {
 
 	if (outFile != NULL) {
 
-		if (LOG_TYPE == LOG_TYPE_BINARY || LOG_TYPE == LOG_TYPE_COMP_BINARY || LOG_TYPE == LOG_TYPE_NIBBLE_BINARY) {
+		if (LOG_TYPE == LOG_TYPE_BINARY || LOG_TYPE == LOG_TYPE_COMP_BINARY || LOG_TYPE == LOG_TYPE_NIBBLE_BINARY || LOG_TYPE == LOG_TYPE_CFEN ) {
 			if (outFileBuffOffset != 0) {
 				fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
 				outFileBuffOffset = 0;
@@ -3863,7 +3863,7 @@ void compressBitBoard(unsigned long board[]) {
 		positionCounter++;
 	}
 
-	compressedBoard[positionCounter] = '\n';
+    compressedBoard[positionCounter] = '\n';
 	positionCounter++;
 
 	if (outFile != NULL) {
@@ -3878,7 +3878,7 @@ void compressBitBoard(unsigned long board[]) {
 
 	}
 	else {
-		printf("%s\n", compressedBoard);
+		printf("%s", compressedBoard);
 	}
 
 }
