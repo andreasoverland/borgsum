@@ -108,3 +108,6 @@ hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02
 For nbin
 
 hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.nbin
+
+
+### 2020.09.12 - try to rewrite engine to use stack + non-recursive

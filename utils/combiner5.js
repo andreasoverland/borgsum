@@ -102,7 +102,7 @@ function fillBufferFromKey( buffer, k, offSet){
 
 	let moveNum = key & 0xFFn;
 	key >>= 8n;
-	
+
 	let k2 = key & 0xFFFFFFFFFFFFFFFFn;
 	key >>= 64n;
 	let k1 = key & 0xFFFFFFFFFFFFFFFFn;
@@ -193,7 +193,7 @@ function reduceSingleFile( fileName ){
 		}
 	}
 	fs.closeSync( file );
-
-	writeMapToFile( fileName, theMap );
+	console.log( "Boards in map: ", Object.keys( theMap).length() );
+	//writeMapToFile( fileName, theMap );
 	theMap = {};
 }
