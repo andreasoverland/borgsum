@@ -1,7 +1,7 @@
 #!/usr/local/bin/node
 
 // hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.nbin
-// ls -1|xargs -n 1 -I x mv x x.nbin
+// ls -1 |grep -v nbin|xargs -n 1 -I x mv x x.nbin
 
 // 1. Go throug each individual file and combine it
 // 2. Load each file as a map
@@ -28,7 +28,7 @@ let fileNames = fs.readdirSync(".").filter( f => f.endsWith(".nbin") );
 
 fileNames.forEach( reduceSingleFile );
 
-/*
+
 while( fileNames.length > 0 ){
 	let map = {};
 
@@ -38,13 +38,14 @@ while( fileNames.length > 0 ){
 	console.log( "Keys in map : ", numKeys );
 
 	for( let i=0;i<fileNames.length;i++){
+		console.log("Filtering:", fileNames[i]);
 		reduceFile( fileNames[i], map );
 	}
 	console.log( "Done scanning files. Writing map to tile");
 	appendMapToFile( "combined.nbin.out", map );
 	
 }
-*/
+
 
 console.log( "totalBoardsWrittenToMap :",totalBoardsWrittenToMap);
 let endTime = new Date();

@@ -5,3 +5,4 @@ chessengine
 *.o
 test/*.*
 results
+*.cfen
