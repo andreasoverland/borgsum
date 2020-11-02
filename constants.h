@@ -58,7 +58,8 @@ const int IDX_KING_THREATS 	 = 23;
 const int IDX_MULTIPLIER     = 24;
 const int IDX_CURRENT_IDX    = 25;
 const int IDX_PARENT_IDX     = 26;
-const int NUM_BYTES          = 27; // REALLY NUM LONGS. 24 is 10% slower.. ??
+const int IDX_FINISHED		 = 27;
+const int NUM_BYTES          = 28; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
 // BINARY BOARD CONVERSION for file input/output
 
