@@ -63,7 +63,7 @@ int moveBlackPawns();
 int moveWhiteRooksOrQueens(int pieceMapIndex);
 int moveWhiteKnights();
 int moveWhiteBishopsOrQueens(int pieceMapIndex);
-int moveWhiteKing(unsigned long b[]);
+int moveWhiteKing();
 
 int moveBlackRooksOrQueens(int pieceMapIndex);
 int moveBlackKnights();
@@ -603,7 +603,7 @@ int findAllPossibleMoves2() {
 		numMovesFound += moveWhiteRooksOrQueens(IDX_WHITE_ROOKS);
 		numMovesFound += moveWhiteBishopsOrQueens(IDX_WHITE_QUEENS);
 		numMovesFound += moveWhiteBishopsOrQueens(IDX_WHITE_BISHOPS);
-		numMovesFound += moveWhiteKing(originalBoard);*/
+		numMovesFound += moveWhiteKing();
 
 	}
 	else {
@@ -635,6 +635,8 @@ int moveWhiteKing() {
 
 	int numMovesFound = 0;
 
+	int offset = currentBoardIdx * NUM_BYTES * sizeof(unsigned long);
+	unsigned long *b = boards + offset;
 	unsigned long pieceMap = b[IDX_WHITE_KING];
 
 	int idx = __builtin_ctzll(pieceMap);
@@ -657,6 +659,7 @@ int moveWhiteKing() {
 
 		unsigned long moveToMap = 1l << moveToIdx;
 
+		unsigned long *move = boards + (nextBoardIdx * NUM_BYTES*sizeof(unsigned long));
 		makeNewBoard(b, move);
 		makeWhiteMove(move, IDX_WHITE_KING, moveToMap, clearMap, blackPieces);
 		move[IDX_CASTLING] &= ~(MASK_CASTLING_WHITE_KING_SIDE | MASK_CASTLING_WHITE_QUEEN_SIDE);
@@ -664,7 +667,7 @@ int moveWhiteKing() {
 		if (calculateWhiteKingCheckStatus(move) == 0) {
 			calculateBlackKingCheckStatus2(move, moveToMap);
 			numMovesFound++;
-			// TODO: NR dig(move);
+			nextBoardIdx++;
 		}
 
 		moveToMaps >>= moveToShift;
@@ -681,6 +684,8 @@ int moveWhiteKing() {
 				if (!calculateWhiteKingCheckStatus(b)) {
 					b[IDX_WHITE_KING] = pieceMap; // king moves from this square
 					if (!calculateWhiteKingCheckStatus(b)) {
+
+						unsigned long *move = boards + (nextBoardIdx * NUM_BYTES*sizeof(unsigned long));
 						makeNewBoard(b, move);
 						makeWhiteMove(move, IDX_WHITE_KING, C1_MASK, clearMap, blackPieces);
 						makeWhiteMove(move, IDX_WHITE_ROOKS, D1_MASK, ~A1_MASK, blackPieces);
@@ -688,7 +693,7 @@ int moveWhiteKing() {
 						move[IDX_CASTLING] &= ~(MASK_CASTLING_WHITE_QUEEN_SIDE | MASK_CASTLING_WHITE_KING_SIDE);
 						move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_QUEEN_SIDE;
 						numMovesFound++;
-						// TODO: NR dig(move);
+						nextBoardIdx++;
 					}
 				}
 			}
@@ -704,6 +709,7 @@ int moveWhiteKing() {
 				if (!calculateWhiteKingCheckStatus(b)) {
 					b[IDX_WHITE_KING] = pieceMap; // king moves from
 					if (!calculateWhiteKingCheckStatus(b)) {
+						unsigned long *move = boards + (nextBoardIdx * NUM_BYTES*sizeof(unsigned long));
 						makeNewBoard(b, move);
 						makeWhiteMove(move, IDX_WHITE_KING, G1_MASK, clearMap, blackPieces);
 						makeWhiteMove(move, IDX_WHITE_ROOKS, F1_MASK, ~H1_MASK, blackPieces);
@@ -711,7 +717,7 @@ int moveWhiteKing() {
 						move[IDX_CASTLING] &= ~(MASK_CASTLING_WHITE_QUEEN_SIDE | MASK_CASTLING_WHITE_KING_SIDE);
 						move[IDX_LAST_MOVE_WAS] = MASK_LAST_MOVE_WAS_CASTLING_KING_SIDE;
 						numMovesFound++;
-						// TODO: NR dig(move);
+						nextBoardIdx++;
 					}
 				}
 			}
