@@ -473,7 +473,7 @@ unsigned long lastCountedMoveNumCounted = 0;
 
 int findAllPossibleMoves2() {
 
-	int numMovesFound = 0;
+	unsigned long numMovesFound = 0;
 	unsigned long offset = currentBoardIdx*NUM_BYTES*sizeof(unsigned long); // eller << 16 + << 8 + << 4
 	unsigned long *board = boards + offset;
 
