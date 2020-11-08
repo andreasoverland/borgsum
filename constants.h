@@ -113,43 +113,41 @@ const int NIBBLE_EP_PAWN = 15;
 
 const int NIBBLE_BINARY_BYTE_SIZE = 33;
 
+const unsigned long A1 = 7;
+const unsigned long B1 = 6;
+const unsigned long C1 = 5;
+const unsigned long D1 = 4;
+const unsigned long E1 = 3;
+const unsigned long F1 = 2;
+const unsigned long G1 = 1;
+const unsigned long H1 = 0;
 
+const unsigned long A8 = 63;
+const unsigned long B8 = 62;
+const unsigned long C8 = 61;
+const unsigned long D8 = 60;
+const unsigned long E8 = 59;
+const unsigned long F8 = 58;
+const unsigned long G8 = 57;
+const unsigned long H8 = 56;
 
-const int A1 = 7;
-const int B1 = 6;
-const int C1 = 5;
-const int D1 = 4;
-const int E1 = 3;
-const int F1 = 2;
-const int G1 = 1;
-const int H1 = 0;
+const unsigned long A1_MASK = (1ul << A1);
+const unsigned long B1_MASK = (1ul << B1);
+const unsigned long C1_MASK = (1ul << C1);
+const unsigned long D1_MASK = (1ul << D1);
+const unsigned long E1_MASK = (1ul << E1);
+const unsigned long F1_MASK = (1ul << F1);
+const unsigned long G1_MASK = (1ul << G1);
+const unsigned long H1_MASK = (1ul << H1);
 
-const int A8 = 63;
-const int B8 = 62;
-const int C8 = 61;
-const int D8 = 60;
-const int E8 = 59;
-const int F8 = 58;
-const int G8 = 57;
-const int H8 = 56;
-
-const unsigned long A1_MASK = (1L << A1);
-const unsigned long B1_MASK = (1L << B1);
-const unsigned long C1_MASK = (1L << C1);
-const unsigned long D1_MASK = (1L << D1);
-const unsigned long E1_MASK = (1L << E1);
-const unsigned long F1_MASK = (1L << F1);
-const unsigned long G1_MASK = (1L << G1);
-const unsigned long H1_MASK = (1L << H1);
-
-const unsigned long A8_MASK = (1L << A8);
-const unsigned long B8_MASK = (1L << B8);
-const unsigned long C8_MASK = (1L << C8);
-const unsigned long D8_MASK = (1L << D8);
-const unsigned long E8_MASK = (1L << E8);
-const unsigned long F8_MASK = (1L << F8);
-const unsigned long G8_MASK = (1L << G8);
-const unsigned long H8_MASK = (1L << H8);
+const unsigned long A8_MASK = (1ul << A8);
+const unsigned long B8_MASK = (1ul << B8);
+const unsigned long C8_MASK = (1ul << C8);
+const unsigned long D8_MASK = (1ul << D8);
+const unsigned long E8_MASK = (1ul << E8);
+const unsigned long F8_MASK = (1ul << F8);
+const unsigned long G8_MASK = (1ul << G8);
+const unsigned long H8_MASK = (1ul << H8);
 
 // CASTLING MASKS
 

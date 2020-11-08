@@ -1,4 +1,4 @@
-const long KING_ATTACK_MAPS[] = {
+const unsigned long KING_ATTACK_MAPS[] = {
 		0x0000000000000302,
 		0x0000000000000705,
 		0x0000000000000e0a,
@@ -66,7 +66,7 @@ const long KING_ATTACK_MAPS[] = {
 };// KING_ATTACK_MAPS
 
 
-const long WHITE_PAWN_ATTACK_MAPS[] = {
+const unsigned long WHITE_PAWN_ATTACK_MAPS[] = {
 		0x0000000000000200,
 		0x0000000000000500,
 		0x0000000000000a00,
@@ -134,7 +134,7 @@ const long WHITE_PAWN_ATTACK_MAPS[] = {
 };// WHITE_PAWN_ATTACK_MAPS
 
 
-const long BLACK_PAWN_ATTACK_MAPS[] = {
+const unsigned long BLACK_PAWN_ATTACK_MAPS[] = {
 		0x0000000000000000,
 		0x0000000000000000,
 		0x0000000000000000,
@@ -202,7 +202,7 @@ const long BLACK_PAWN_ATTACK_MAPS[] = {
 };// BLACK_PAWN_ATTACK_MAPS
 
 
-const long BLACK_PAWN_REVERSE_ATTACK_MAPS[] = {
+const unsigned long BLACK_PAWN_REVERSE_ATTACK_MAPS[] = {
 		0x0000000000000200,
 		0x0000000000000500,
 		0x0000000000000a00,
@@ -270,7 +270,7 @@ const long BLACK_PAWN_REVERSE_ATTACK_MAPS[] = {
 };// BLACK_PAWN_REVERSE_ATTACK_MAPS
 
 
-const long QR_ATTACK_MAPS[] = {
+const unsigned long QR_ATTACK_MAPS[] = {
 		0x01010101010101fe,
 		0x02020202020202fd,
 		0x04040404040404fb,
@@ -338,7 +338,7 @@ const long QR_ATTACK_MAPS[] = {
 };// QR_ATTACK_MAPS
 
 
-const long QB_ATTACK_MAPS[] = {
+const unsigned long QB_ATTACK_MAPS[] = {
 		0x8040201008040200,
 		0x0080402010080500,
 		0x0000804020110a00,
@@ -406,7 +406,7 @@ const long QB_ATTACK_MAPS[] = {
 };// QB_ATTACK_MAPS
 
 
-const long KNIGHT_ATTACK_MAPS[] = {
+const unsigned long KNIGHT_ATTACK_MAPS[] = {
 		0x0000000000020400,
 		0x0000000000050800,
 		0x00000000000a1100,
@@ -474,7 +474,7 @@ const long KNIGHT_ATTACK_MAPS[] = {
 };// KNIGHT_ATTACK_MAPS
 
 
-const long QB_ATTACK_MAPS_1[] = {
+const unsigned long QB_ATTACK_MAPS_1[] = {
 		0x0000000000000000,
 		0x0000000000000000,
 		0x0000000000000000,
@@ -542,7 +542,7 @@ const long QB_ATTACK_MAPS_1[] = {
 };// QB_ATTACK_MAPS_1
 
 
-const long QB_ATTACK_MAPS_2[] = {
+const unsigned long QB_ATTACK_MAPS_2[] = {
 		0x8040201008040200,
 		0x0080402010080400,
 		0x0000804020100800,
@@ -610,7 +610,7 @@ const long QB_ATTACK_MAPS_2[] = {
 };// QB_ATTACK_MAPS_2
 
 
-const long QB_ATTACK_MAPS_3[] = {
+const unsigned long QB_ATTACK_MAPS_3[] = {
 		0x0000000000000000,
 		0x0000000000000100,
 		0x0000000000010200,
@@ -678,7 +678,7 @@ const long QB_ATTACK_MAPS_3[] = {
 };// QB_ATTACK_MAPS_3
 
 
-const long QB_ATTACK_MAPS_4[] = {
+const unsigned long QB_ATTACK_MAPS_4[] = {
 		0x0000000000000000,
 		0x0000000000000000,
 		0x0000000000000000,
@@ -745,7 +745,7 @@ const long QB_ATTACK_MAPS_4[] = {
 		0x0000000000000000,
 };// QB_ATTACK_MAPS_4
 
-const long QR_ATTACK_MAPS_1[] = {
+const unsigned long QR_ATTACK_MAPS_1[] = {
 		0x0000000000000000,
 		0x0000000000000001,
 		0x0000000000000003,
@@ -813,7 +813,7 @@ const long QR_ATTACK_MAPS_1[] = {
 };// QR_ATTACK_MAPS_1
 
 
-const long QR_ATTACK_MAPS_2[] = {
+const unsigned long QR_ATTACK_MAPS_2[] = {
 		0x0000000000000000,
 		0x0000000000000000,
 		0x0000000000000000,
@@ -881,7 +881,7 @@ const long QR_ATTACK_MAPS_2[] = {
 };// QR_ATTACK_MAPS_2
 
 
-const long QR_ATTACK_MAPS_3[] = {
+const unsigned long QR_ATTACK_MAPS_3[] = {
 		0x0101010101010100,
 		0x0202020202020200,
 		0x0404040404040400,
@@ -949,7 +949,7 @@ const long QR_ATTACK_MAPS_3[] = {
 };// QR_ATTACK_MAPS_3
 
 
-const long QR_ATTACK_MAPS_4[] = {
+const unsigned long QR_ATTACK_MAPS_4[] = {
 		0x00000000000000fe,
 		0x00000000000000fc,
 		0x00000000000000f8,
