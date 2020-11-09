@@ -13,21 +13,21 @@
 
 int main(int argc, char **argv) {
 
-	FILE *inFile = fopen("combined", "+b");
+	FILE *inFile = fopen("combined", "r+b");
 	FILE *outFile = fopen("collated","wb");
 
 	unsigned long total = 0;
 	unsigned char nibbleBinary[NIBBLE_BINARY_BYTE_SIZE];
 	unsigned char clearNibbleBinary[NIBBLE_BINARY_BYTE_SIZE];
-	//memset(clearNibbleBinary,0,sizeof(unsigned char) * NIBBLE_BINARY_BYTE_SIZE);
+	memset(clearNibbleBinary,0,sizeof(unsigned char) * NIBBLE_BINARY_BYTE_SIZE);
 	int read = -1;
 	int pos = 0;
 	//while( read != 0){
 
 	    read = fread(nibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile);  
 		
-	//	fseek( inFile, pos, SEEK_SET );
-	//	fwrite( clearNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile );
+		fseek( inFile, pos, SEEK_SET );
+		fwrite( clearNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile );
 		pos += read;
 
 		unsigned long *k = (unsigned long *) &nibbleBinary[0];
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 		unsigned long multiplier = *multi;
 		
 		printf( "%lu %lu %lu %lu\n", k[0],k[1],k[2],multiplier );
-/*
+
 		unsigned char subNibbleBinary[NIBBLE_BINARY_BYTE_SIZE];
 		int subPos = pos;
 		int subRead = fread(subNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile );
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 
 		total += multiplier;
 		printf( "multi after scan %lu\r", multiplier); 
-*/
+
 	//	fseek( inFile, pos, SEEK_SET );
 
 	///}

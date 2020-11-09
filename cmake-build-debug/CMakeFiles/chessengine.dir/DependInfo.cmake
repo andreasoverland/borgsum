@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/Users/andreasoverland/projects/personal/ChessEngine/borgsum/mainnr.c" "/Users/andreasoverland/projects/personal/ChessEngine/borgsum/cmake-build-debug/CMakeFiles/chessengine.dir/mainnr.c.o"
+  "/Users/andreasoverland/projects/personal/borgsum/mainnr.c" "/Users/andreasoverland/projects/personal/borgsum/cmake-build-debug/CMakeFiles/chessengine.dir/mainnr.c.o"
   )
 set(CMAKE_C_COMPILER_ID "Clang")
 
