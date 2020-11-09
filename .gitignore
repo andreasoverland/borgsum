@@ -10,3 +10,4 @@ results
 *.nbin
 *.nbin.*
 node_modules
+combined
