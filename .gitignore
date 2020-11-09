@@ -6,3 +6,7 @@ chessengine
 test/*.*
 results
 *.cfen
+.DS_Store
+*.nbin
+*.nbin.*
+node_modules
