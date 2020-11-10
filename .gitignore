@@ -11,3 +11,4 @@ results
 *.nbin.*
 node_modules
 combined
+collated

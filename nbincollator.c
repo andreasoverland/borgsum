@@ -16,62 +16,118 @@ int main(int argc, char **argv) {
 	FILE *inFile = fopen("combined", "r+b");
 	FILE *outFile = fopen("collated","wb");
 
+	const int CACHE_MAX = 100000;
 	unsigned long total = 0;
-	unsigned char nibbleBinary[NIBBLE_BINARY_BYTE_SIZE];
+	unsigned char nibbleBinary[NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX];
 	unsigned char clearNibbleBinary[NIBBLE_BINARY_BYTE_SIZE];
+	unsigned char subNibbleBinary[NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX];
 	memset(clearNibbleBinary,0,sizeof(unsigned char) * NIBBLE_BINARY_BYTE_SIZE);
-	int read = -1;
-	int pos = 0;
-	//while( read != 0){
+	unsigned long pos = 0;
+	unsigned long numUniqueBoards = 0;
+	unsigned long zeroBoardsInCache = 0;
+	memset(nibbleBinary,0,sizeof(unsigned char)*NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX);
+	memset(subNibbleBinary,0,sizeof(unsigned char)*NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX);
+	unsigned long read = fread(nibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX, inFile);
+	while( read > 0 ){
+		// Phase 1 - Read 10,000 boards into cache
 
-	    read = fread(nibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile);  
-		
-		fseek( inFile, pos, SEEK_SET );
-		fwrite( clearNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile );
+		int cacheSize = 0;
+
 		pos += read;
+		cacheSize = read/NIBBLE_BINARY_BYTE_SIZE;
 
-		unsigned long *k = (unsigned long *) &nibbleBinary[0];
 
-		if( k[0] == 0 && k[1] == 0 && k[2] == 0){
-	//		continue;	
-		}
-
-		unsigned long *multi = (unsigned long *) &nibbleBinary[25];
-		unsigned char level = nibbleBinary[24];
-		unsigned long multiplier = *multi;
-		
-		printf( "%lu %lu %lu %lu\n", k[0],k[1],k[2],multiplier );
-
-		unsigned char subNibbleBinary[NIBBLE_BINARY_BYTE_SIZE];
-		int subPos = pos;
-		int subRead = fread(subNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile );
-		while( subRead != 0){			
-			unsigned long *subk = (unsigned long *) &subNibbleBinary[0];
-			unsigned long *submulti = (unsigned long *) &subNibbleBinary[25];
-			unsigned long submultiplier = *submulti;
-			if( subk[0] == k[0] && subk[1] == k[1] && subk[2] == k[2] ){
-				multiplier += submultiplier;
-				printf( "%lu %lu %lu %lu\n", subk[0],subk[1],subk[2],submultiplier );
-				fseek(inFile, subPos, SEEK_SET );
-				fwrite( clearNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile );
+		// Phase 1.1 - Make sure no duplicates exist in the cache
+		for( int i=0;i<cacheSize;i++) {
+			unsigned long *k = (unsigned long *) &nibbleBinary[i*NIBBLE_BINARY_BYTE_SIZE];
+			if (k[0] == 0 && k[1] == 0 && k[2] == 0) {
+				// May well be zero after iteration 0
+				continue;
 			}
-			subPos += subRead;
-			subRead = fread(subNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, inFile );
+			for (int ii = 0; ii < i; ii++) {
+				unsigned long *kk = (unsigned long *) &nibbleBinary[ii * NIBBLE_BINARY_BYTE_SIZE];
+				if (k[0] == kk[0] && k[1] == kk[1] && k[2] == kk[2]) {
+					unsigned long *multi = (unsigned long *) &nibbleBinary[25 + i * NIBBLE_BINARY_BYTE_SIZE];
+					unsigned long multiplier = *multi;
+
+					unsigned long *multi2 = (unsigned long *) &nibbleBinary[25 + ii * NIBBLE_BINARY_BYTE_SIZE];
+					unsigned long multiplier2 = *multi2;
+
+					multiplier += multiplier2;
+
+					memset(nibbleBinary + NIBBLE_BINARY_BYTE_SIZE * ii, 0, NIBBLE_BINARY_BYTE_SIZE);
+					break;
+				}
+			}
 		}
-		
-		// set multivalue on board to new multiplier
-		multi[0] = multiplier;
-		fwrite( nibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, outFile );
 
-		total += multiplier;
-		printf( "multi after scan %lu\r", multiplier); 
+		// Now the cache contains unique boards, with correct multipliers
 
-	//	fseek( inFile, pos, SEEK_SET );
 
-	///}
+		// Phase 3 - Scan each line of the file and compare with boards in cache
 
-	printf( "\nnum boards read:%d\n", pos/33 );
 
+		unsigned long subRead = fread(subNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX, inFile );
+		unsigned long subPos = pos;
+		while( subRead > 0) {
+			for (int si = 0; si < subRead / NIBBLE_BINARY_BYTE_SIZE; si++) {
+				unsigned long *subk = (unsigned long *) &subNibbleBinary[si * NIBBLE_BINARY_BYTE_SIZE];
+				unsigned long *submulti = (unsigned long *) &subNibbleBinary[25 + si * NIBBLE_BINARY_BYTE_SIZE];
+				unsigned long submultiplier = *submulti;
+				// gå igjennom alle nibbleBinary-gærningene og sjekk om de er like
+				for (int i = 0; i < cacheSize; i++) {
+					unsigned long *k = (unsigned long *) &nibbleBinary[i * NIBBLE_BINARY_BYTE_SIZE];
+					unsigned long *multi = (unsigned long *) &nibbleBinary[25 + i * NIBBLE_BINARY_BYTE_SIZE];
+					unsigned long multiplier = *multi;
+					if (k[0] == 0) {
+						//printf("strange cached board %lu %lu %lu %lu", k[0], k[1], k[2], multiplier );
+						continue;
+					}
+					if (subk[0] == k[0] && subk[1] == k[1] && subk[2] == k[2]) {
+						multiplier += submultiplier;
+						multi[0] = multiplier;
+
+						// printf("%lu %lu %lu %lu\n", subk[0], subk[1], subk[2], submultiplier);
+						subk[0] = 0;
+						subk[1] = 0;
+						subk[2] = 0;
+						submulti[0] = 0;
+
+					}
+				}
+			}
+			fseek(inFile, subPos, SEEK_SET);
+			fwrite(subNibbleBinary, sizeof(unsigned char), subRead, inFile);
+			subPos+=subRead;
+			fseek(inFile, subPos,SEEK_SET);
+			subRead = fread(subNibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX, inFile );
+
+		}
+
+
+		// Phase 4 - write cache to file
+		for( int i=0;i<cacheSize;i++) {
+			unsigned long *k = (unsigned long *) &nibbleBinary[i*NIBBLE_BINARY_BYTE_SIZE];
+			if( k[0] != 0 && k[1] != 0 && k[2] != 0 ) {
+				fwrite(nibbleBinary+i*NIBBLE_BINARY_BYTE_SIZE, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE, outFile);
+				unsigned long *multi = (unsigned long *) &nibbleBinary[25+i*NIBBLE_BINARY_BYTE_SIZE];
+				unsigned long multiplier = *multi;
+				total += multiplier;
+				numUniqueBoards++;
+			}
+
+		}
+
+
+		fseek( inFile, (int)pos, SEEK_SET );
+		memset(nibbleBinary,0,sizeof(unsigned char)*NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX);
+		read = fread(nibbleBinary, sizeof(unsigned char), NIBBLE_BINARY_BYTE_SIZE*CACHE_MAX, inFile);
+
+	}
+
+	printf("zeroboards in cache: %lu\n", zeroBoardsInCache );
+	printf("num boards read:%lu\n", pos/33 );
+	printf("num unique boards:%lu\n", numUniqueBoards );
 	fclose(inFile);
 	fclose(outFile);
 
