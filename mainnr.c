@@ -737,11 +737,11 @@ int moveWhitePawns() {
 			else {
 				calculateBlackKingCheckStatus2(move, moveToMap);
 				numPawnMoves++;
+                count(move);
+                nextBoardIdx++;
 			}
 
-			count(move);
-			// The board currently on the top of the stack, is the next legal move to be expolored, unless maxleve is hit
-			nextBoardIdx++;
+
 		}
 
 		pawnsThatCanMoveOneForward >>= shift;
@@ -1927,9 +1927,10 @@ void makeWhiteBitPromos(unsigned long *board, unsigned long newPieceMap) {
 	board[IDX_WHITE_PAWNS] &= clearPiece;
 	board[IDX_WHITE_ROOKS] |= newPieceMap;
 	calculateBlackKingCheckStatus2(board, newPieceMap);
-	// TODO: NR dig(board);
+    count(board);
+    nextBoardIdx++;
 
-	board[IDX_WHITE_ROOKS] &= clearPiece;
+    board[IDX_WHITE_ROOKS] &= clearPiece;
 	board[IDX_WHITE_QUEENS] |= newPieceMap;
 	calculateBlackKingCheckStatus2(board, newPieceMap);
 	// TODO: NR dig(board);
