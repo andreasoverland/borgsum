@@ -26,15 +26,7 @@ int MAX_LEVEL = 4;
 // Opa Bjørnar Øverland
 
 // TODO:
-// 1. Log discovery checks, double checks
-//    - make extra function to check for how the move affected the other king, which includes moved piece
-// DONE: log stalemate
-// 2. Implement ^ for moving, instead of &~ and then |. Do it in makeBlack/WhiteMove
-// 3. file input
-// 4. on check on last level only check until the first valid move is found
-// 5. check stalemate counting for with and black maybe bugging for black
-// 6. rewrite diagram, create new for level 6, include multiplier
-
+// nbin-text
 
 void printDiagram(unsigned long *board);
 
