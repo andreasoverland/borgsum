@@ -13,7 +13,7 @@ typedef enum {
 
 int MAX_LEVEL = 4;
 
-#define MAKE_NEW_BOARD_ITER_
+#define MAKE_NEW_BOARD_ITER
 
 // Authors
 // Andreas Øverland
@@ -38,24 +38,37 @@ void count(const unsigned long *board);
 
 // bitboard functions, highly speed sensitive
 void makeNewBoard(const unsigned long *oldBoard, unsigned long *newBoard);
+
 void makeNewBoardIter();
 
 int calculateWhiteKingCheckStatus(const unsigned long *board);
+
 int calculateBlackKingCheckStatus(const unsigned long *board);
 
 unsigned long calculateWhiteKingCheckStatus2(unsigned long *board, unsigned long lastMoveMap);
+
 unsigned long calculateBlackKingCheckStatus2(unsigned long *board, unsigned long lastMoveMap);
 
 int findAllPossibleMoves2();
+
 int moveWhitePawns();
+
 int moveBlackPawns();
+
 int moveWhiteRooksOrQueens(int pieceMapIndex);
+
 int moveWhiteKnights();
+
 int moveWhiteBishopsOrQueens(int pieceMapIndex);
+
 int moveWhiteKing();
+
 int moveBlackRooksOrQueens(int pieceMapIndex);
+
 int moveBlackKnights();
+
 int moveBlackBishopsOrQueens(int pieceMapIndex);
+
 int moveBlackKing();
 
 void makeWhiteMove(unsigned long *move, int pieceMapIndex, unsigned long moveToMap, unsigned long clearMap,
@@ -65,19 +78,30 @@ void makeBlackMove(unsigned long *move, int pieceMapIndex, unsigned long moveToM
 				   unsigned long whitePieces);
 
 void clearBlackPiecesWithClearMap(unsigned long *board, unsigned long clear);
+
 void clearWhitePiecesWithClearMap(unsigned long *board, unsigned long clear);
+
 void makeWhiteBitPromos(unsigned long *board, unsigned long map);
+
 void makeBlackBitPromos(unsigned long *board, unsigned long map);
 
 // util for board printing and conversion.
 void setBitsToChar(char *str, unsigned long bits, char c);
+
 void sprintDiagram(char *target, unsigned long *board);
+
 void printBitBoard(unsigned long *board);
+
 void diagramToBitBoard(unsigned long *board, char diagram[]);
+
 void printLongAsBitBoard(unsigned long bitstream);
+
 void compressBitBoard(unsigned long *board);
 
+void bitBoardToDBFriendlyFormat(const unsigned long *board);
+
 void bitBoardToNibbleBinary(const unsigned long *b, unsigned char nibbleBinary[]);
+
 void nibbleBinaryToBitBoard(unsigned char nibbleBinary[], unsigned long *board);
 
 /*** LEVEL ***/
@@ -103,7 +127,7 @@ unsigned long numDoublePromoChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numDoubleCaptureChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long numDoubleEPChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-unsigned long makeNewBoardInvocations = 0;
+unsigned long makeNewBoardInvocations = 1;
 unsigned long isSquaresThreatenedByColorInvocations = 0;
 unsigned long influenceMapForSquareInvocations = 0;
 unsigned long moveLinearInvocations = 0;
@@ -208,9 +232,11 @@ int main(int argc, char **argv) {
 			printf("                   Spaces are ignored, and dots are treated as empty squares. \r\n");
 			printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
 			printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
-			printf("-logtype TYPE      Either 'nbin' or 'diagram'. Will print out each new board found as 'nibble binary' or 'diagram' format.\r\n");
+			printf("-logtype TYPE      Either 'nbin','diagram' or 'db'. Will print out each new board found as 'nibble binary' or 'diagram' format.\r\n");
 			printf("                   If omitted, only the statistics will be printed at the end of the run, without logging each found board.\r\n");
 			printf("                   The format nbin has a fixed length of 33 bytes, nice for sorting and finding duplicated for later runs with the -infile argument.\r\n");
+			printf("                   DB will print longs for the different maps, including meta data, flags and ply num");
+			printf("-outfile           Filename for log file");
 			printf("SLEEP              The program will sleep for 60 seconds. Useful when running as a distributed client.\r\n");
 
 			printf("\r\n\r\nandreasoverland@gmail.com\r\n\r\n");
@@ -235,9 +261,8 @@ int main(int argc, char **argv) {
 
 		if (strcmp(argv[a], "-outfile") == 0) {
 			a++;
-			outFile = fopen(argv[a], "wb");
-			matesOutFile = fopen("mates.out", "wb");
-
+			outFile = fopen(argv[a], "w");
+			matesOutFile = fopen("mates.out", "w");
 		}
 
 		if (strcmp(argv[a], "-diagram") == 0) {
@@ -262,6 +287,9 @@ int main(int argc, char **argv) {
 			}
 			else if (strcmp(argv[a], "nbin") == 0) {
 				LOG_TYPE = LOG_TYPE_NIBBLE_BINARY;
+			}
+			else if (strcmp(argv[a], "db") == 0) {
+				LOG_TYPE = LOG_TYPE_DB_FRIENDLY;
 			}
 
 		}
@@ -305,7 +333,11 @@ int main(int argc, char **argv) {
 	do {
 		if (boards[currentBoardIdx * NUM_BYTES + IDX_MOVE_NUM] < MAX_LEVEL &&
 			boards[currentBoardIdx * NUM_BYTES + IDX_FINISHED] == 0) {
-			numMovesFound += findAllPossibleMoves2(); // <- changes currentBoardIdx
+			int numMovesFoundNow = findAllPossibleMoves2();
+			if( numMovesFoundNow == 0){
+				boards[currentBoardIdx * NUM_BYTES + IDX_CHECK_STATUS] |= MASK_KING_IS_MATED;
+			}
+			numMovesFound += numMovesFoundNow; // <- changes currentBoardIdx
 		}
 		else {
 			currentBoardIdx--;
@@ -351,9 +383,8 @@ int main(int argc, char **argv) {
 	}
 
 	if (outFile != NULL) {
-
 		if (LOG_TYPE == LOG_TYPE_BINARY || LOG_TYPE == LOG_TYPE_COMP_BINARY || LOG_TYPE == LOG_TYPE_NIBBLE_BINARY ||
-			LOG_TYPE == LOG_TYPE_CFEN) {
+			LOG_TYPE == LOG_TYPE_CFEN || LOG_TYPE == LOG_TYPE_DB_FRIENDLY) {
 			if (outFileBuffOffset != 0) {
 				fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
 				outFileBuffOffset = 0;
@@ -729,8 +760,8 @@ int moveWhitePawns() {
 			else {
 				calculateBlackKingCheckStatus2(move, moveToMap);
 				numPawnMoves++;
-                count(move);
-                nextBoardIdx++;
+				count(move);
+				nextBoardIdx++;
 			}
 
 
@@ -1919,10 +1950,10 @@ void makeWhiteBitPromos(unsigned long *board, unsigned long newPieceMap) {
 	board[IDX_WHITE_PAWNS] &= clearPiece;
 	board[IDX_WHITE_ROOKS] |= newPieceMap;
 	calculateBlackKingCheckStatus2(board, newPieceMap);
-    count(board);
-    nextBoardIdx++;
+	count(board);
+	nextBoardIdx++;
 
-    board[IDX_WHITE_ROOKS] &= clearPiece;
+	board[IDX_WHITE_ROOKS] &= clearPiece;
 	board[IDX_WHITE_QUEENS] |= newPieceMap;
 	calculateBlackKingCheckStatus2(board, newPieceMap);
 	// TODO: NR dig(board);
@@ -1987,9 +2018,9 @@ void makeNewBoardIter() {
 }
 
 void makeNewBoard(const unsigned long *oldBoard, unsigned long *newBoard) {
-
+	makeNewBoardInvocations++;
 	memcpy(newBoard, oldBoard, sizeof(unsigned long) * NUM_BYTES_TO_COPY);
-	newBoard[IDX_MOVE_ID] = makeNewBoardInvocations++;
+	newBoard[IDX_MOVE_ID] = makeNewBoardInvocations;
 	newBoard[IDX_LAST_MOVE_WAS] = 0;
 	newBoard[IDX_EP_IDX] = 0;
 	newBoard[IDX_FINISHED] = 0;
@@ -2815,6 +2846,9 @@ void count(const unsigned long *b) {
 			}
 		}
 	}
+	if (LOG_TYPE == LOG_TYPE_DB_FRIENDLY) {
+		bitBoardToDBFriendlyFormat(b);
+	}
 
 }
 
@@ -3285,7 +3319,8 @@ void diagramToBitBoard(unsigned long *board, char diagram[]) {
 	int len = strlen(diagram);
 
 	memset(board, 0, sizeof(unsigned long) * NUM_BYTES);
-
+	board[IDX_MOVE_ID] = 1;
+	board[IDX_PARENT_MOVE_ID] = 0;
 	board[IDX_CASTLING] = 0;
 	board[IDX_EP_IDX] = 0;
 	board[IDX_TURN] = WHITE_MASK;
@@ -3440,6 +3475,64 @@ void diagramToBitBoard(unsigned long *board, char diagram[]) {
 
 } // diagramToBitBoard
 
+void bitBoardToDBFriendlyFormat(const unsigned long *board) {
+
+	// 16 bits on the middle of the board is still free for flags
+	// må ta bort last_move_was siden det bare er en statistikk mer enn en tilstand som ep, castling og sjakk
+	// #INPROGRESS todo: write binary file for
+	unsigned long moveStatus = board[IDX_LAST_MOVE_WAS] | (board[IDX_CHECK_STATUS] << 8);
+
+	unsigned long castlingFlags = 0;
+	if ((board[IDX_CHECK_STATUS] & A1_MASK & E1_MASK) != 0) {
+		castlingFlags |= 2; // Queen Side White Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & H1_MASK & E1_MASK) != 0) {
+		castlingFlags |= 1; // King Side White Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & A8_MASK & E8_MASK) != 0) {
+		castlingFlags |= 8; // Queen Side Black Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & H8_MASK & E8_MASK) != 0) {
+		castlingFlags |= 4; // King Side Black Castling
+	}
+
+	unsigned long flags = castlingFlags | board[IDX_EP_IDX];
+	char friendly[1000];
+	sprintf(friendly, "%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%d,%lu\n",
+			board[IDX_MOVE_ID],
+			board[IDX_PARENT_MOVE_ID],
+			board[IDX_MOVE_NUM], // ply
+			board[IDX_WHITE_KING] | board[IDX_BLACK_KING],
+			board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS],
+			board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS],
+			board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS],
+			board[IDX_WHITE_ROOKS] | board[IDX_BLACK_ROOKS],
+			board[IDX_WHITE_PAWNS],
+			board[IDX_WHITE_PIECES],
+			board[IDX_ALL_PIECES],
+			castlingFlags,
+			board[IDX_LAST_MOVE_WAS],
+			board[IDX_EP_IDX] != 0 ? __builtin_ctzll(board[IDX_EP_IDX]) : 0,
+			board[IDX_CHECK_STATUS]
+	);
+
+
+	int positionCounter = strlen(friendly);
+
+	if (outFile != NULL) {
+		memcpy(outFileBuff + outFileBuffOffset, friendly, positionCounter);
+		outFileBuffOffset += positionCounter;
+		buffWrites++;
+		if (outFileBuffOffset > 1023 * 1024) {
+			fileWrites++;
+			fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
+			outFileBuffOffset = 0;
+		}
+	}
+	else {
+		printf("friendly: %s\n", friendly);
+	}
+}
 
 void compressBitBoard(unsigned long *board) {
 

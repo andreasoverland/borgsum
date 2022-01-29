@@ -12,3 +12,4 @@ results
 node_modules
 combined
 collated
+cmake-build

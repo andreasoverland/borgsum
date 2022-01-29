@@ -11,44 +11,6 @@ typedef enum {
 	FALSE, TRUE
 } boolean;
 
-struct BOARD {
-
-	unsigned long ALL_PIECES;
-
-	unsigned long WHITE_PAWNS;
-	unsigned long WHITE_ROOKS;
-	unsigned long WHITE_KNIGHTS;
-	unsigned long WHITE_BISHOPS;
-	unsigned long WHITE_QUEEN;
-	unsigned long WHITE_KING;
-	unsigned long WHITE_PIECES;
-
-	unsigned long BLACK_PAWNS;
-	unsigned long BLACK_ROOKS;
-	unsigned long BLACK_KNIGHTS;
-	unsigned long BLACK_BISHOPS;
-	unsigned long BLACK_QUEEN;
-	unsigned long BLACK_KING;
-	unsigned long BLACK_PIECES;
-
-	unsigned long MULTIPLIER;
-
-	// copy above
-	// discard below when copying board
-	unsigned int CASTLING;
-	unsigned int MOVE_NUM;
-	unsigned int TURN;
-	unsigned int EP_IDX;
-	unsigned int CHECK_STATUS;
-	unsigned int LAST_MOVE_WAS;
-	unsigned int KING_THREATS;
-	unsigned int CURRENT_IDX;
-	unsigned int PARENT_IDX;
-	unsigned int FINISHED;
-
-};
-
-typedef struct BOARD Board;
 
 // Authors
 // Andreas Øverland
@@ -134,6 +96,9 @@ void printBitBoard(unsigned long board[]);
 
 void diagramToBitBoard(unsigned long board[], char diagram[]);
 
+void bitBoardToDBFriendlyFormat(const unsigned long *board);
+void bitBoardToDBFriendlyFormat2(const unsigned long *board);
+
 void cfenToBitBoard(unsigned long board[], char cfen[]);
 
 void fenToBitBoard(unsigned long board[], char fen[]);
@@ -205,6 +170,9 @@ int fileWrites = 0;
 
 int main(int argc, char **argv) {
 
+
+	// Max Queens
+	// "k.qrq... rq....Qq ...q.Q.. Q......q ...Q.... .Q....Q. R.q.Q..Q KQR..q.q w"
 
 	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
 
@@ -278,7 +246,7 @@ int main(int argc, char **argv) {
 			printf("-cfen \"string\"     Uses a Compact FEN as starting position\r\n");
 			printf("-maxlevel N        Max recursion level, defaults to 5.\r\n");
 			printf("-workunitid ID     Handy for distributing workunits. Only used when printing the statistics.\r\n");
-			printf("-logtype TYPE      Either nbin, cbin, binary, cfen or diagram. Will print out each new board found as nibble binary, compact binary, raw binary, diagram or compact fen format.\r\n");
+			printf("-logtype TYPE      Either db, nbin, cbin, binary, cfen or diagram. Will print out each new board found as nibble binary, compact binary, raw binary, diagram or compact fen format.\r\n");
 			printf("                   If omitted, only the statistics will be printed at the end of the run.\r\n");
 			printf("SLEEP              The program will sleep for 60 seconds. Useful when running as a distributed client.\r\n");
 
@@ -304,9 +272,7 @@ int main(int argc, char **argv) {
 
 		if (strcmp(argv[a], "-outfile") == 0) {
 			a++;
-			outFile = fopen(argv[a], "wb");
-			matesOutFile = fopen("mates.out", "wb");
-
+			outFile = fopen(argv[a], "w");
 		}
 
 		if (strcmp(argv[a], "-diagram") == 0) {
@@ -353,6 +319,9 @@ int main(int argc, char **argv) {
 			}
 			else if (strcmp(argv[a], "nbin") == 0) {
 				LOG_TYPE = LOG_TYPE_NIBBLE_BINARY;
+			}
+			else if (strcmp(argv[a], "db") == 0) {
+				LOG_TYPE = LOG_TYPE_DB_FRIENDLY;
 			}
 
 		}
@@ -433,7 +402,7 @@ int main(int argc, char **argv) {
 
 	if (outFile != NULL) {
 
-		if (LOG_TYPE == LOG_TYPE_BINARY || LOG_TYPE == LOG_TYPE_COMP_BINARY || LOG_TYPE == LOG_TYPE_NIBBLE_BINARY || LOG_TYPE == LOG_TYPE_CFEN ) {
+		if ( LOG_TYPE == LOG_TYPE_DB_FRIENDLY || LOG_TYPE == LOG_TYPE_BINARY || LOG_TYPE == LOG_TYPE_COMP_BINARY || LOG_TYPE == LOG_TYPE_NIBBLE_BINARY || LOG_TYPE == LOG_TYPE_CFEN ) {
 			if (outFileBuffOffset != 0) {
 				fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
 				outFileBuffOffset = 0;
@@ -527,7 +496,7 @@ void dig(unsigned long board[]) {
 			compressBitBoard(board);
 		}
 	}
-	else if (outFile != NULL && board[IDX_MOVE_NUM] == MAX_LEVEL) {
+	else if (outFile != NULL && board[IDX_MOVE_NUM] <= MAX_LEVEL ) {
 		if (LOG_TYPE == LOG_TYPE_BINARY) {
 			unsigned long binary[BINARY_BOARD_NUM_ELEMENTS];
 			bitBoardToBinary(board, binary);
@@ -599,6 +568,9 @@ void dig(unsigned long board[]) {
 					matesOutFileBuffOffset = 0;
 				}
 			}
+		}
+		else if( LOG_TYPE == LOG_TYPE_DB_FRIENDLY ){
+			bitBoardToDBFriendlyFormat2(board);
 		}
 
 	}
@@ -3165,9 +3137,7 @@ void bitBoardToNibbleBinary(unsigned long board[], unsigned char nibbleBinary[])
 		else {
 			epMask = board[IDX_EP_IDX] >> 8;
 		}
-
 	}
-
 
 	int numPieces = 16;
 	int nibbleShift = 0;
@@ -3236,8 +3206,6 @@ void bitBoardToNibbleBinary(unsigned long board[], unsigned char nibbleBinary[])
 		nibbleShift = (numPieces % 2) << 2;
 		mask <<= 1;
 	}
-
-
 
 	nibbleBinary[24] = board[IDX_MOVE_NUM] & 0xff;
 
@@ -3339,7 +3307,6 @@ void nibbleBinaryToBitBoard(unsigned char nibbleBinary[], unsigned long board[])
 
 		}
 
-
 		mask <<= 1L;
 	}
 
@@ -3349,7 +3316,6 @@ void nibbleBinaryToBitBoard(unsigned char nibbleBinary[], unsigned long board[])
 							  board[IDX_WHITE_BISHOPS] |
 							  board[IDX_WHITE_QUEENS] |
 							  board[IDX_WHITE_KING];
-
 
 	board[IDX_BLACK_PIECES] = board[IDX_BLACK_PAWNS] |
 							  board[IDX_BLACK_ROOKS] |
@@ -3364,10 +3330,7 @@ void nibbleBinaryToBitBoard(unsigned char nibbleBinary[], unsigned long board[])
 
 	unsigned long *multi = (unsigned long *) &nibbleBinary[25];
 	board[IDX_MULTIPLIER] = *multi;
-
 	board[IDX_TURN] = (nibbleBinary[24] % 2) == 0 ? WHITE_MASK : BLACK_MASK;
-
-
 
 }
 
@@ -3576,6 +3539,125 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
 		}
 	}
 
+}
+
+void bitBoardToDBFriendlyFormat(const unsigned long *board) {
+
+	// 16 bits on the middle of the board is still free for flags
+	// må ta bort last_move_was siden det bare er en statistikk mer enn en tilstand som ep, castling og sjakk
+	// #INPROGRESS todo: write binary file for
+	unsigned long moveStatus = board[IDX_LAST_MOVE_WAS] | (board[IDX_CHECK_STATUS] << 8);
+
+	unsigned long castlingFlags = 0;
+	if ((board[IDX_CHECK_STATUS] & A1_MASK & E1_MASK) != 0) {
+		castlingFlags |= 2; // Queen Side White Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & H1_MASK & E1_MASK) != 0) {
+		castlingFlags |= 1; // King Side White Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & A8_MASK & E8_MASK) != 0) {
+		castlingFlags |= 8; // Queen Side Black Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & H8_MASK & E8_MASK) != 0) {
+		castlingFlags |= 4; // King Side Black Castling
+	}
+
+	unsigned long flags = castlingFlags | board[IDX_EP_IDX];
+	char friendly[1000];
+	sprintf(friendly, "%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%X,%lX,%lX\n",
+			board[IDX_MOVE_ID],  // 0
+			board[IDX_PARENT_MOVE_ID], // 1
+			board[IDX_MOVE_NUM], // ply 2
+			board[IDX_WHITE_KING] | board[IDX_BLACK_KING], // 3
+			board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS], // 4
+			board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS], // 5
+			board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS], // 6
+			board[IDX_WHITE_ROOKS] | board[IDX_BLACK_ROOKS], // 7
+			board[IDX_WHITE_PAWNS] | board[IDX_BLACK_PAWNS], // 8
+			board[IDX_WHITE_PIECES], // 9
+			castlingFlags, // 10
+			board[IDX_LAST_MOVE_WAS], // 11
+			board[IDX_EP_IDX] != 0 ? __builtin_ctzll(board[IDX_EP_IDX]) : 0, // 12
+			board[IDX_CHECK_STATUS], // 13
+			board[IDX_MULTIPLIER] // 14
+	);
+
+	int positionCounter = strlen(friendly);
+
+	if (outFile != NULL) {
+		memcpy(outFileBuff + outFileBuffOffset, friendly, positionCounter);
+		outFileBuffOffset += positionCounter;
+		buffWrites++;
+		if (outFileBuffOffset > 1023 * 1024) {
+			fileWrites++;
+			fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
+			outFileBuffOffset = 0;
+		}
+	}
+	else {
+		printf("friendly: %s\n", friendly);
+	}
+}
+
+
+void bitBoardToDBFriendlyFormat2(const unsigned long *board) {
+
+	// 16 bits on the middle of the board is still free for flags
+	// må ta bort last_move_was siden det bare er en statistikk mer enn en tilstand som ep, castling og sjakk
+	// #INPROGRESS
+	if( (board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE) != 0 ){
+		return;
+	}
+
+	unsigned long moveStatus = board[IDX_LAST_MOVE_WAS] | (board[IDX_CHECK_STATUS] << 8);
+
+	unsigned long castlingFlags = 0;
+	if ((board[IDX_CHECK_STATUS] & A1_MASK & E1_MASK) != 0) {
+		castlingFlags |= 2; // Queen Side White Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & H1_MASK & E1_MASK) != 0) {
+		castlingFlags |= 1; // King Side White Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & A8_MASK & E8_MASK) != 0) {
+		castlingFlags |= 8; // Queen Side Black Castling
+	}
+	if ((board[IDX_CHECK_STATUS] & H8_MASK & E8_MASK) != 0) {
+		castlingFlags |= 4; // King Side Black Castling
+	}
+
+	unsigned long flags = castlingFlags | board[IDX_EP_IDX];
+	char friendly[1000];
+	sprintf(friendly, "%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%X,%lX,%lX\n",
+			board[IDX_MOVE_ID],  // 0
+			board[IDX_PARENT_MOVE_ID], // 1
+			board[IDX_MOVE_NUM], // ply 2
+			board[IDX_WHITE_KING] | board[IDX_BLACK_KING] | board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS] , // 3
+			board[IDX_WHITE_ROOKS] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS] , // 3
+			board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS] | board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS], // 5
+			board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS] | board[IDX_WHITE_PAWNS] | board[IDX_BLACK_PAWNS], // 6
+			board[IDX_WHITE_PIECES], // 7
+			castlingFlags, // 8
+			board[IDX_LAST_MOVE_WAS], // 9
+			board[IDX_EP_IDX] != 0 ? __builtin_ctzll(board[IDX_EP_IDX]) : 0, // 10
+			board[IDX_CHECK_STATUS], // 11
+			board[IDX_MULTIPLIER] // 12
+	);
+
+	int positionCounter = strlen(friendly);
+
+	if (outFile != NULL) {
+		memcpy(outFileBuff + outFileBuffOffset, friendly, positionCounter);
+		outFileBuffOffset += positionCounter;
+		buffWrites++;
+		if (outFileBuffOffset > 1023 * 1024) {
+			fileWrites++;
+			fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
+			outFileBuffOffset = 0;
+		}
+	}
+	else {
+		printf("friendly: %s\n", friendly);
+	}
 }
 
 void diagramToBitBoard(unsigned long board[], char diagram[]) {

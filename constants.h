@@ -194,3 +194,4 @@ const int LOG_TYPE_CFEN = 3;
 const int LOG_TYPE_BINARY = 4;
 const int LOG_TYPE_COMP_BINARY = 5;
 const int LOG_TYPE_NIBBLE_BINARY = 6;
+const int LOG_TYPE_DB_FRIENDLY = 7;
