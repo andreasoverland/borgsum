@@ -11,6 +11,8 @@ typedef enum {
 	FALSE, TRUE
 } boolean;
 
+// #define DONT_CARE_ABOUT_BOARDS_MOVES_WITH_CAPTURE
+
 
 // Authors
 // Andreas Øverland
@@ -96,7 +98,6 @@ void printBitBoard(unsigned long board[]);
 
 void diagramToBitBoard(unsigned long board[], char diagram[]);
 
-void bitBoardToDBFriendlyFormat(const unsigned long *board);
 void bitBoardToDBFriendlyFormat2(const unsigned long *board);
 
 void cfenToBitBoard(unsigned long board[], char cfen[]);
@@ -464,6 +465,12 @@ unsigned long lastCountedMoveNum = 0;
 unsigned long lastCountedMoveNumCounted = 0;
 
 void dig(unsigned long board[]) {
+
+#ifdef DONT_CARE_ABOUT_BOARDS_MOVES_WITH_CAPTURE
+    if( (board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE) != 0 ){
+        return;
+    }
+#endif
 
 	if (board[IDX_MOVE_NUM] < MAX_LEVEL
 		|| (board[IDX_MOVE_NUM] == MAX_LEVEL &&
@@ -3541,63 +3548,6 @@ void cfenToBitBoard(unsigned long board[], char cfen[]) {
 
 }
 
-void bitBoardToDBFriendlyFormat(const unsigned long *board) {
-
-	// 16 bits on the middle of the board is still free for flags
-	// må ta bort last_move_was siden det bare er en statistikk mer enn en tilstand som ep, castling og sjakk
-	// #INPROGRESS todo: write binary file for
-	unsigned long moveStatus = board[IDX_LAST_MOVE_WAS] | (board[IDX_CHECK_STATUS] << 8);
-
-	unsigned long castlingFlags = 0;
-	if ((board[IDX_CHECK_STATUS] & A1_MASK & E1_MASK) != 0) {
-		castlingFlags |= 2; // Queen Side White Castling
-	}
-	if ((board[IDX_CHECK_STATUS] & H1_MASK & E1_MASK) != 0) {
-		castlingFlags |= 1; // King Side White Castling
-	}
-	if ((board[IDX_CHECK_STATUS] & A8_MASK & E8_MASK) != 0) {
-		castlingFlags |= 8; // Queen Side Black Castling
-	}
-	if ((board[IDX_CHECK_STATUS] & H8_MASK & E8_MASK) != 0) {
-		castlingFlags |= 4; // King Side Black Castling
-	}
-
-	unsigned long flags = castlingFlags | board[IDX_EP_IDX];
-	char friendly[1000];
-	sprintf(friendly, "%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%X,%lX,%lX\n",
-			board[IDX_MOVE_ID],  // 0
-			board[IDX_PARENT_MOVE_ID], // 1
-			board[IDX_MOVE_NUM], // ply 2
-			board[IDX_WHITE_KING] | board[IDX_BLACK_KING], // 3
-			board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS], // 4
-			board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS], // 5
-			board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS], // 6
-			board[IDX_WHITE_ROOKS] | board[IDX_BLACK_ROOKS], // 7
-			board[IDX_WHITE_PAWNS] | board[IDX_BLACK_PAWNS], // 8
-			board[IDX_WHITE_PIECES], // 9
-			castlingFlags, // 10
-			board[IDX_LAST_MOVE_WAS], // 11
-			board[IDX_EP_IDX] != 0 ? __builtin_ctzll(board[IDX_EP_IDX]) : 0, // 12
-			board[IDX_CHECK_STATUS], // 13
-			board[IDX_MULTIPLIER] // 14
-	);
-
-	int positionCounter = strlen(friendly);
-
-	if (outFile != NULL) {
-		memcpy(outFileBuff + outFileBuffOffset, friendly, positionCounter);
-		outFileBuffOffset += positionCounter;
-		buffWrites++;
-		if (outFileBuffOffset > 1023 * 1024) {
-			fileWrites++;
-			fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
-			outFileBuffOffset = 0;
-		}
-	}
-	else {
-		printf("friendly: %s\n", friendly);
-	}
-}
 
 
 void bitBoardToDBFriendlyFormat2(const unsigned long *board) {
@@ -3605,43 +3555,57 @@ void bitBoardToDBFriendlyFormat2(const unsigned long *board) {
 	// 16 bits on the middle of the board is still free for flags
 	// må ta bort last_move_was siden det bare er en statistikk mer enn en tilstand som ep, castling og sjakk
 	// #INPROGRESS
-	if( (board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE) != 0 ){
-		return;
-	}
+#ifdef DONT_CARE_ABOUT_BOARDS_MOVES_WITH_CAPTURE
+    if( (board[IDX_LAST_MOVE_WAS] & MASK_LAST_MOVE_WAS_CAPTURE) != 0 ){
+        return;
+    }
+#endif
 
-	unsigned long moveStatus = board[IDX_LAST_MOVE_WAS] | (board[IDX_CHECK_STATUS] << 8);
+	unsigned long lastMoveWas = board[IDX_LAST_MOVE_WAS];
+    unsigned long checkStatus = board[IDX_CHECK_STATUS];
 
 	unsigned long castlingFlags = 0;
-	if ((board[IDX_CHECK_STATUS] & A1_MASK & E1_MASK) != 0) {
-		castlingFlags |= 2; // Queen Side White Castling
-	}
-	if ((board[IDX_CHECK_STATUS] & H1_MASK & E1_MASK) != 0) {
-		castlingFlags |= 1; // King Side White Castling
-	}
-	if ((board[IDX_CHECK_STATUS] & A8_MASK & E8_MASK) != 0) {
-		castlingFlags |= 8; // Queen Side Black Castling
-	}
-	if ((board[IDX_CHECK_STATUS] & H8_MASK & E8_MASK) != 0) {
-		castlingFlags |= 4; // King Side Black Castling
-	}
+    if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) != 0ll) {
+        castlingFlags |= 2; // Queen Side White Castling
+    }
+    if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) != 0ll) {
+        castlingFlags |= 1; // King Side White Castling
+    }
+    if ((board[IDX_CASTLING ] & MASK_CASTLING_BLACK_QUEEN_SIDE) != 0ll) {
+        castlingFlags |= 8; // Queen Side Black Castling
+    }
+    if ((board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) != 0ll) {
+        castlingFlags |= 4; // King Side Black Castling
+    }
 
-	unsigned long flags = castlingFlags | board[IDX_EP_IDX];
+
 	char friendly[1000];
-	sprintf(friendly, "%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%lX,%X,%lX,%lX\n",
-			board[IDX_MOVE_ID],  // 0
-			board[IDX_PARENT_MOVE_ID], // 1
-			board[IDX_MOVE_NUM], // ply 2
-			board[IDX_WHITE_KING] | board[IDX_BLACK_KING] | board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS] , // 3
-			board[IDX_WHITE_ROOKS] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS] , // 3
-			board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS] | board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS], // 5
-			board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS] | board[IDX_WHITE_PAWNS] | board[IDX_BLACK_PAWNS], // 6
-			board[IDX_WHITE_PIECES], // 7
-			castlingFlags, // 8
-			board[IDX_LAST_MOVE_WAS], // 9
-			board[IDX_EP_IDX] != 0 ? __builtin_ctzll(board[IDX_EP_IDX]) : 0, // 10
-			board[IDX_CHECK_STATUS], // 11
-			board[IDX_MULTIPLIER] // 12
-	);
+
+    // Goal, create mariadb sql statements for storing the board, and relevant states
+    // insert into boards (krp_map, qrb_map, bnp_map, w_map, ply_bits) values (%lX,%lX,%lX,%lX,%lX) on duplicate key update ply_bits = ply_bits| (1 << %lX), count = count + 1"
+
+    unsigned long krp = board[IDX_WHITE_KING] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_PAWNS] |
+                        board[IDX_BLACK_KING] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_PAWNS];
+
+    unsigned long qrb = board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_BISHOPS] |
+                        board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_BISHOPS];
+
+    unsigned long bnp = board[IDX_WHITE_BISHOPS] | board[IDX_WHITE_KNIGHTS] | board[IDX_WHITE_PAWNS] |
+                        board[IDX_BLACK_BISHOPS] | board[IDX_BLACK_KNIGHTS] | board[IDX_BLACK_PAWNS];
+
+    int unsigned epIndex = 0;
+    if( board[IDX_EP_IDX] != 0){
+        epIndex = __builtin_ctzll(board[IDX_EP_IDX]);
+    }
+
+	sprintf(friendly,
+            "insert into b (a,b,c,w,p) values (0x%lX,0x%lX,0x%lX,0x%lX,1<<0x%lX) on duplicate key update p=p|(1<<0x%lX),d=d+1;\n"
+            "insert into c (p,lm,cs,cr,ep) value (0x%lX,0x%lX,0x%lX,0x%lX,0x%X) on duplicate key update c=c+1;\n",
+            krp, qrb, bnp, board[IDX_WHITE_PIECES], board[IDX_MOVE_NUM], board[IDX_MOVE_NUM],
+            board[IDX_MOVE_NUM], lastMoveWas, checkStatus, castlingFlags, epIndex
+            );
+
+
 
 	int positionCounter = strlen(friendly);
 
