@@ -87,7 +87,7 @@ const int BINARY_BOARD_NUM_ELEMENTS   = 8;
 const int BINARY_BOARD_SIZE           = 64;
 
 // COMPACT BINARY BOARD CONVERSION for file in/out
-const int COMP_BINARY_BYTE_SIZE      = 41;
+const int COMP_BINARY_BYTE_SIZE      = 8*4+5;
 
 
 // NIBBLE BINARY BOARD CONVERSION
@@ -130,6 +130,25 @@ const unsigned long E8 = 59;
 const unsigned long F8 = 58;
 const unsigned long G8 = 57;
 const unsigned long H8 = 56;
+
+// mostly for checking EP
+const unsigned long A5_MASK = ( 1L << 39);
+const unsigned long B5_MASK = ( 1L << 38);
+const unsigned long C5_MASK = ( 1L << 37);
+const unsigned long D5_MASK = ( 1L << 36);
+const unsigned long E5_MASK = ( 1L << 35);
+const unsigned long F5_MASK = ( 1L << 34);
+const unsigned long G5_MASK = ( 1L << 33);
+const unsigned long H5_MASK = ( 1L << 32);
+
+const unsigned long A4_MASK = ( 1L << 31);
+const unsigned long B4_MASK = ( 1L << 30);
+const unsigned long C4_MASK = ( 1L << 29);
+const unsigned long D4_MASK = ( 1L << 28);
+const unsigned long E4_MASK = ( 1L << 27);
+const unsigned long F4_MASK = ( 1L << 26);
+const unsigned long G4_MASK = ( 1L << 25);
+const unsigned long H4_MASK = ( 1L << 24);
 
 const unsigned long A1_MASK = (1ul << A1);
 const unsigned long B1_MASK = (1ul << B1);

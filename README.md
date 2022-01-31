@@ -109,7 +109,7 @@ Todo
  ls -1|xargs -n 1 -I x mv x x.nbin
 
 For cbin
-hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.cbin
+hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X"  "\n" '  data.cbin
 
 For nbin
 
