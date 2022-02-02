@@ -108,12 +108,6 @@ Todo
 
  ls -1|xargs -n 1 -I x mv x x.nbin
 
-For cbin
-hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X"  "\n" '  data.cbin
+cbinm hexdump
+hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 4/1 "%02X"  "\n" '  level0.cbinm
 
-For nbin
-
-hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 8/1 "%02X" "\n"'  level1.nbin
-
-
-### 2020.09.12 - try to rewrite engine to use stack + non-recursive
