@@ -1,12 +1,30 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+# top-most EditorConfig file
 root = true
 
-[*]
-end_of_line = lf
-insert_final_newline = true
 
+# 4 space tabbed indentation
+# vim friendly spaces within parentheses
 [*]
-charset = utf-8
-
-[{*.js,*.css,*.html,*.hbs,*.c,*.md,*.txt}]
 indent_style = tab
 indent_size = 4
+charset = utf-8
+end_of_line = lf
+insert_final_newline = false
+ij_javascript_else_on_new_line = true
+ij_html_do_not_indent_children_of_tags = ""
+ij_any_catch_on_new_line = true
+ij_any_else_on_new_line = true
+ij_any_spaces_within_parentheses = true
+ij_any_spaces_within_if_parentheses = true
+ij_any_spaces_within_for_parentheses = true
+ij_any_spaces_within_method_parentheses = true
+ij_any_spaces_within_method_call_parentheses = true
+ij_javascript_force_semicolon_style = false
+
+# Matches the exact files either package.json or .travis.yml
+[{package.json,.travis.yml}]
+indent_style = space
+indent_size = 2
+
