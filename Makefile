@@ -1,4 +1,4 @@
-all: main.o collator.o
+all: main.o
 	gcc -Ofast main.o -o chessengine
 	rm -rf *.o
 

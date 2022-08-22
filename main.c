@@ -2898,534 +2898,556 @@ void compactBinaryToBitBoard(unsigned char cbinm[], unsigned long board[]) {
 	unsigned char epIndex = *(unsigned char *) &byteArray[4 * 8 + 1]; // epIndex
 	unsigned char castling = *(unsigned char *) &byteArray[4 * 8 + 2]; // castling
 	unsigned char lastMoveWas = *(unsigned char *) &byteArray[4 * 8 + 3]; // last move was
-	unsigned char ply = *(unsigned char *) &byteArray[4 * 8 + 4];
-	unsigned int mul = *(unsigned int *) &byteArray[37];
+	unsigned int ply = *(unsigned int *) &byteArray[4 * 8 + 4];
+	unsigned int mul = *(unsigned int *) &byteArray[40];
 	//unsigned int  mul = toInt( byteArray+37 );
 	//printf("%i\n", mul);
 
-	unsigned long kings = krp & ~(qrb | bnp);
-	unsigned long rooks = krp & qrb;
-	unsigned long pawns = krp & bnp;
-	unsigned long queens = qrb & ~(krp | bnp);
-	unsigned long bishops = qrb & bnp;
-	unsigned long knights = bnp & ~(krp | qrb);
-
-	unsigned long notWhite = ~wmap;
-
-	board[IDX_MOVE_ID] = 0l;
-	board[IDX_WHITE_PIECES] = wmap;
-	board[IDX_WHITE_PAWNS] = pawns & wmap;
-	board[IDX_WHITE_ROOKS] = rooks & wmap;
-	board[IDX_WHITE_KNIGHTS] = knights & wmap;
-	board[IDX_WHITE_BISHOPS] = bishops & wmap;
-	board[IDX_WHITE_QUEENS] = queens & wmap;
-	board[IDX_WHITE_KING] = kings & wmap;
-
-	board[IDX_BLACK_PAWNS] = pawns & notWhite;
-	board[IDX_BLACK_ROOKS] = rooks & notWhite;
-	board[IDX_BLACK_KNIGHTS] = knights & notWhite;
-	board[IDX_BLACK_BISHOPS] = bishops & notWhite;
-	board[IDX_BLACK_QUEENS] = queens & notWhite;
-	board[IDX_BLACK_KING] = kings & notWhite;
-
-	board[IDX_BLACK_PIECES] = (pawns | rooks | knights | bishops | queens | kings) & notWhite;
-	board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] | board[IDX_BLACK_PIECES];
-
-	board[IDX_TURN] = (ply % 2) + 1;
-	board[IDX_MOVE_NUM] = ply;
-	if (epIndex != 0) {
-		board[IDX_EP_IDX] = 1L << epIndex;
-	}
-	else {
-		board[IDX_EP_IDX] = 0;
-	}
-	board[IDX_LAST_MOVE_WAS] = lastMoveWas;
-	board[IDX_CHECK_STATUS] = checkStatus;
-	board[IDX_CASTLING] = 0;
-	if ((castling & 1) != 0) {
-		board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
-	}
-	if ((castling & 2) != 0) {
-		board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
-	}
-	if ((castling & 4) != 0) {
-		board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
-	}
-	if ((castling & 8) != 0) {
-		board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
-	}
-
-	board[IDX_MULTIPLIER] = mul;
-
-}
-
-void bitBoardToBinary(unsigned long board[], unsigned long binary[]) {
-
-	memset(binary, 0, sizeof(unsigned long) * BINARY_BOARD_NUM_ELEMENTS);
-
-	// slå sammen alle like pieces sine longs
-	binary[BINARY_IDX_WHITE_PCS] = board[IDX_WHITE_PIECES];
-	binary[BINARY_IDX_PAWNS] = board[IDX_WHITE_PAWNS] | board[IDX_BLACK_PAWNS];
-	binary[BINARY_IDX_ROOKS] = board[IDX_WHITE_ROOKS] | board[IDX_BLACK_ROOKS];
-	binary[BINARY_IDX_KNIGHTS] = board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS];
-	binary[BINARY_IDX_BISHOPS] = board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS];
-	binary[BINARY_IDX_QUEENS] = board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS];
-
-	unsigned long krp = board[IDX_WHITE_KING] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_PAWNS] |
-						board[IDX_BLACK_KING] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_PAWNS];
-
-	unsigned long qrb = board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_BISHOPS] |
-						board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_BISHOPS];
-
-	unsigned long bnp = board[IDX_WHITE_BISHOPS] | board[IDX_WHITE_KNIGHTS] | board[IDX_WHITE_PAWNS] |
-						board[IDX_BLACK_BISHOPS] | board[IDX_BLACK_KNIGHTS] | board[IDX_BLACK_PAWNS];
-
-	unsigned long flags = 0;
-
-	unsigned long castling = board[IDX_CASTLING];
-
-	flags = (MASK_CASTLING_BLACK_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_KING_SIDE
-			? BINARY_CASTLING_BLACK_KING_SIDE : 0;
-	flags |= (MASK_CASTLING_BLACK_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_QUEEN_SIDE
-			 ? BINARY_CASTLING_BLACK_QUEEN_SIDE : 0;
-	flags |= (MASK_CASTLING_WHITE_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_KING_SIDE
-			 ? BINARY_CASTLING_WHITE_KING_SIDE : 0;
-	flags |= (MASK_CASTLING_WHITE_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_QUEEN_SIDE
-			 ? BINARY_CASTLING_WHITE_QUEEN_SIDE : 0;
-
-	if (board[IDX_TURN] == WHITE_MASK) {
-		flags |= BINARY_WHITES_TURN;
-	}
-
-	if (board[IDX_EP_IDX] != 0) {
-		// count leading bits
-		int idx = __builtin_ctzll(board[IDX_EP_IDX]);
-		flags |= (idx << BINARY_IDX_FLAGS_EP_IDX);
-	}
-
-	flags |= (board[IDX_MOVE_NUM] << BINARY_IDX_FLAGS_MOVE_NUM_IDX);
-
-	unsigned long whiteKingIndex = __builtin_ctzll(board[IDX_WHITE_KING]);
-	flags |= (whiteKingIndex << BINARY_IDX_FLAGS_WHITE_KING_SHIFT);
-
-	unsigned long blackKingIndex = __builtin_ctzll(board[IDX_BLACK_KING]);
-	flags |= (blackKingIndex << BINARY_IDX_FLAGS_BLACK_KING_SHIFT);
-
-	binary[BINARY_IDX_FLAGS] = flags;
-	binary[BINARY_IDX_MULTIPLIER] = board[IDX_MULTIPLIER];
-
-}
-
-void bitBoardToCompactBinary(unsigned long board[], unsigned char compactBinary[]) {
-
-	// byte layout
-	//      0 - krp map           8 bytes
-	//      8 - qrb map           8 bytes
-	//     16 - bnp map           8 bytes
-	//     24 - white pieces map  8 bytes
-	//     32 - check status      1 byte
-	//     33 - ep index          1 byte ( 6 bits )
-	//     34 - castling flags    1 byte ( 4 bits )
-	//     35 - last move was     1 byte ( 5 bits )
-	//     36 - ply               1 byte ( 8 bits )
-	//     37 - multiplier        4 bytes
-	//     sum 41 bytes
-
-	unsigned long *pieces = (unsigned long *) &compactBinary[0];
-
-	unsigned long castlingFlags = 0;
-	if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) != 0ll) {
-		castlingFlags |= 2; // Queen Side White Castling
-	}
-	if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) != 0ll) {
-		castlingFlags |= 1; // King Side White Castling
-	}
-	if ((board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) != 0ll) {
-		castlingFlags |= 8; // Queen Side Black Castling
-	}
-	if ((board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) != 0ll) {
-		castlingFlags |= 4; // King Side Black Castling
-	}
-
-	unsigned long *krp = (unsigned long *) &compactBinary[0 * 8];
-	unsigned long *qrb = (unsigned long *) &compactBinary[1 * 8];
-	unsigned long *bnp = (unsigned long *) &compactBinary[2 * 8];
-	unsigned long *wmap = (unsigned long *) &compactBinary[3 * 8];
-
-	*krp = board[IDX_WHITE_KING] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_PAWNS] |
-		   board[IDX_BLACK_KING] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_PAWNS];
-
-	*qrb = board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_BISHOPS] |
-		   board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_BISHOPS];
-
-	*bnp = board[IDX_WHITE_BISHOPS] | board[IDX_WHITE_KNIGHTS] | board[IDX_WHITE_PAWNS] |
-		   board[IDX_BLACK_BISHOPS] | board[IDX_BLACK_KNIGHTS] | board[IDX_BLACK_PAWNS];
-
-	unsigned long whitePieces = board[IDX_WHITE_PIECES];
-	*wmap = whitePieces;
-
-	unsigned char *checkStatus = (unsigned char *) &compactBinary[4 * 8];
-	unsigned char checkStatusTmp = board[IDX_CHECK_STATUS];
-	*checkStatus = checkStatusTmp;
-
-	unsigned char *epIndex = (unsigned char *) &compactBinary[4 * 8 + 1];
-	unsigned char epIndexTmp = 0;
-	if (board[IDX_EP_IDX] != 0) {
-		epIndexTmp = __builtin_ctzll(board[IDX_EP_IDX]);
-	}
-	*epIndex = epIndexTmp;
-
-	unsigned char *castling = (unsigned char *) &compactBinary[4 * 8 + 2];
-	*castling = castlingFlags;
-
-	unsigned char *lastMoveWas = (unsigned char *) &compactBinary[4 * 8 + 3];
-	unsigned char lastMoveWasTmp = board[IDX_LAST_MOVE_WAS];
-	*lastMoveWas = lastMoveWasTmp;
-
-	unsigned char *moveNum = (unsigned char *) &compactBinary[4 * 8 + 4];
-	unsigned char moveNumTmp = board[IDX_MOVE_NUM];
-	*moveNum = moveNumTmp;
-
-	unsigned int *multiplier = (unsigned int *) &compactBinary[4 * 8 + 5];
-	*multiplier = MULTIPLIER;
-}
-
-
-void diagramToBitBoard(unsigned long board[], char diagram[]) {
-
-	//
-	//		A B C D E F G H
-	// 8	0,0,0,0,0,0,0,0,
-	// 7	0,0,0,0,0,0,0,0,
-	// 6	0,0,0,0,0,0,0,0,
-	// 5	0,0,0,0,0,0,0,0,
-	// 4	0,0,0,0,0,0,0,0,
-	// 3	0,0,0,0,0,0,0,0,
-	// 2	0,0,0,0,0,0,0,0,
-	// 1	0,0,0,0,0,0,0,0,
-
-	int len = strlen(diagram);
-
-	memset(board, 0, sizeof(unsigned long) * NUM_BYTES);
-
-	board[IDX_CASTLING] = 0;
-	board[IDX_EP_IDX] = 0;
-	board[IDX_TURN] = WHITE_MASK;
-	board[IDX_MULTIPLIER] = 1;
-	int pos = 0;
-	int lastLenUsed = 0;
-
-	for (int t = 0; t < len; t++) {
-		switch (diagram[t]) {
-			// BLACK PIECES
-			case '.':
-				pos++;
-				break;
-			case 'p':
-				board[IDX_BLACK_PAWNS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'r':
-				board[IDX_BLACK_ROOKS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'b':
-				board[IDX_BLACK_BISHOPS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'n':
-				board[IDX_BLACK_KNIGHTS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'q':
-				board[IDX_BLACK_QUEENS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'k':
-				board[IDX_BLACK_KING] = (1l << (63 - pos));
-				pos++;
-				break;
-				// WHITE PIECES
-			case 'P':
-				board[IDX_WHITE_PAWNS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'R':
-				board[IDX_WHITE_ROOKS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'N':
-				board[IDX_WHITE_KNIGHTS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'B':
-				board[IDX_WHITE_BISHOPS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'Q':
-				board[IDX_WHITE_QUEENS] |= (1l << (63 - pos));
-				pos++;
-				break;
-			case 'K':
-				board[IDX_WHITE_KING] = (1l << (63 - pos));
-				pos++;
-				break;
-
-		}// switch
-
-
-
-		if (pos > 63) {
-			lastLenUsed = t + 1;
-			break;
-		}
-
-	} // 0..len
-
-	board[IDX_WHITE_PIECES] = board[IDX_WHITE_PAWNS] |
-							  board[IDX_WHITE_ROOKS] |
-							  board[IDX_WHITE_KNIGHTS] |
-							  board[IDX_WHITE_BISHOPS] |
-							  board[IDX_WHITE_QUEENS] |
-							  board[IDX_WHITE_KING];
-
-	board[IDX_BLACK_PIECES] = board[IDX_BLACK_PAWNS] |
-							  board[IDX_BLACK_ROOKS] |
-							  board[IDX_BLACK_KNIGHTS] |
-							  board[IDX_BLACK_BISHOPS] |
-							  board[IDX_BLACK_QUEENS] |
-							  board[IDX_BLACK_KING];
-
-	board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] |
-							board[IDX_BLACK_PIECES];
-
-
-	board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board) | calculateBlackKingCheckStatus(board);
-
-	int mode = 0; // looking for turn character
-	int modeTurnDone = 0;
-	int modeCastlingDone = 0;
-	int modeEnPassSquareDone = 0;
-
-
-	char str[strlen(diagram)];
-	sprintf(str, "%s", diagram + lastLenUsed);
-
-	char delim[] = " \t\n";
-	char *ptr = strtok(str, delim);
-
-	int arg = 0;
-	while (ptr != NULL) {
-
-		if (arg == 0) {
-			if (strcmp(ptr, "w") == 0) {
-				board[IDX_TURN] = WHITE_MASK;
-			}
-			else if (strcmp(ptr, "b") == 0) {
-				board[IDX_TURN] = BLACK_MASK;
-			}
-		}
-		else if (arg == 1) {
-			if (strchr(ptr, 'K') != NULL) {
-				board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
-			}
-
-			if (strchr(ptr, 'k') != NULL) {
-				board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
-			}
-
-			if (strchr(ptr, 'Q') != NULL) {
-				board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
-			}
-
-			if (strchr(ptr, 'q') != NULL) {
-				board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
-			}
-		}
-		else if (arg == 2) {
-
-			if (ptr[0] >= 'a' && ptr[0] <= 'h') {
-				int rank = (ptr[1] - 49);
-				if (rank == 2 || rank == 5) {
-					board[IDX_EP_IDX] = 1L << (7 - (ptr[0] - 97) + (rank << 3));
-				}
-			}
-		}
-		else if (arg == 3) {
-			board[IDX_MOVE_NUM] = atoi(ptr);
-		}
-
-		ptr = strtok(NULL, delim);
-		arg++;
-	}
-
-
-} // diagramToBitBoard
-
-
-void compressBitBoard(unsigned long board[]) {
-
-	char compressedBoard[] = "................................................................\0";
-
-	unsigned long idx = 1L << 63;
-	int positionCounter = 0;
-	int repeatCount = 0;
-	char lastPiece = ' ';
-	char currentPiece = ' ';
-
-	for (int t = 0; t < 64; t++) {
-
-		if (board[IDX_BLACK_PAWNS] & idx) {
-			currentPiece = 'p';
-		}
-		else if (board[IDX_BLACK_ROOKS] & idx) {
-			currentPiece = 'r';
-		}
-		else if (board[IDX_BLACK_KNIGHTS] & idx) {
-			currentPiece = 'n';
-		}
-		else if (board[IDX_BLACK_BISHOPS] & idx) {
-			currentPiece = 'b';
-		}
-		else if (board[IDX_BLACK_QUEENS] & idx) {
-			currentPiece = 'q';
-		}
-		else if (board[IDX_BLACK_KING] & idx) {
-			currentPiece = 'k';
-		}
-		else if (board[IDX_WHITE_PAWNS] & idx) {
-			currentPiece = 'P';
-		}
-		else if (board[IDX_WHITE_ROOKS] & idx) {
-			currentPiece = 'R';
-		}
-		else if (board[IDX_WHITE_KNIGHTS] & idx) {
-			currentPiece = 'N';
-		}
-		else if (board[IDX_WHITE_BISHOPS] & idx) {
-			currentPiece = 'B';
-		}
-		else if (board[IDX_WHITE_QUEENS] & idx) {
-			currentPiece = 'Q';
-		}
-		else if (board[IDX_WHITE_KING] & idx) {
-			currentPiece = 'K';
-		}
-		else {
-			currentPiece = 'e';
-		}
-
-		if (currentPiece != lastPiece && lastPiece != ' ') {
-			if (repeatCount > 9) {
-				compressedBoard[positionCounter] = 48 + (repeatCount / 10);
-				positionCounter++;
-			}
-			if (repeatCount > 1) {
-				compressedBoard[positionCounter] = 48 + (repeatCount % 10);
-				positionCounter++;
-				repeatCount = 1;
-			}
-			compressedBoard[positionCounter] = lastPiece;
-			positionCounter++;
-			lastPiece = currentPiece;
-		}
-		else {
-			repeatCount++;
-			lastPiece = currentPiece;
-		}
-
-		idx >>= 1L;
-
-	}
-
-	if (repeatCount > 1) {
-		if (repeatCount > 9) {
-			compressedBoard[positionCounter] = 48 + (repeatCount / 10);
-			positionCounter++;
-		}
-
-		compressedBoard[positionCounter] = 48 + (repeatCount % 10);
-		positionCounter++;
-
-		compressedBoard[positionCounter] = lastPiece;
-		positionCounter++;
-	}
-	else if (repeatCount == 1) {
-		compressedBoard[positionCounter] = lastPiece;
-		positionCounter++;
-	}
-
-
-	int KQkq = 0;
-	KQkq = (MASK_CASTLING_BLACK_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_KING_SIDE ? 1 : 0;
-	KQkq |= (MASK_CASTLING_BLACK_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_QUEEN_SIDE ? 2 : 0;
-	KQkq |= (MASK_CASTLING_WHITE_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_KING_SIDE ? 4 : 0;
-	KQkq |= (MASK_CASTLING_WHITE_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_QUEEN_SIDE ? 8 : 0;
-
-	if (KQkq > 9) {
-		compressedBoard[positionCounter] = 48 + (KQkq / 10);
-		positionCounter++;
-	}
-	compressedBoard[positionCounter] = 48 + (KQkq % 10);
-	positionCounter++;
-
-
-	compressedBoard[positionCounter] = '-';
-	if (board[IDX_EP_IDX] != 0) {
-		int idx = __builtin_ctzll(board[IDX_EP_IDX]);
-		int rank = (idx >> 3);
-		int file = (7 - (idx & 7));
-		compressedBoard[positionCounter] = 97 + file;
-		compressedBoard[positionCounter + 1] = 49 + rank;
-		positionCounter++;
-	}
-	positionCounter++;
-
-	compressedBoard[positionCounter] = board[IDX_TURN] == WHITE_MASK ? 'w' : 'b';
-	positionCounter++;
-
-	if (board[IDX_MOVE_NUM] > 9) {
-		compressedBoard[positionCounter] = 48 + (board[IDX_MOVE_NUM] / 10);
-		positionCounter++;
-	}
-
-	compressedBoard[positionCounter] = 48 + (board[IDX_MOVE_NUM] % 10);
-	positionCounter++;
-
-	compressedBoard[positionCounter] = 'm';
-	positionCounter++;
-
-	unsigned long mul = board[IDX_MULTIPLIER];
-	char digits[] = "xxxxxxxxxxxxxx";
-	int md = 0;
-	while (mul > 0) {
-		digits[md] = 48 + (char) (mul % 10);
-		mul /= 10;
-		md++;
-	}
-	for (int t = 0; t < md; t++) {
-		compressedBoard[positionCounter] = digits[md - t - 1];
-		positionCounter++;
-	}
-
-	compressedBoard[positionCounter] = '\n';
-	positionCounter++;
-
-	if (outFile != NULL) {
-		memcpy(outFileBuff + outFileBuffOffset, compressedBoard, positionCounter);
-		outFileBuffOffset += positionCounter;
-		buffWrites++;
-		if (outFileBuffOffset > 1023 * 1024) {
-			fileWrites++;
-			fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
-			outFileBuffOffset = 0;
-		}
-
-	}
-	else {
-		printf("%s", compressedBoard);
-	}
-
-}
+/*
+* NBINC Format. Since the nbinc file always will have the same ply for all boards, a unique key consists
+* of the first 4*8+3 (35) bytes
+*  0 krp map      (8 bytes)
+*  8 qrb map      (8 bytes)
+* 16 bnp map      (8 bytes)
+* 24 w map        (8 bytes)
+* 32 castling     (1 byte)
+* 33 ep index     (1 byte) <- ********** NEW * only set this, if an en passant strike is possible
+* ---- end of key
+* 34 lastMoveWas  (1 byte)
+* 35 check status (1 byte)
+* 36 dup. on ply  (4 bytes) <- if this position already exists, this points to the ply ************** NEW
+* 40 multiplier   (4 bytes) <- int at index 10
+* Total 44 bytes.
+  */
+      unsigned long kings = krp & ~(qrb | bnp);
+      unsigned long rooks = krp & qrb;
+      unsigned long pawns = krp & bnp;
+      unsigned long queens = qrb & ~(krp | bnp);
+      unsigned long bishops = qrb & bnp;
+      unsigned long knights = bnp & ~(krp | qrb);
+
+      unsigned long notWhite = ~wmap;
+
+      board[IDX_MOVE_ID] = 0l;
+      board[IDX_WHITE_PIECES] = wmap;
+      board[IDX_WHITE_PAWNS] = pawns & wmap;
+      board[IDX_WHITE_ROOKS] = rooks & wmap;
+      board[IDX_WHITE_KNIGHTS] = knights & wmap;
+      board[IDX_WHITE_BISHOPS] = bishops & wmap;
+      board[IDX_WHITE_QUEENS] = queens & wmap;
+      board[IDX_WHITE_KING] = kings & wmap;
+
+      board[IDX_BLACK_PAWNS] = pawns & notWhite;
+      board[IDX_BLACK_ROOKS] = rooks & notWhite;
+      board[IDX_BLACK_KNIGHTS] = knights & notWhite;
+      board[IDX_BLACK_BISHOPS] = bishops & notWhite;
+      board[IDX_BLACK_QUEENS] = queens & notWhite;
+      board[IDX_BLACK_KING] = kings & notWhite;
+
+      board[IDX_BLACK_PIECES] = (pawns | rooks | knights | bishops | queens | kings) & notWhite;
+      board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] | board[IDX_BLACK_PIECES];
+
+      board[IDX_TURN] = (ply % 2) + 1;
+      board[IDX_MOVE_NUM] = ply;
+      if (epIndex != 0) {
+          board[IDX_EP_IDX] = 1L << epIndex;
+      }
+      else {
+          board[IDX_EP_IDX] = 0;
+      }
+      board[IDX_LAST_MOVE_WAS] = lastMoveWas;
+      board[IDX_CHECK_STATUS] = checkStatus;
+      board[IDX_CASTLING] = 0;
+      if ((castling & 1) != 0) {
+          board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+      }
+      if ((castling & 2) != 0) {
+          board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+      }
+      if ((castling & 4) != 0) {
+          board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+      }
+      if ((castling & 8) != 0) {
+          board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
+      }
+
+      board[IDX_MULTIPLIER] = mul;
+
+  }
+
+  void bitBoardToBinary(unsigned long board[], unsigned long binary[]) {
+
+      memset(binary, 0, sizeof(unsigned long) * BINARY_BOARD_NUM_ELEMENTS);
+
+      // slå sammen alle like pieces sine longs
+      binary[BINARY_IDX_WHITE_PCS] = board[IDX_WHITE_PIECES];
+      binary[BINARY_IDX_PAWNS] = board[IDX_WHITE_PAWNS] | board[IDX_BLACK_PAWNS];
+      binary[BINARY_IDX_ROOKS] = board[IDX_WHITE_ROOKS] | board[IDX_BLACK_ROOKS];
+      binary[BINARY_IDX_KNIGHTS] = board[IDX_WHITE_KNIGHTS] | board[IDX_BLACK_KNIGHTS];
+      binary[BINARY_IDX_BISHOPS] = board[IDX_WHITE_BISHOPS] | board[IDX_BLACK_BISHOPS];
+      binary[BINARY_IDX_QUEENS] = board[IDX_WHITE_QUEENS] | board[IDX_BLACK_QUEENS];
+
+      unsigned long krp = board[IDX_WHITE_KING] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_PAWNS] |
+                          board[IDX_BLACK_KING] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_PAWNS];
+
+      unsigned long qrb = board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_BISHOPS] |
+                          board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_BISHOPS];
+
+      unsigned long bnp = board[IDX_WHITE_BISHOPS] | board[IDX_WHITE_KNIGHTS] | board[IDX_WHITE_PAWNS] |
+                          board[IDX_BLACK_BISHOPS] | board[IDX_BLACK_KNIGHTS] | board[IDX_BLACK_PAWNS];
+
+      unsigned long flags = 0;
+
+      unsigned long castling = board[IDX_CASTLING];
+
+      flags = (MASK_CASTLING_BLACK_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_KING_SIDE
+              ? BINARY_CASTLING_BLACK_KING_SIDE : 0;
+      flags |= (MASK_CASTLING_BLACK_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_QUEEN_SIDE
+               ? BINARY_CASTLING_BLACK_QUEEN_SIDE : 0;
+      flags |= (MASK_CASTLING_WHITE_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_KING_SIDE
+               ? BINARY_CASTLING_WHITE_KING_SIDE : 0;
+      flags |= (MASK_CASTLING_WHITE_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_QUEEN_SIDE
+               ? BINARY_CASTLING_WHITE_QUEEN_SIDE : 0;
+
+      if (board[IDX_TURN] == WHITE_MASK) {
+          flags |= BINARY_WHITES_TURN;
+      }
+
+      if (board[IDX_EP_IDX] != 0) {
+          // count leading bits
+          int idx = __builtin_ctzll(board[IDX_EP_IDX]);
+          flags |= (idx << BINARY_IDX_FLAGS_EP_IDX);
+      }
+
+      flags |= (board[IDX_MOVE_NUM] << BINARY_IDX_FLAGS_MOVE_NUM_IDX);
+
+      unsigned long whiteKingIndex = __builtin_ctzll(board[IDX_WHITE_KING]);
+      flags |= (whiteKingIndex << BINARY_IDX_FLAGS_WHITE_KING_SHIFT);
+
+      unsigned long blackKingIndex = __builtin_ctzll(board[IDX_BLACK_KING]);
+      flags |= (blackKingIndex << BINARY_IDX_FLAGS_BLACK_KING_SHIFT);
+
+      binary[BINARY_IDX_FLAGS] = flags;
+      binary[BINARY_IDX_MULTIPLIER] = board[IDX_MULTIPLIER];
+
+  }
+
+  void bitBoardToCompactBinary(unsigned long board[], unsigned char compactBinary[]) {
+
+/*
+* NBINC Format. Since the nbinc file always will have the same ply for all boards, a unique key consists in the file,
+* without keeping the ply in the data. The first 4*8+2 (34) bytes can be used for comparison
+*  0 krp map      (8 bytes)
+*  8 qrb map      (8 bytes)
+* 16 bnp map      (8 bytes)
+* 24 w map        (8 bytes)
+* 32 castling     (1 byte)
+* 33 ep index     (1 byte) <- ********** NEW * only set this, if an en passant strike is possible
+* ---- end of key
+* 34 lastMoveWas  (1 byte)
+* 35 check status (1 byte)
+* 36 dup. on ply  (1 bytes) <- if this position already exists, this points to the ply ************** NEW
+* 40 multiplier   (4 bytes) <- int at index 10
+* Total 41 bytes.
+  */
+
+      unsigned long *pieces = (unsigned long *) &compactBinary[0];
+
+      unsigned long castlingFlags = 0;
+      if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_QUEEN_SIDE) != 0ll) {
+          castlingFlags |= 2; // Queen Side White Castling
+      }
+      if ((board[IDX_CASTLING] & MASK_CASTLING_WHITE_KING_SIDE) != 0ll) {
+          castlingFlags |= 1; // King Side White Castling
+      }
+      if ((board[IDX_CASTLING] & MASK_CASTLING_BLACK_QUEEN_SIDE) != 0ll) {
+          castlingFlags |= 8; // Queen Side Black Castling
+      }
+      if ((board[IDX_CASTLING] & MASK_CASTLING_BLACK_KING_SIDE) != 0ll) {
+          castlingFlags |= 4; // King Side Black Castling
+      }
+
+      unsigned long *krp = (unsigned long *) &compactBinary[0 * 8];
+      unsigned long *qrb = (unsigned long *) &compactBinary[1 * 8];
+      unsigned long *bnp = (unsigned long *) &compactBinary[2 * 8];
+      unsigned long *wmap = (unsigned long *) &compactBinary[3 * 8];
+
+      *krp = board[IDX_WHITE_KING] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_PAWNS] |
+             board[IDX_BLACK_KING] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_PAWNS];
+
+      *qrb = board[IDX_WHITE_QUEENS] | board[IDX_WHITE_ROOKS] | board[IDX_WHITE_BISHOPS] |
+             board[IDX_BLACK_QUEENS] | board[IDX_BLACK_ROOKS] | board[IDX_BLACK_BISHOPS];
+
+      *bnp = board[IDX_WHITE_BISHOPS] | board[IDX_WHITE_KNIGHTS] | board[IDX_WHITE_PAWNS] |
+             board[IDX_BLACK_BISHOPS] | board[IDX_BLACK_KNIGHTS] | board[IDX_BLACK_PAWNS];
+
+      unsigned long whitePieces = board[IDX_WHITE_PIECES];
+      *wmap = whitePieces;
+
+      unsigned char *castling = (unsigned char *) &compactBinary[4 * 8 + 0];
+      *castling = castlingFlags;
+
+      unsigned char *epIndex = (unsigned char *) &compactBinary[4 * 8 + 1];
+      unsigned char epIndexTmp = 0;
+      if (board[IDX_EP_IDX] != 0) {
+          epIndexTmp = __builtin_ctzll(board[IDX_EP_IDX]);
+      }
+      *epIndex = epIndexTmp;
+
+      unsigned char *lastMoveWas = (unsigned char *) &compactBinary[4 * 8 + 2];
+      unsigned char lastMoveWasTmp = board[IDX_LAST_MOVE_WAS];
+      *lastMoveWas = lastMoveWasTmp;
+
+      unsigned char *checkStatus = (unsigned char *) &compactBinary[4 * 8 + 3] ;
+      unsigned char checkStatusTmp = board[IDX_CHECK_STATUS];
+      *checkStatus = checkStatusTmp;
+
+      // Will be filled by other utils
+      unsigned char *duplicateOnPly = (unsigned char *) &compactBinary[4 * 8 + 4];
+      *duplicateOnPly = 0;
+
+      unsigned int *multiplier = (unsigned int *) &compactBinary[4 * 8 + 5];
+      *multiplier = MULTIPLIER;
+
+
+  }
+
+
+  void diagramToBitBoard(unsigned long board[], char diagram[]) {
+
+      //
+      //		A B C D E F G H
+      // 8	0,0,0,0,0,0,0,0,
+      // 7	0,0,0,0,0,0,0,0,
+      // 6	0,0,0,0,0,0,0,0,
+      // 5	0,0,0,0,0,0,0,0,
+      // 4	0,0,0,0,0,0,0,0,
+      // 3	0,0,0,0,0,0,0,0,
+      // 2	0,0,0,0,0,0,0,0,
+      // 1	0,0,0,0,0,0,0,0,
+
+      int len = strlen(diagram);
+
+      memset(board, 0, sizeof(unsigned long) * NUM_BYTES);
+
+      board[IDX_CASTLING] = 0;
+      board[IDX_EP_IDX] = 0;
+      board[IDX_TURN] = WHITE_MASK;
+      board[IDX_MULTIPLIER] = 1;
+      int pos = 0;
+      int lastLenUsed = 0;
+
+      for (int t = 0; t < len; t++) {
+          switch (diagram[t]) {
+              // BLACK PIECES
+              case '.':
+                  pos++;
+                  break;
+              case 'p':
+                  board[IDX_BLACK_PAWNS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'r':
+                  board[IDX_BLACK_ROOKS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'b':
+                  board[IDX_BLACK_BISHOPS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'n':
+                  board[IDX_BLACK_KNIGHTS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'q':
+                  board[IDX_BLACK_QUEENS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'k':
+                  board[IDX_BLACK_KING] = (1l << (63 - pos));
+                  pos++;
+                  break;
+                  // WHITE PIECES
+              case 'P':
+                  board[IDX_WHITE_PAWNS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'R':
+                  board[IDX_WHITE_ROOKS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'N':
+                  board[IDX_WHITE_KNIGHTS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'B':
+                  board[IDX_WHITE_BISHOPS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'Q':
+                  board[IDX_WHITE_QUEENS] |= (1l << (63 - pos));
+                  pos++;
+                  break;
+              case 'K':
+                  board[IDX_WHITE_KING] = (1l << (63 - pos));
+                  pos++;
+                  break;
+
+          }// switch
+
+
+
+          if (pos > 63) {
+              lastLenUsed = t + 1;
+              break;
+          }
+
+      } // 0..len
+
+      board[IDX_WHITE_PIECES] = board[IDX_WHITE_PAWNS] |
+                                board[IDX_WHITE_ROOKS] |
+                                board[IDX_WHITE_KNIGHTS] |
+                                board[IDX_WHITE_BISHOPS] |
+                                board[IDX_WHITE_QUEENS] |
+                                board[IDX_WHITE_KING];
+
+      board[IDX_BLACK_PIECES] = board[IDX_BLACK_PAWNS] |
+                                board[IDX_BLACK_ROOKS] |
+                                board[IDX_BLACK_KNIGHTS] |
+                                board[IDX_BLACK_BISHOPS] |
+                                board[IDX_BLACK_QUEENS] |
+                                board[IDX_BLACK_KING];
+
+      board[IDX_ALL_PIECES] = board[IDX_WHITE_PIECES] |
+                              board[IDX_BLACK_PIECES];
+
+
+      board[IDX_CHECK_STATUS] = calculateWhiteKingCheckStatus(board) | calculateBlackKingCheckStatus(board);
+
+      int mode = 0; // looking for turn character
+      int modeTurnDone = 0;
+      int modeCastlingDone = 0;
+      int modeEnPassSquareDone = 0;
+
+
+      char str[strlen(diagram)];
+      sprintf(str, "%s", diagram + lastLenUsed);
+
+      char delim[] = " \t\n";
+      char *ptr = strtok(str, delim);
+
+      int arg = 0;
+      while (ptr != NULL) {
+
+          if (arg == 0) {
+              if (strcmp(ptr, "w") == 0) {
+                  board[IDX_TURN] = WHITE_MASK;
+              }
+              else if (strcmp(ptr, "b") == 0) {
+                  board[IDX_TURN] = BLACK_MASK;
+              }
+          }
+          else if (arg == 1) {
+              if (strchr(ptr, 'K') != NULL) {
+                  board[IDX_CASTLING] |= MASK_CASTLING_WHITE_KING_SIDE;
+              }
+
+              if (strchr(ptr, 'k') != NULL) {
+                  board[IDX_CASTLING] |= MASK_CASTLING_BLACK_KING_SIDE;
+              }
+
+              if (strchr(ptr, 'Q') != NULL) {
+                  board[IDX_CASTLING] |= MASK_CASTLING_WHITE_QUEEN_SIDE;
+              }
+
+              if (strchr(ptr, 'q') != NULL) {
+                  board[IDX_CASTLING] |= MASK_CASTLING_BLACK_QUEEN_SIDE;
+              }
+          }
+          else if (arg == 2) {
+
+              if (ptr[0] >= 'a' && ptr[0] <= 'h') {
+                  int rank = (ptr[1] - 49);
+                  if (rank == 2 || rank == 5) {
+                      board[IDX_EP_IDX] = 1L << (7 - (ptr[0] - 97) + (rank << 3));
+                  }
+              }
+          }
+          else if (arg == 3) {
+              board[IDX_MOVE_NUM] = atoi(ptr);
+          }
+
+          ptr = strtok(NULL, delim);
+          arg++;
+      }
+
+
+  } // diagramToBitBoard
+
+
+  void compressBitBoard(unsigned long board[]) {
+
+      char compressedBoard[] = "................................................................\0";
+
+      unsigned long idx = 1L << 63;
+      int positionCounter = 0;
+      int repeatCount = 0;
+      char lastPiece = ' ';
+      char currentPiece = ' ';
+
+      for (int t = 0; t < 64; t++) {
+
+          if (board[IDX_BLACK_PAWNS] & idx) {
+              currentPiece = 'p';
+          }
+          else if (board[IDX_BLACK_ROOKS] & idx) {
+              currentPiece = 'r';
+          }
+          else if (board[IDX_BLACK_KNIGHTS] & idx) {
+              currentPiece = 'n';
+          }
+          else if (board[IDX_BLACK_BISHOPS] & idx) {
+              currentPiece = 'b';
+          }
+          else if (board[IDX_BLACK_QUEENS] & idx) {
+              currentPiece = 'q';
+          }
+          else if (board[IDX_BLACK_KING] & idx) {
+              currentPiece = 'k';
+          }
+          else if (board[IDX_WHITE_PAWNS] & idx) {
+              currentPiece = 'P';
+          }
+          else if (board[IDX_WHITE_ROOKS] & idx) {
+              currentPiece = 'R';
+          }
+          else if (board[IDX_WHITE_KNIGHTS] & idx) {
+              currentPiece = 'N';
+          }
+          else if (board[IDX_WHITE_BISHOPS] & idx) {
+              currentPiece = 'B';
+          }
+          else if (board[IDX_WHITE_QUEENS] & idx) {
+              currentPiece = 'Q';
+          }
+          else if (board[IDX_WHITE_KING] & idx) {
+              currentPiece = 'K';
+          }
+          else {
+              currentPiece = 'e';
+          }
+
+          if (currentPiece != lastPiece && lastPiece != ' ') {
+              if (repeatCount > 9) {
+                  compressedBoard[positionCounter] = 48 + (repeatCount / 10);
+                  positionCounter++;
+              }
+              if (repeatCount > 1) {
+                  compressedBoard[positionCounter] = 48 + (repeatCount % 10);
+                  positionCounter++;
+                  repeatCount = 1;
+              }
+              compressedBoard[positionCounter] = lastPiece;
+              positionCounter++;
+              lastPiece = currentPiece;
+          }
+          else {
+              repeatCount++;
+              lastPiece = currentPiece;
+          }
+
+          idx >>= 1L;
+
+      }
+
+      if (repeatCount > 1) {
+          if (repeatCount > 9) {
+              compressedBoard[positionCounter] = 48 + (repeatCount / 10);
+              positionCounter++;
+          }
+
+          compressedBoard[positionCounter] = 48 + (repeatCount % 10);
+          positionCounter++;
+
+          compressedBoard[positionCounter] = lastPiece;
+          positionCounter++;
+      }
+      else if (repeatCount == 1) {
+          compressedBoard[positionCounter] = lastPiece;
+          positionCounter++;
+      }
+
+
+      int KQkq = 0;
+      KQkq = (MASK_CASTLING_BLACK_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_KING_SIDE ? 1 : 0;
+      KQkq |= (MASK_CASTLING_BLACK_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_BLACK_QUEEN_SIDE ? 2 : 0;
+      KQkq |= (MASK_CASTLING_WHITE_KING_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_KING_SIDE ? 4 : 0;
+      KQkq |= (MASK_CASTLING_WHITE_QUEEN_SIDE & board[IDX_CASTLING]) == MASK_CASTLING_WHITE_QUEEN_SIDE ? 8 : 0;
+
+      if (KQkq > 9) {
+          compressedBoard[positionCounter] = 48 + (KQkq / 10);
+          positionCounter++;
+      }
+      compressedBoard[positionCounter] = 48 + (KQkq % 10);
+      positionCounter++;
+
+
+      compressedBoard[positionCounter] = '-';
+      if (board[IDX_EP_IDX] != 0) {
+          int idx = __builtin_ctzll(board[IDX_EP_IDX]);
+          int rank = (idx >> 3);
+          int file = (7 - (idx & 7));
+          compressedBoard[positionCounter] = 97 + file;
+          compressedBoard[positionCounter + 1] = 49 + rank;
+          positionCounter++;
+      }
+      positionCounter++;
+
+      compressedBoard[positionCounter] = board[IDX_TURN] == WHITE_MASK ? 'w' : 'b';
+      positionCounter++;
+
+      if (board[IDX_MOVE_NUM] > 9) {
+          compressedBoard[positionCounter] = 48 + (board[IDX_MOVE_NUM] / 10);
+          positionCounter++;
+      }
+
+      compressedBoard[positionCounter] = 48 + (board[IDX_MOVE_NUM] % 10);
+      positionCounter++;
+
+      compressedBoard[positionCounter] = 'm';
+      positionCounter++;
+
+      unsigned long mul = board[IDX_MULTIPLIER];
+      char digits[] = "xxxxxxxxxxxxxx";
+      int md = 0;
+      while (mul > 0) {
+          digits[md] = 48 + (char) (mul % 10);
+          mul /= 10;
+          md++;
+      }
+      for (int t = 0; t < md; t++) {
+          compressedBoard[positionCounter] = digits[md - t - 1];
+          positionCounter++;
+      }
+
+      compressedBoard[positionCounter] = '\n';
+      positionCounter++;
+
+      if (outFile != NULL) {
+          memcpy(outFileBuff + outFileBuffOffset, compressedBoard, positionCounter);
+          outFileBuffOffset += positionCounter;
+          buffWrites++;
+          if (outFileBuffOffset > 1023 * 1024) {
+              fileWrites++;
+              fwrite(outFileBuff, 1, outFileBuffOffset, outFile);
+              outFileBuffOffset = 0;
+          }
+
+      }
+      else {
+          printf("%s", compressedBoard);
+      }
+
+  }
 
 

@@ -56,10 +56,7 @@ const int IDX_CHECK_STATUS = 21;
 const int IDX_LAST_MOVE_WAS = 22; // 5 bits, status for last move,
 const int IDX_KING_THREATS = 23;
 const int IDX_MULTIPLIER = 24;
-const int IDX_CURRENT_IDX = 25;
-const int IDX_PARENT_IDX = 26;
-const int IDX_FINISHED = 27;
-const int NUM_BYTES = 28; // REALLY NUM LONGS. 24 is 10% slower.. ??
+const int NUM_BYTES = 25; // REALLY NUM LONGS. 24 is 10% slower.. ??
 
 // BINARY BOARD CONVERSION for file input/output
 
@@ -88,7 +85,7 @@ const int BINARY_BOARD_SIZE = 64;
 
 // COMPACT BINARY BOARD CONVERSION for file in/out
 // 41 bytes. Changed 1. feb 2022, added 4 bytes for multiplier, always present
-const int COMP_BINARY_BYTE_SIZE = 8 * 4 + 5 + 4;
+const int COMP_BINARY_BYTE_SIZE = 8 * 4 + 4 + 2*4;
 
 
 const unsigned long A1 = 7;
