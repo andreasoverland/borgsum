@@ -2,8 +2,7 @@
 ### by Andreas Øverland - andreasoverland@gmail.com
 
 
-
-Super Simple Chess Engine
+Count Unique Positions 
 
 - Status : Working on finding moves as fast as possible. No evaluation yet. Single thread for simplicity.
 - What : Will currently do a depth 5 search on Kiwi Pete (without doing an extra level for checks on level 5 to test for mate)
@@ -80,7 +79,6 @@ Plan:
 
 ### 2019.07.17 10:00 - Status all of the above done.
 
-
 Todo
 - CSV output format for statistics
 - Parse FEN
@@ -95,7 +93,6 @@ Todo
    - make cfen -> bitboard
    - bring in the multiplier count for each result
    - make it possile to run a large amount of runs
-
 
 
 ### 2019.09.07 - todo

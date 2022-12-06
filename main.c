@@ -34,6 +34,22 @@ typedef enum {
 // 5. check stalemate counting for with and black maybe bugging for black
 // 6. rewrite diagram, create new for level 6, include multiplier
 
+
+// 2022.12.06 - Idéer
+// For å nå mest mulig dybde og flest mulige unike posisjoner : Hvis en posisjon finnes fra før, prune fra mengden. Go så kun videre med nye unike posisjoner.
+// Dette betyr at hver ply må køres invidivuelt og alle resultat-brett for 1 nivå må lagres og prunes.
+// Lagrings-felter :
+// - De tre/fire brikke-mapsa
+// - Move og status flagg. Turn, EP idx, Castling, last move was Capture/Ep/Promotion, check status (if any)
+// - 4 longs ( = 256 moves max ) med bit flags for hvilke trekk posisjonen oppstår i
+// - ca 64 bytes
+//
+// Flow:
+// 1. kør programmet med en inn-fil, som leser alle posisjoner i filen, beregner alle trekk i ett nivå fra hver innleste posisjon og skriver de ut.
+// 2. unikifiser resultatet, og filtrer ut slik at kun posisjoner som opptrer for første gang er igjen til neste input-runde
+// 3. goto 1
+
+
 void printDiagram(unsigned long board[]);
 
 unsigned long printStats();
@@ -123,22 +139,24 @@ void nibbleBinaryToBitBoard(unsigned char nibbleBinary[], unsigned long board[])
 int MAX_LEVEL = 5;
 int LOG_TYPE = LOG_TYPE_NONE;
 unsigned int MULTIPLIER = 1;
-unsigned long numMoves[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numCaptures[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numEP[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numCastles[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numPromos[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numCheckmates[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numStalemates[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDiscoveryChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDiscoveryPromoChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDiscoveryCaptureChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDiscoveryEPChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDoubleChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDoublePromoChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDoubleCaptureChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long numDoubleEPChecks[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+// max-level 7 med [] 55.6 sec
+// max-level 7 med malloc 55.3 sec
+unsigned long *numMoves;// = malloc( 80 );// {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numCaptures;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numEP;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numCastles;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numPromos;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numCheckmates;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numStalemates;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDiscoveryChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDiscoveryPromoChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDiscoveryCaptureChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDiscoveryEPChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDoubleChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDoublePromoChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDoubleCaptureChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long *numDoubleEPChecks;//[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 unsigned long makeNewBoardInvocations = 0;
 unsigned long isSquaresThreatenedByColorInvocations = 0;
@@ -162,7 +180,25 @@ int fileWrites = 0;
 int main(int argc, char **argv) {
 
 
-	// Max Queens
+    numMoves = malloc( sizeof(unsigned long) * 10 );
+    numCaptures = malloc( sizeof(unsigned long) * 10 );
+    numEP = malloc( sizeof(unsigned long) * 10 );
+    numCastles = malloc( sizeof(unsigned long) * 10 );
+    numPromos = malloc( sizeof(unsigned long) * 10 );
+    numChecks = malloc( sizeof(unsigned long) * 10 );
+    numCheckmates = malloc( sizeof(unsigned long) * 10 );
+    numStalemates = malloc( sizeof(unsigned long) * 10 );
+    numDiscoveryChecks = malloc( sizeof(unsigned long) * 10 );
+    numDiscoveryPromoChecks = malloc( sizeof(unsigned long) * 10 );
+    numDiscoveryCaptureChecks = malloc( sizeof(unsigned long) * 10 );
+    numDiscoveryEPChecks = malloc( sizeof(unsigned long) * 10 );
+    numDoubleChecks = malloc( sizeof(unsigned long) * 10 );
+    numDoublePromoChecks = malloc( sizeof(unsigned long) * 10 );
+    numDoubleCaptureChecks = malloc( sizeof(unsigned long) * 10 );
+    numDoubleEPChecks = malloc( sizeof(unsigned long) * 10 );
+
+
+    // Max Queens
 	// "k.qrq... rq....Qq ...q.Q.. Q......q ...Q.... .Q....Q. R.q.Q..Q KQR..q.q w"
 
 	// "rnbqkbnr pppppppp ........ ........ ........ ........ PPPPPPPP RNBQKBNR"
@@ -2915,9 +2951,9 @@ void compactBinaryToBitBoard(unsigned char cbinm[], unsigned long board[]) {
 * ---- end of key
 * 34 lastMoveWas  (1 byte)
 * 35 check status (1 byte)
-* 36 dup. on ply  (4 bytes) <- if this position already exists, this points to the ply ************** NEW
-* 40 multiplier   (4 bytes) <- int at index 10
-* Total 44 bytes.
+* 36 dup. on ply  (1 bytes) <- if this position already exists, this points to the ply ************** NEW
+* 37 multiplier   (4 bytes) <- int at index 10
+* Total 41 bytes.
   */
       unsigned long kings = krp & ~(qrb | bnp);
       unsigned long rooks = krp & qrb;
@@ -3047,9 +3083,11 @@ void compactBinaryToBitBoard(unsigned char cbinm[], unsigned long board[]) {
 * 34 lastMoveWas  (1 byte)
 * 35 check status (1 byte)
 * 36 dup. on ply  (1 bytes) <- if this position already exists, this points to the ply ************** NEW
-* 40 multiplier   (4 bytes) <- int at index 10
+* 37 multiplier   (4 bytes) <- int at index 10
 * Total 41 bytes.
   */
+
+      memset(compactBinary, 0, sizeof(unsigned char) * COMP_BINARY_BYTE_SIZE);
 
       unsigned long *pieces = (unsigned long *) &compactBinary[0];
 
@@ -3111,8 +3149,6 @@ void compactBinaryToBitBoard(unsigned char cbinm[], unsigned long board[]) {
 
 
   }
-
-
   void diagramToBitBoard(unsigned long board[], char diagram[]) {
 
       //
