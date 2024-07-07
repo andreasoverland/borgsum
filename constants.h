@@ -86,7 +86,7 @@ const int BINARY_BOARD_SIZE = 64;
 // COMPACT BINARY BOARD CONVERSION for file in/out
 // 41 bytes. Changed 1. feb 2022, added 4 bytes for multiplier, always present
 const int COMP_BINARY_BYTE_SIZE = 8 * 4 + 5 + 4;
-
+const int REDUCED_COMP_BINARY_BYTE_SIZE = 8 * 4 + 2; // 4 longs + 4 bytes
 
 const unsigned long A1 = 7;
 const unsigned long B1 = 6;
@@ -187,3 +187,5 @@ const int LOG_TYPE_CFEN = 3;
 const int LOG_TYPE_BINARY = 4;
 const int LOG_TYPE_COMP_BINARY = 5;
 const int LOG_TYPE_DB_FRIENDLY = 7;
+const int LOG_TYPE_REDUCED_COMP_BINARY = 8; // without the
+

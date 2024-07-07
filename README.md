@@ -105,6 +105,6 @@ Todo
 
  ls -1|xargs -n 1 -I x mv x x.nbin
 
-cbinm hexdump
-hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 4/1 "%02X"  "\n" '  level0.cbinm
+rcbin hexdump
+hexdump -e '8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 8/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" " " 1/1 "%02X" ' level1.rcbin
 
